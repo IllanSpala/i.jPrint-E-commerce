@@ -75,7 +75,7 @@ export function CarrinhoProvider({ children }) {
   const totalPreco = itens.reduce((acc, i) => acc + i.preco * i.quantidade, 0);
 
   function gerarLinkWhatsApp() {
-    const numero = "5528999202470"; // WhatsApp oficial da IJ Print
+    const numero = "5528999202470"; // uatizap
 
     const linhasItens = itens
       .map((item, idx) => {
