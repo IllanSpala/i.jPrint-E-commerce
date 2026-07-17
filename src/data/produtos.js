@@ -106,6 +106,24 @@ export const produtos = [
     categoria: "Sensoriais",
     exigePersonalizacao: false,
     descricao: "Estrela 10 pontas fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil.",
+  },
+  {
+    id: 13,
+    nome: "Estatua Gandalf - Senhor dos anéis (16cm)",
+    preco: 179.90,
+    imagem: "/produtos/ESTATUA_GANDALF.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Estatua Gandalf do Senhor dos anéis, impressa em Pla Stone Marmore e Pla SIlk Dourado, aproximadamente 16cm",
+  },
+  {
+    id: 14,
+    nome: "Kit Fallout - Funcionário Vault-tec",
+    preco: 119.90,
+    imagem: "/produtos/KIT_FALLOUT.png",
+    categoria: "Kits",
+    exigePersonalizacao: false,
+    descricao: "Kit Fallout contendo: \n Action Figure do Vault Boy de aproximadamente 13cm pintado a mão \n 4 POrta-copos \n 1 Hueforge (20x20)",
   }
 ];
 
