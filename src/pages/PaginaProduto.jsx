@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, ShoppingCart, Pencil } from "lucide-react";
 import { produtos } from "../data/produtos";
 import { useCarrinho } from "../context/CarrinhoContext";
@@ -12,6 +12,11 @@ export default function PaginaProduto() {
   const produto = produtos.find((p) => p.id === Number(id));
   const [personalizacao, setPersonalizacao] = useState("");
   const [adicionado, setAdicionado] = useState(false);
+
+  useEffect(() => {
+    setPersonalizacao("");
+    setAdicionado(false);
+  }, [id]);
 
   if (!produto) {
     return (

@@ -14,7 +14,7 @@ export default function Footer() {
 
         {/* Email */}
         <a
-          href="mailto:i.j.print26@gmail.com"
+          href="mailto:i.j.print26@gmail.com?subject=Contato%20/%20Pedido%20Personalizado%20-%20I.J%20Print&body=Ol%C3%A1!%20Gostaria%20de%20conversar%20sobre%20um%20projeto%20personalizado.%0A%0A[Por%20favor%2C%20descreva%20aqui%20a%20sua%20ideia%20e%20anexe%20arquivos/fotos%20se%20necess%C3%A1rio]"
           className="flex items-center gap-2 text-sand-400 hover:text-sand-200 transition-colors text-sm"
         >
           <Mail size={15} />

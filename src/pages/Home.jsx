@@ -41,7 +41,7 @@ export default function Home() {
 
       {/* Hero */}
       <section className="text-center py-12 mb-12 relative">
-        <h1 className="font-display text-5xl md:text-7xl text-white tracking-tight uppercase">
+        <h1 className="font-display text-5xl md:text-7xl text-white tracking-tight leading-[1.15] uppercase">
           Forjado em{" "}
           <span className="text-sand-400">três dimensões</span>
         </h1>
