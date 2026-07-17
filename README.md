@@ -2,7 +2,7 @@
 
 Catálogo interativo para venda de produtos de impressão 3D (Miniaturas, Personalizados, Casa e Decoração, Sensoriais, Hot Toys). O site permite visualizar os produtos, ver detalhes, adicionar a um carrinho de compras e enviar o pedido estruturado diretamente via WhatsApp.
 
-## 🚀 Tecnologias Utilizadas
+##  Tecnologias Utilizadas
 
 - **React** + **Vite**
 - **Tailwind CSS** (estilização com paleta personalizada `silver` e `sand`)
@@ -10,7 +10,7 @@ Catálogo interativo para venda de produtos de impressão 3D (Miniaturas, Person
 - **React Router Dom** (navegação)
 - Context API (gerenciamento global do carrinho)
 
-## 🛠️ Como rodar o projeto localmente
+##  Como rodar o projeto localmente
 
 1. Certifique-se de ter o [Node.js](https://nodejs.org/) instalado.
 2. Clone este repositório.
@@ -24,16 +24,13 @@ Catálogo interativo para venda de produtos de impressão 3D (Miniaturas, Person
    ```
 5. Acesse `http://localhost:5173` no seu navegador.
 
-## 📦 Gerenciamento de Produtos
+##  Gerenciamento de Produtos
 
 Os produtos são gerenciados de forma estática, sem necessidade de banco de dados.
 - O arquivo que controla o catálogo é o `src/data/produtos.js`.
 - As imagens devem ser quadradas (1:1), preferencialmente em fundo escuro, e salvas na pasta `public/produtos/`.
 - Basta adicionar um novo bloco `{ id, nome, preco, imagem, categoria, ... }` no array para que o produto apareça imediatamente no site.
 
-## 🌐 Deploy (Hospedagem)
-
-Este projeto foi construído para ser exportado como um site estático (Static Site Generation / Single Page Application). A hospedagem recomendada e **100% gratuita** é a **Vercel** ou **Netlify**.
 
 Para publicar:
 1. Suba este código para o seu GitHub.
