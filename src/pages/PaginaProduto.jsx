@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingCart, Pencil } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Pencil, Tag } from "lucide-react";
 import { produtos } from "../data/produtos";
 import { useCarrinho } from "../context/CarrinhoContext";
 
@@ -12,11 +12,16 @@ export default function PaginaProduto() {
   const produto = produtos.find((p) => p.id === Number(id));
   const [personalizacao, setPersonalizacao] = useState("");
   const [adicionado, setAdicionado] = useState(false);
+  const [opcaoSelecionada, setOpcaoSelecionada] = useState("");
+  const [imagemAtual, setImagemAtual] = useState("");
 
   useEffect(() => {
     setPersonalizacao("");
     setAdicionado(false);
-  }, [id]);
+    setOpcaoSelecionada("");
+    if (produto) setImagemAtual(produto.imagem);
+  }, [id, produto]);
+
 
   if (!produto) {
     return (
@@ -35,6 +40,8 @@ export default function PaginaProduto() {
       item: {
         ...produto,
         personalizacao: produto.exigePersonalizacao ? personalizacao : undefined,
+        opcaoEscolhida: opcaoSelecionada || undefined,
+        cartId: `${produto.id}-${opcaoSelecionada || 'default'}-${Date.now()}`,
       },
     });
     setAdicionado(true);
@@ -44,7 +51,8 @@ export default function PaginaProduto() {
     }, 600);
   }
 
-  const podeAdicionar = !produto.exigePersonalizacao || personalizacao.trim().length > 0;
+  const temOpcaoPendente = produto.opcoes && produto.opcoes.length > 0 && !opcaoSelecionada;
+  const podeAdicionar = (!produto.exigePersonalizacao || personalizacao.trim().length > 0) && !temOpcaoPendente;
 
   return (
     <main className="pt-24 pb-16 px-4 max-w-5xl mx-auto">
@@ -59,12 +67,18 @@ export default function PaginaProduto() {
 
       <div className="grid md:grid-cols-2 gap-10">
         {/* Imagem */}
-        <div className="aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900">
+        <div className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900">
           <img
-            src={produto.imagem}
+            src={imagemAtual}
             alt={produto.nome}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-all duration-300"
           />
+          {produto.precoPromocional && (
+            <span className="absolute top-4 right-4 flex items-center gap-1 px-3 py-1 bg-red-950/90 border border-red-500/40 rounded text-red-400 text-xs font-bold tracking-wider uppercase">
+              <Tag size={12} />
+              Promoção
+            </span>
+          )}
         </div>
 
         {/* Detalhes */}
@@ -100,11 +114,58 @@ export default function PaginaProduto() {
             </div>
           )}
 
+          {/* Opções de Escolha (ex: cores) */}
+          {produto.opcoes && produto.opcoes.length > 0 && (
+            <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
+              <span className="text-sm font-medium text-sand-400">Opções Disponíveis</span>
+              <div className="flex flex-wrap gap-3">
+                {produto.opcoes.map((opcao) => {
+                  const isSelected = opcaoSelecionada === opcao.nome;
+                  return (
+                    <button
+                      key={opcao.nome}
+                      disabled={opcao.esgotado}
+                      onClick={() => {
+                        setOpcaoSelecionada(opcao.nome);
+                        if (opcao.imagem) setImagemAtual(opcao.imagem);
+                      }}
+                      className={`relative px-4 py-2 rounded-full border text-sm font-medium transition-all duration-300 ${
+                        opcao.esgotado
+                          ? "bg-zinc-900/40 backdrop-blur-sm border-zinc-800/50 text-zinc-600 cursor-not-allowed overflow-hidden"
+                          : isSelected
+                          ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_12px_rgba(255,255,255,0.1)] scale-[1.02]"
+                          : "bg-zinc-800/40 backdrop-blur-sm border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60 hover:border-sand-400/60 hover:text-white"
+                      }`}
+                    >
+                      {opcao.nome}
+                      {opcao.esgotado && (
+                        <div className="absolute inset-0 w-full h-full pointer-events-none">
+                          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-600/50 -rotate-[20deg] transform origin-center"></div>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Preço e botão */}
           <div className="mt-auto space-y-3">
-            <p className="text-sand-400 font-bold text-3xl">
-              R$ {produto.preco.toFixed(2).replace(".", ",")}
-            </p>
+            {produto.precoPromocional ? (
+              <div className="flex items-end gap-3">
+                <p className="text-sand-400 font-bold text-3xl">
+                  R$ {produto.precoPromocional.toFixed(2).replace(".", ",")}
+                </p>
+                <p className="text-zinc-500 line-through text-lg mb-0.5">
+                  R$ {produto.preco.toFixed(2).replace(".", ",")}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sand-400 font-bold text-3xl">
+                R$ {produto.preco.toFixed(2).replace(".", ",")}
+              </p>
+            )}
 
             <button
               onClick={adicionarAoCarrinho}
@@ -124,6 +185,12 @@ export default function PaginaProduto() {
             {produto.exigePersonalizacao && !personalizacao.trim() && (
               <p className="text-xs text-zinc-600 text-center">
                 Preencha a personalização para continuar.
+              </p>
+            )}
+            
+            {temOpcaoPendente && (
+              <p className="text-xs text-zinc-600 text-center">
+                Selecione uma opção para continuar.
               </p>
             )}
           </div>

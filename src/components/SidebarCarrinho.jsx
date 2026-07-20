@@ -19,7 +19,7 @@ export default function SidebarCarrinho() {
 
   function validar() {
     const novos = {};
-    if (!cliente.nome.trim())     novos.nome     = "Informe seu nome.";
+    if (!cliente.nome.trim()) novos.nome = "Informe seu nome.";
     if (!cliente.endereco.trim()) novos.endereco = "Informe o endereço completo.";
     setErros(novos);
     return Object.keys(novos).length === 0;
@@ -42,9 +42,8 @@ export default function SidebarCarrinho() {
 
       {/* Gaveta */}
       <aside
-        className={`fixed top-0 right-0 h-full z-50 w-full max-w-md bg-zinc-900 border-l border-zinc-800 flex flex-col shadow-2xl transition-transform duration-300 ${
-          sidebarAberta ? "translate-x-0" : "translate-x-full"
-        }`}
+        className={`fixed top-0 right-0 h-full z-50 w-full max-w-md bg-zinc-900 border-l border-zinc-800 flex flex-col shadow-2xl transition-transform duration-300 ${sidebarAberta ? "translate-x-0" : "translate-x-full"
+          }`}
       >
         {/* Cabeçalho */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
@@ -84,16 +83,18 @@ export default function SidebarCarrinho() {
           ) : (
             <ul className="divide-y divide-zinc-800">
               {itens.map((item) => (
-                <li key={item.id} className="p-4 flex gap-3">
+                <li key={item.cartId || item.id} className="p-4 flex gap-3">
                   <img
                     src={item.imagem}
                     alt={item.nome}
                     className="w-14 h-14 rounded object-cover flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="text-zinc-100 text-sm font-medium truncate">{item.nome}</p>
+                    <p className="text-zinc-100 text-sm font-medium truncate">
+                      {item.nome} {item.opcaoEscolhida && <span className="text-zinc-400 font-normal">({item.opcaoEscolhida})</span>}
+                    </p>
                     <p className="text-sand-400 text-sm font-bold mt-0.5">
-                      R$ {(item.preco * item.quantidade).toFixed(2).replace(".", ",")}
+                      R$ {((item.precoPromocional || item.preco) * item.quantidade).toFixed(2).replace(".", ",")}
                     </p>
 
                     {/* Campo de personalização */}
@@ -105,7 +106,7 @@ export default function SidebarCarrinho() {
                         onChange={(e) =>
                           dispatch({
                             type: "ATUALIZAR_PERSONALIZACAO",
-                            id: item.id,
+                            cartId: item.cartId || item.id,
                             texto: e.target.value,
                           })
                         }
@@ -117,7 +118,7 @@ export default function SidebarCarrinho() {
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={() =>
-                          dispatch({ type: "ALTERAR_QUANTIDADE", id: item.id, quantidade: item.quantidade - 1 })
+                          dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade - 1 })
                         }
                         className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
                       >
@@ -126,14 +127,14 @@ export default function SidebarCarrinho() {
                       <span className="text-zinc-100 text-sm w-5 text-center">{item.quantidade}</span>
                       <button
                         onClick={() =>
-                          dispatch({ type: "ALTERAR_QUANTIDADE", id: item.id, quantidade: item.quantidade + 1 })
+                          dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade + 1 })
                         }
                         className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
                       >
                         <Plus size={12} />
                       </button>
                       <button
-                        onClick={() => dispatch({ type: "REMOVER", id: item.id })}
+                        onClick={() => dispatch({ type: "REMOVER", cartId: item.cartId || item.id })}
                         className="ml-auto p-1 text-zinc-600 hover:text-red-400 transition-colors"
                         aria-label="Remover item"
                       >

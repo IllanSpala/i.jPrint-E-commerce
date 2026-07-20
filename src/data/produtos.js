@@ -48,6 +48,7 @@ export const produtos = [
     id: 6,
     nome: "Tony Montana - Scarface",
     preco: 99.90,
+    precoPromocional: 79.90,
     imagem: "/produtos/HOTTOY_TONY.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
@@ -96,6 +97,11 @@ export const produtos = [
     imagem: "/produtos/FIDGET_OVO_SENSORIAL.png",
     categoria: "Sensoriais",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Sortido", esgotado: false },
+      { nome: "Tricolor", esgotado: false },
+      { nome: "Dourado", esgotado: false }
+    ],
     descricao: "Ovo de dragão fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil. Aproximadamente 150g",
   },
   {
@@ -105,6 +111,11 @@ export const produtos = [
     imagem: "/produtos/FIDGET_ESTRELA_SENSORIAL.png",
     categoria: "Sensoriais",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Sortido", esgotado: false },
+      { nome: "Tricolor", esgotado: false },
+      { nome: "Dourado", esgotado: false }
+    ],
     descricao: "Estrela 10 pontas fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil.",
   },
   {
@@ -124,7 +135,128 @@ export const produtos = [
     categoria: "Kits",
     exigePersonalizacao: false,
     descricao: "Kit Fallout contendo: \n Action Figure do Vault Boy de aproximadamente 13cm pintado a mão \n 4 POrta-copos \n 1 Hueforge (20x20)",
+  },
+  {
+    id: 15,
+    nome: "Estatueta Worms-TD Granada Santa",
+    preco: 109.90,
+    imagem: "/produtos/WORMS_GRANADA_SANTA.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Estatueta de Minhoca com Granada Santa, do jogo Worms. Impresso em PLA Premium, aproximadamente 20cm"
+  },
+  {
+    id: 16,
+    nome: "Porta Escova de Dentes Gatinho",
+    preco: 34.90,
+    imagem: "/produtos/PORTA_ESCOVA_GATINHOS.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Branco", esgotado: false },
+      { nome: "Preto", esgotado: false }
+    ],
+    descricao: "Porta Escova de Dentes Gatinho, impresso em PLA Premium"
+  },
+  {
+    id: 17,
+    nome: "Mario-Elvis",
+    preco: 79.90,
+    imagem: "/produtos/MARIO_ELVIS.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Hot-Toys Mario-Elvis, impresso em PLA Premium, aproximadamente 13cm"
+  },
+  {
+    id: 18,
+    nome: "Edward Mãos de Tesoura",
+    preco: 99.90,
+    precoPromocional: 79.90,
+    imagem: "/produtos/EDWARD.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Edward Mãos de Tesoura (Hot-Toys), impresso em PLA Premium, aproximadamente 18cm"
+  },
+  {
+    id: 20,
+    nome: "Porta-Lapís Hogwarts",
+    preco: 34.90,
+    imagem: "/produtos/PORTA_LAPIS_HOGWARTS.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Porta Lapís do castelo de Hogwarts, da franquia HarryPotter, impresso em PLA Premium"
+  },
+  {
+    id: 21,
+    nome: "Action Figure Monkey D. Luffy",
+    preco: 73.90,
+    imagem: "/produtos/FIGURE_LUFFY.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Action Figure Luffy, One Piece, impresso em PLA Premium Cinza e pintado a mão após, cerca de 15cm"
+  },
+  {
+    id: 22,
+    nome: "Action Figure Vault-Boy",
+    preco: 73.90,
+    imagem: "/produtos/FIGURE_VAULT_BOY.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Action FIgure Vault Boy, de Fallout, impresso em PLA Cinza e pintado a mão após, cerca de 15cm"
+  },
+  {
+    id: 23,
+    nome: "Action Figure Smeagol (Gollum)",
+    preco: 109.90,
+    imagem: "/produtos/FIGURE_SMEAGOL.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Action Figure Smeagol, do Senhor dos Anéis, impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 24,
+    nome: "Pokemon Chibi",
+    preco: 109.90,
+    imagem: "/produtos/CHIBI_PIKACHU.png",
+    imagens: [
+      "/produtos/CHIBI_PIKACHU.png",
+      "/produtos/CHIBI_MEW.png",
+      "/produtos/CHIBI_FROAKIE.png",
+      "/produtos/CHIBI_FLAREON.png",
+      "/produtos/CHIBI_JOLTEON.png",
+      "/produtos/CHIBI_UMBREON.png",
+    ],
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Pikachu", esgotado: false, imagem: "/produtos/CHIBI_PIKACHU.png" },
+      { nome: "Mew", esgotado: false, imagem: "/produtos/CHIBI_MEW.png" },
+      { nome: "Froakie", esgotado: false, imagem: "/produtos/CHIBI_FROAKIE.png" },
+      { nome: "Flareon", esgotado: false, imagem: "/produtos/CHIBI_FLAREON.png" },
+      { nome: "Joelton", esgotado: false, imagem: "/produtos/CHIBI_JOLTEON.png" },
+      { nome: "Umbreon", esgotado: false, imagem: "/produtos/CHIBI_UMBREON.png" },
+    ],
+    descricao: "Miniaturas Chibi de Pokémon impressos em PLA Premium. Escolha o seu favorito! Aproximadamente 15cm"
+  },
+  {
+    id: 25,
+    nome: "Pomni - Amazing Digital Circus",
+    preco: 139.90,
+    imagem: "/produtos/POMNI.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Pomni do desenho The Amazing Digital Circus, impresso em PLA Premium, aproximadamente 15cm e acompanha base"
+  },
+  {
+    id: 26,
+    nome: "Busto Malenia - Elden Ring",
+    preco: 239.90,
+    imagem: "/produtos/BUSTO_MALENIA.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Busto de Malenia do jogo Elden Ring, impresso em PLA Premium e pintado a mão, aproximadamente 20cm"
   }
+
 ];
 
 // ─── COMO ADICIONAR UM NOVO PRODUTO ───────────────────────────────────────
@@ -145,6 +277,7 @@ export const produtos = [
 
 export const categorias = [
   "Todos",
+  ...(produtos.some(p => p.precoPromocional) ? ["Promoção"] : []),
   "Casa e Decoração",
   "Hot Toys",
   "Kits",

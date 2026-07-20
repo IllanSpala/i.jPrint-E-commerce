@@ -27,13 +27,23 @@ export default function Home() {
   }
 
   const filtrados = produtos.filter((p) => {
-    const passaCategoria = categoriaAtiva === "Todos" || p.categoria === categoriaAtiva;
+    const passaCategoria = categoriaAtiva === "Todos" 
+      ? true 
+      : (categoriaAtiva === "Promoção" ? p.precoPromocional : p.categoria === categoriaAtiva);
     const passaBusca =
       termoBusca.trim() === "" ||
       p.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
       p.descricao.toLowerCase().includes(termoBusca.toLowerCase()) ||
       p.categoria.toLowerCase().includes(termoBusca.toLowerCase());
     return passaCategoria && passaBusca;
+  });
+
+  const filtradosOrdenados = [...filtrados].sort((a, b) => {
+    if (categoriaAtiva === "Todos") {
+      if (a.precoPromocional && !b.precoPromocional) return -1;
+      if (!a.precoPromocional && b.precoPromocional) return 1;
+    }
+    return 0;
   });
 
   return (
@@ -127,7 +137,7 @@ export default function Home() {
 
       {/* Grid de produtos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtrados.map((produto) => (
+        {filtradosOrdenados.map((produto) => (
           <CardProduto key={produto.id} produto={produto} />
         ))}
       </div>

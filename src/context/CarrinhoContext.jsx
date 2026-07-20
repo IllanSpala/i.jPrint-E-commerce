@@ -5,29 +5,30 @@ const CarrinhoContext = createContext(null);
 function carrinhoReducer(state, action) {
   switch (action.type) {
     case "ADICIONAR": {
-      const existente = state.find((i) => i.id === action.item.id);
+      // Find based on id and opcaoEscolhida
+      const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida);
       if (existente) {
         return state.map((i) =>
-          i.id === action.item.id
+          (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida)
             ? { ...i, quantidade: i.quantidade + 1 }
             : i
         );
       }
-      return [...state, { ...action.item, quantidade: 1 }];
+      return [...state, { ...action.item, quantidade: 1, cartId: action.item.cartId || `${action.item.id}-${action.item.opcaoEscolhida || 'default'}-${Date.now()}` }];
     }
     case "REMOVER":
-      return state.filter((i) => i.id !== action.id);
+      return state.filter((i) => (i.cartId || i.id) !== action.cartId);
     case "ALTERAR_QUANTIDADE": {
-      if (action.quantidade <= 0) return state.filter((i) => i.id !== action.id);
+      if (action.quantidade <= 0) return state.filter((i) => (i.cartId || i.id) !== action.cartId);
       return state.map((i) =>
-        i.id === action.id ? { ...i, quantidade: action.quantidade } : i
+        (i.cartId || i.id) === action.cartId ? { ...i, quantidade: action.quantidade } : i
       );
     }
     case "LIMPAR":
       return [];
     case "ATUALIZAR_PERSONALIZACAO":
       return state.map((i) =>
-        i.id === action.id ? { ...i, personalizacao: action.texto } : i
+        (i.cartId || i.id) === action.cartId ? { ...i, personalizacao: action.texto } : i
       );
     default:
       return state;
@@ -72,14 +73,16 @@ export function CarrinhoProvider({ children }) {
   }
 
   const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0);
-  const totalPreco = itens.reduce((acc, i) => acc + i.preco * i.quantidade, 0);
+  const totalPreco = itens.reduce((acc, i) => acc + (i.precoPromocional || i.preco) * i.quantidade, 0);
 
   function gerarLinkWhatsApp() {
     const numero = "5528999202470"; // uatizap
 
     const linhasItens = itens
       .map((item, idx) => {
-        const base = `${item.quantidade}x ${item.nome} - R$ ${(item.preco * item.quantidade).toFixed(2).replace(".", ",")}`;
+        const nomeFinal = item.opcaoEscolhida ? `${item.nome} (${item.opcaoEscolhida})` : item.nome;
+        const precoItem = item.precoPromocional || item.preco;
+        const base = `${item.quantidade}x ${nomeFinal} - R$ ${(precoItem * item.quantidade).toFixed(2).replace(".", ",")}`;
         if (item.exigePersonalizacao && item.personalizacao) {
           return `${idx + 1}. ${base}\n   Detalhes: ${item.personalizacao}`;
         }
