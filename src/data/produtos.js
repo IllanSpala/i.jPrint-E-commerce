@@ -472,7 +472,7 @@ export const produtos = [
         ]
       }
     ],
-    descricao: "Figures diversas da Hello Kitty, impressas em PLA Premium e disponíveis para pintura, aproximadamente 15cm"
+    descricao: "Figures diversas da Hello Kitty, impressas em PLA Premium e disponíveis para pintura, aproximadamente 15cm (ACOMPANHA UMA FIGURE DA SUA ESCOLHA, PINTADA OU NÃO)"
   }
 
 
