@@ -129,10 +129,10 @@ export const produtos = [
   },
   {
     id: 14,
-    nome: "Kit Fallout - Funcionário Vault-tec",
+    nome: "Coleção Fallout - Funcionário Vault-tec",
     preco: 139.90,
     imagem: "/produtos/KIT_FALLOUT.png",
-    categoria: "Kits",
+    categoria: "Coleções",
     exigePersonalizacao: false,
     descricao: "Kit Fallout contendo: \n Action Figure do Vault Boy de aproximadamente 13cm pintado a mão \n 4 POrta-copos \n 1 Hueforge (20x20)",
   },
@@ -404,7 +404,7 @@ export const produtos = [
       "/produtos/KITTY_STITCH.png",
       "/produtos/KITTY_KNIGHT.png"
     ],
-    categoria: "Hot Toys",
+    categoria: "Coleções",
     exigePersonalizacao: false,
     opcoes: [
       {
@@ -498,8 +498,8 @@ export const categorias = [
   "Todos",
   ...(produtos.some(p => p.precoPromocional) ? ["Promoção"] : []),
   "Casa e Decoração",
+  "Coleções",
   "Hot Toys",
-  "Kits",
   "Personalizados",
   "Sensoriais",
 ];

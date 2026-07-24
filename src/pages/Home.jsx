@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, MoreVertical } from "lucide-react";
 import { produtos, categorias } from "../data/produtos";
 import CardProduto from "../components/CardProduto";
 
@@ -7,6 +7,7 @@ export default function Home() {
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [termoBusca, setTermoBusca] = useState("");
+  const [menuCategoriasAberto, setMenuCategoriasAberto] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -50,7 +51,7 @@ export default function Home() {
     <main className="pt-24 pb-16 px-4 max-w-7xl mx-auto">
 
       {/* Hero */}
-      <section className="text-center py-12 mb-12 relative">
+      <section className="text-center py-6 mb-6 md:py-12 md:mb-12 relative">
         <h1 className="font-display text-5xl md:text-7xl text-white tracking-tight leading-[1.15] uppercase">
           Forjado em{" "}
           <span className="text-sand-400">três dimensões</span>
@@ -61,10 +62,19 @@ export default function Home() {
       </section>
 
       {/* Filtros + Busca */}
-      <div className="flex items-center gap-3 mb-8 flex-wrap">
+      <div className="flex items-center gap-3 mb-8 flex-wrap justify-between md:justify-start">
 
-        {/* Tags de categoria */}
-        <div className="flex flex-wrap gap-2 flex-1">
+        {/* Ícone 3 pontinhos (Mobile) */}
+        <button 
+          onClick={() => setMenuCategoriasAberto(true)}
+          className="md:hidden p-2 text-zinc-400 hover:text-white transition-colors flex items-center justify-center rounded-full bg-zinc-800/50 border border-zinc-700/50"
+          aria-label="Menu de categorias"
+        >
+          <MoreVertical size={16} />
+        </button>
+
+        {/* Tags de categoria (Desktop) */}
+        <div className="hidden md:flex flex-wrap gap-2 flex-1">
           {categorias.map((cat) => (
             <button
               key={cat}
@@ -147,6 +157,43 @@ export default function Home() {
           {termoBusca ? `Nenhum produto encontrado para "${termoBusca}".` : "Nenhum produto nesta categoria."}
         </p>
       )}
+
+      {/* Menu Lateral Mobile de Categorias */}
+      <div 
+        className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${menuCategoriasAberto ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setMenuCategoriasAberto(false)}
+      />
+      <div 
+        className={`fixed top-0 left-0 h-full w-72 bg-zinc-950 border-r border-zinc-800 p-6 z-50 transition-transform duration-300 ease-in-out md:hidden flex flex-col ${menuCategoriasAberto ? 'translate-x-0' : '-translate-x-full'}`}
+      >
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-sand-400 font-bold uppercase tracking-wider text-sm">Categorias</h2>
+          <button 
+            onClick={() => setMenuCategoriasAberto(false)} 
+            className="text-zinc-500 hover:text-white p-2 rounded-full hover:bg-zinc-800 transition-colors"
+          >
+            <X size={18} />
+          </button>
+        </div>
+        <div className="flex flex-col gap-3 overflow-y-auto pb-6">
+          {categorias.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => { 
+                setCategoriaAtiva(cat); 
+                setMenuCategoriasAberto(false); 
+              }}
+              className={`text-left px-4 py-3 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all duration-200 ${
+                categoriaAtiva === cat
+                  ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_15px_rgba(255,255,255,0.1)]"
+                  : "bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 hover:bg-zinc-800"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+      </div>
     </main>
   );
 }
