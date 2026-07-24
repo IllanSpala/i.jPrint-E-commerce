@@ -130,7 +130,7 @@ export const produtos = [
   {
     id: 14,
     nome: "Kit Fallout - Funcionário Vault-tec",
-    preco: 119.90,
+    preco: 139.90,
     imagem: "/produtos/KIT_FALLOUT.png",
     categoria: "Kits",
     exigePersonalizacao: false,
@@ -139,7 +139,7 @@ export const produtos = [
   {
     id: 15,
     nome: "Estatueta Worms-TD Granada Santa",
-    preco: 109.90,
+    preco: 149.90,
     imagem: "/produtos/WORMS_GRANADA_SANTA.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
@@ -189,36 +189,49 @@ export const produtos = [
   {
     id: 21,
     nome: "Action Figure Monkey D. Luffy",
-    preco: 73.90,
+    preco: 44.90,
     imagem: "/produtos/FIGURE_LUFFY.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 109.90 }
+    ],
     descricao: "Action Figure Luffy, One Piece, impresso em PLA Premium Cinza e pintado a mão após, cerca de 15cm"
   },
   {
     id: 22,
     nome: "Action Figure Vault-Boy",
-    preco: 73.90,
+    preco: 44.90,
     imagem: "/produtos/FIGURE_VAULT_BOY.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 83.90 }
+    ],
     descricao: "Action FIgure Vault Boy, de Fallout, impresso em PLA Cinza e pintado a mão após, cerca de 15cm"
   },
   {
     id: 23,
     nome: "Action Figure Smeagol (Gollum)",
-    preco: 109.90,
+    preco: 44.90,
     imagem: "/produtos/FIGURE_SMEAGOL.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 109.90 }
+    ],
     descricao: "Action Figure Smeagol, do Senhor dos Anéis, impresso em PLA Premium, aproximadamente 15cm"
   },
   {
     id: 24,
     nome: "Pokemon Chibi",
     preco: 109.90,
-    imagem: "/produtos/CHIBI_PIKACHU.png",
+    imagem: "/produtos/CHIBI_POKEMON.png",
     imagens: [
+      "/produtos/CHIBI_POKEMON.png",
       "/produtos/CHIBI_PIKACHU.png",
       "/produtos/CHIBI_MEW.png",
       "/produtos/CHIBI_FROAKIE.png",
@@ -250,12 +263,218 @@ export const produtos = [
   {
     id: 26,
     nome: "Busto Malenia - Elden Ring",
-    preco: 239.90,
+    preco: 159.90,
     imagem: "/produtos/BUSTO_MALENIA.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 159.90 },
+      { nome: "Pintado", esgotado: false, preco: 239.90 }
+    ],
     descricao: "Busto de Malenia do jogo Elden Ring, impresso em PLA Premium e pintado a mão, aproximadamente 20cm"
+  },
+  {
+    id: 27,
+    nome: "Presilhas de Cabelo",
+    preco: 34.90,
+    imagem: "/produtos/CLIP_CABELO.png",
+    imagens: [
+      "/produtos/CLIP_CABELO.png",
+      "/produtos/CLIP_ENROLADOS.png",
+      "/produtos/CLIP_FROZEN.png",
+      "/produtos/CLIP_CORVO.png",
+      "/produtos/CLIP_KUBONE.png",
+      "/produtos/CLIP_DRAGAO.png",
+      "/produtos/CLIP_TREX.png",
+      "/produtos/CLIP_CAVEIRAO.png",
+      "/produtos/CLIP_GENSHIN.png"
+    ],
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    opcoes:
+      [
+        { nome: "Enrolados", esgotado: false, imagem: "/produtos/CLIP_ENROLADOS.png" },
+        { nome: "Frozen", esgotado: false, imagem: "/produtos/CLIP_FROZEN.png" },
+        { nome: "Corvo", esgotado: false, imagem: "/produtos/CLIP_CORVO.png" },
+        { nome: "Kubone", esgotado: false, imagem: "/produtos/CLIP_KUBONE.png" },
+        { nome: "Dragao", esgotado: false, imagem: "/produtos/CLIP_DRAGAO.png" },
+        { nome: "T-Rex", esgotado: false, imagem: "/produtos/CLIP_TREX.png" },
+        { nome: "Caveirao", esgotado: false, imagem: "/produtos/CLIP_CAVEIRAO.png" },
+        { nome: "Genshin", esgotado: false, imagem: "/produtos/CLIP_GENSHIN.png" }
+      ],
+    descricao: "Presilha/Grampos de cabelo impressas em PLA, aceitamos referencias."
+  },
+  {
+    id: 28,
+    nome: "Chapeleiro Maluco - Figure",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_CHAPELEIRO.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 119.90 }
+    ],
+    descricao: "Chapeleiro Maluco, da franquia Alice no Pais das Maravilhas, impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 29,
+    nome: "Talismã Pote Companheiro - Elden ring",
+    preco: 14.90,
+    imagem: "/produtos/TALISMÃ_ELDEN.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Talismã Pote Companheiro, do jogo Elden Ring, impresso em PLA Premium, ideal para usar como chaveiro, colar ou pingente, aproximadamente 5cm"
+  },
+  {
+    id: 30,
+    nome: "Smough, O executor - Dark Souls",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_SMOUGH.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Smough, O executor, do jogo Dark Souls, impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 31,
+    nome: "Figure Makima - Chainsaw Man",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_MAKIMA.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 109.90 }
+    ],
+    descricao: "Figure Makima, do mangá Chainsaw Man, impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 32,
+    nome: "The Division Bell - Pink Floyd",
+    preco: 73.90,
+    imagem: "/produtos/DIVISION_PINK.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 73.90 },
+      { nome: "Pintado", esgotado: false, preco: 159.90 },
+    ],
+    descricao: "Escultura The Division Bell, album do Pink Floyd impressa em PLA, aproximadamente 20cm"
+  },
+  {
+    id: 33,
+    nome: "Android 18 - Dragon Ball",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_ANDROID18.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Action Figure Android 18, de DragonBall, impressa em PLA premium, aproximadamente 16cm"
+  },
+  {
+    id: 34,
+    nome: "Kuromi - Hello Kitty",
+    preco: 49.90,
+    imagem: "/produtos/FIGURE_KUROMI.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 49.90 },
+      { nome: "Pintado", esgotado: false, preco: 119.90 }
+    ],
+    descricao: "Figure Kuromi, do universo Hello Kitty, impresso em PLA Premium, aproximadamente 15cm"
+  },
+
+  {
+    id: 35,
+    nome: "Coleção Hello Kitty",
+    preco: 49.90,
+    imagem: "/produtos/COLECAO_KITTY.png",
+    imagens: [
+      "/produtos/COLECAO_KITTY.png",
+      "/produtos/KITTY_MOON.png",
+      "/produtos/KITTY_NEVE.png",
+      "/produtos/KITTY_DIABINHA.png",
+      "/produtos/KITTY_COWGIRL.png",
+      "/produtos/KITTY_PIRATA.png",
+      "/produtos/KITTY_CRAB.png",
+      "/produtos/KITTY_STITCH.png",
+      "/produtos/KITTY_KNIGHT.png"
+    ],
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      {
+        nome: "SAILOR MOON",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_MOON.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_MOON.png" }
+        ]
+      },
+      {
+        nome: "BRANCA DE NEVE",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_NEVE.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_NEVE.png" }
+        ]
+      },
+      {
+        nome: "DIABINHA",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_DIABINHA.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_DIABINHA.png" }
+        ]
+      },
+      {
+        nome: "COWGIRL",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_COWGIRL.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_COWGIRL.png" }
+        ]
+      },
+      {
+        nome: "PIRATA",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_PIRATA.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_PIRATA.png" }
+        ]
+      },
+      {
+        nome: "CARANGUEJO",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_CRAB.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_CRAB.png" }
+        ]
+      },
+      {
+        nome: "STITCH",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_STITCH.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_STITCH.png" }
+        ]
+      },
+      {
+        nome: "HOLLOW KNIGHT",
+        esgotado: false,
+        variacoes: [
+          { nome: "Não Pintado", preco: 49.90, esgotado: false, imagem: "/produtos/KITTY_KNIGHT.png" },
+          { nome: "Pintado", preco: 119.90, esgotado: false, imagem: "/produtos/KITTY_KNIGHT.png" }
+        ]
+      }
+    ],
+    descricao: "Figures diversas da Hello Kitty, impressas em PLA Premium e disponíveis para pintura, aproximadamente 15cm"
   }
+
 
 ];
 
