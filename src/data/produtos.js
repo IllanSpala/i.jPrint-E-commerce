@@ -2,7 +2,7 @@ export const produtos = [
   {
     id: 1,
     nome: "Pophead Personalizado",
-    preco: 89.90,
+    preco: 109.90,
     imagem: "/produtos/MINIATURA.png",
     categoria: "Personalizados",
     exigePersonalizacao: true,
@@ -11,7 +11,7 @@ export const produtos = [
   {
     id: 2,
     nome: "Pophead Casal",
-    preco: 159.90,
+    preco: 199.90,
     imagem: "/produtos/MINIATURA_CASAL.png",
     categoria: "Personalizados",
     exigePersonalizacao: true,
@@ -20,7 +20,7 @@ export const produtos = [
   {
     id: 3,
     nome: "Pophead Família",
-    preco: 229.90,
+    preco: 249.90,
     imagem: "/produtos/MINIATURA_FAMILIA.png",
     categoria: "Personalizados",
     exigePersonalizacao: true,
@@ -29,7 +29,7 @@ export const produtos = [
   {
     id: 4,
     nome: "Pophead Operadores RainbowSixSiege",
-    preco: 89.90,
+    preco: 109.90,
     imagem: "/produtos/MINIATURA_R6.png",
     categoria: "Personalizados",
     exigePersonalizacao: true,
@@ -38,7 +38,7 @@ export const produtos = [
   {
     id: 5,
     nome: "Miniatura Personalizada Temática",
-    preco: 119.90,
+    preco: 149.90,
     imagem: "/produtos/MINIATURA_TEMATICA.png",
     categoria: "Personalizados",
     exigePersonalizacao: true,
@@ -121,7 +121,7 @@ export const produtos = [
   {
     id: 13,
     nome: "Estatua Gandalf - Senhor dos anéis (16cm)",
-    preco: 179.90,
+    preco: 169.90,
     imagem: "/produtos/ESTATUA_GANDALF.png",
     categoria: "Casa e Decoração",
     exigePersonalizacao: false,
