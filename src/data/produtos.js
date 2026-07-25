@@ -473,6 +473,84 @@ export const produtos = [
       }
     ],
     descricao: "Figures diversas da Hello Kitty, impressas em PLA Premium e disponíveis para pintura, aproximadamente 15cm (ACOMPANHA UMA FIGURE DA SUA ESCOLHA, PINTADA OU NÃO)"
+  },
+  {
+    id: 36,
+    nome: "Figure Lemmy Kilmister - Motorhead",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_LEMMY.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Figure Lemmy Kilmister, vocalista e baixista do Motorhead, impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 37,
+    nome: "Figure Joey Jordison - Slipknot",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_JOEY.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Figure Joey Jordison, baterista do Slipknot, impresso em PLA Premium, aproximadamente 15cm"
+  },
+
+  {
+    id: 38,
+    nome: "Figure Alice Cooper",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_COOPER.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Figure Alice Cooper, impresso em PLA Premium, aproximadamente 15cm"
+  },
+
+
+  {
+    id: 39,
+    nome: "Figure A freira (The Nun)",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_FREIRA.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Figure A freira (The Nun), impresso em PLA Premium, aproximadamente 15cm"
+  },
+
+  {
+    id: 40,
+    nome: "Figure A outra mãe (Coraline)",
+    preco: 44.90,
+    imagem: "/produtos/FIGURE_CORAMAE.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    opcoes: [
+      { nome: "Não Pintado", esgotado: false, preco: 44.90 },
+      { nome: "Pintado", esgotado: false, preco: 103.90 }
+    ],
+    descricao: "Figure A outra mãe (Coraline), impresso em PLA Premium, aproximadamente 15cm"
+  },
+  {
+    id: 41,
+    nome: "Tux",
+    preco: 79.90,
+    imagem: "/produtos/TUX.png",
+    categoria: "Hot Toys",
+    exigePersonalizacao: false,
+    descricao: "Tux, o mascote do Linux, impresso em PLA Premium, aproximadamente 20cm (foto atual sem pintura, boneco vem pintado)"
   }
 
 
