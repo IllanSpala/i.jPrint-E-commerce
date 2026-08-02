@@ -239,7 +239,7 @@ export const produtos = [
       "/produtos/CHIBI_JOLTEON.png",
       "/produtos/CHIBI_UMBREON.png",
     ],
-    categoria: "Hot Toys",
+    categoria: "Coleções",
     exigePersonalizacao: false,
     opcoes: [
       { nome: "Pikachu", esgotado: false, imagem: "/produtos/CHIBI_PIKACHU.png" },
@@ -546,13 +546,62 @@ export const produtos = [
   {
     id: 41,
     nome: "Tux",
-    preco: 79.90,
+    preco: 39.90,
     imagem: "/produtos/TUX.png",
     categoria: "Hot Toys",
     exigePersonalizacao: false,
     descricao: "Tux, o mascote do Linux, impresso em PLA Premium, aproximadamente 20cm (foto atual sem pintura, boneco vem pintado)"
-  }
+  },
+ 
+ {
+   id: 42,
+   nome:"Busto Marmorizado - Karl Marx",
+   preco: 41.90,
+   imagem: "/produtos/BUSTO_MARX.png",
+   categoria: "Casa e Decoração",
+   exigePersonalizacao: false,
+   descricao: "Busto Marmorizado de Karl Marx, Impresso em PLA STONE MARMORE, medindo aproximadamente 15cm de altura"
+ },
 
+ {
+   id: 43,
+   nome:"Busto Marmorizado - Lenin",
+   preco: 41.90,
+   imagem: "/produtos/BUSTO_LENIN.png",
+   categoria: "Casa e Decoração",
+   exigePersonalizacao: false,
+   descricao: "Busto Marmorizado de Vladmir Ilyich Ulyanov (LENIN), Impresso em PLA STONE MARMORE, aproximadamente 15cm de altura"
+ },
+
+ {
+   id: 44,
+   nome:"Busto Marmorizado - Stalin",
+   preco: 41.90,
+   imagem: "/produtos/BUSTO_STALIN.png",
+   categoria: "Casa e Decoração",
+   exigePersonalizacao: false,
+   descricao: "Busto Marmorizado de Joseph Stalin, Impresso em PLA STONE MARMORE, aproximadamente 15cm de altura"
+ },
+
+ {
+   id: 45,
+   nome:"Busto Marmorizado - Ozzy Osbourne",
+   preco: 41.90,
+   imagem: "/produtos/BUSTO_OZZY.png",
+   categoria: "Casa e Decoração",
+   exigePersonalizacao: false,
+   descricao: "Busto Marmorizado do Ozzy Osbourne, Impresso em PLA STONE MARMORE, aproximadamente 15cm de altura"
+ },
+
+ {
+   id: 46,
+   nome:"Busto Marmorizado - Dimebag Darrel",
+   preco: 41.90,
+   imagem: "/produtos/BUSTO_DIMEBAG.png",
+   categoria: "Casa e Decoração",
+   exigePersonalizacao: false,
+   descricao: "Busto Marmorizado do Dimebag Darrel, Impresso em PLA STONE MARMORE, aproximadamente 15cm de altura"
+ }
 
 ];
 
