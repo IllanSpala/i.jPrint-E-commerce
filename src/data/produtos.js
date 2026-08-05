@@ -601,8 +601,120 @@ export const produtos = [
    categoria: "Casa e Decoração",
    exigePersonalizacao: false,
    descricao: "Busto Marmorizado do Dimebag Darrel, Impresso em PLA STONE MARMORE, aproximadamente 15cm de altura"
- }
-
+ },
+ {
+  id: 47,
+  nome:"Chibi Chococat - Sanrio",
+  preco: 109.90,
+  imagem: "/produtos/CHIBI_CHOCOCAT.png",
+  categoria: "Hot Toys",
+  exigePersonalizacao: false,
+  descricao: "Chibi Chococat - Sanrio, impresso em PLA Premium, aproximadamente 15cm"
+ },
+ {
+  id: 48,
+  nome: "Figure Patolino - Looney Tunes",
+  preco: 119.90,
+  imagem: "/produtos/FIGURE_PATOLINO.png",
+  categoria: "Hot Toys",
+  exigePersonalizacao: false,
+  descricao: "Figure Patolino - Looney Tunes, impresso em PLA Premium, aproximadamente 15cm"
+ },
+ {
+  id:49,
+  nome:"Figure Skye - Patrulha Canina",
+  preco: 144.90,
+  imagem: "/produtos/FIGURE_SKYE.png",
+  categoria: "Hot Toys",
+  exigePersonalizacao: false,
+  descricao: "Figure Skye - Patrulha Canina, impresso em PLA Premium, aproximadamente 16cm"
+ },
+ {
+  id:50,
+  nome:'Figure Angel - Lilo & Stitch',
+  preco: 144.90,
+  imagem: "/produtos/FIGURE_ANGEL.png",
+  categoria: "Hot Toys",
+  exigePersonalizacao: false,
+  descricao: "Figure Angel - Lilo & Stitch, impresso em PLA Premium, aproximadamente 16cm"
+ },
+ {
+  id:51,
+  nome:"Figure Shaun - O carneiro",
+  preco: 104.90,
+  imagem: "/produtos/FIGURE_SHAUN.png",
+  categoria: "Hot Toys",
+  exigePersonalizacao: false,
+  descricao: "Figure Shaun - O carneiro, impresso em PLA Premium, aproximadamente 16cm"
+ },
+ {
+  id:52,
+  nome:"Rolling Trays Variados",
+  preco: 43.90,
+  imagem: "/produtos/RT_MIMIC.png",
+  imagens: [
+    "/produtos/RT_MISTERSHAKE.png",
+    "/produtos/RT_BATATA_FRITA.png",
+    "/produtos/RT_MEATBALL.png",
+    "/produtos/RT_STEWIE.png",
+    "/produtos/RT_MIMIC.png",
+    "/produtos/RT_JIGLIPUF.png",
+    "/produtos/RT_MEW.png",
+    "/produtos/RT_GENGAR.png",
+    "/produtos/RT_BUBASSAUR.png",
+    "/produtos/RT_CHARMANDER.png",
+    "/produtos/RT_FINN.png",
+    "/produtos/RT_YOSHI.png",
+    "/produtos/RT_DIABIN.png",
+    "/produtos/RT_TOTORO.png",
+  ],
+  categoria: "Casa e Decoração",
+  exigePersonalizacao: false,
+  opcoes: [
+    { nome: "Master Shake", esgotado: false, imagem: "/produtos/RT_MISTERSHAKE.png" },
+    { nome: "FryLock", esgotado: false, imagem: "/produtos/RT_BATATA_FRITA.png" },
+    { nome: "Meatwad", esgotado: false, imagem: "/produtos/RT_MEATBALL.png" },
+    { nome: "Stewie", esgotado: false, imagem: "/produtos/RT_STEWIE.png" },
+    { nome: "Mimikyu", esgotado: false, imagem: "/produtos/RT_MIMIC.png" },
+    { nome: "jiglypuff", esgotado: false, imagem: "/produtos/RT_JIGLIPUF.png" },
+    { nome: "Mew", esgotado: false, imagem: "/produtos/RT_MEW.png" },
+    { nome: "Gengar", esgotado: false, imagem: "/produtos/RT_GENGAR.png" },
+    { nome: "bulbasauro", esgotado: false, imagem: "/produtos/RT_BUBASSAUR.png" },
+    { nome: "Charmander", esgotado: false, imagem: "/produtos/RT_CHARMANDER.png" },
+    { nome: "Finn", esgotado: false, imagem: "/produtos/RT_FINN.png" },
+    { nome: "Yoshi", esgotado: false, imagem: "/produtos/RT_YOSHI.png" },
+    { nome: "Diabinho", esgotado: false, imagem: "/produtos/RT_DIABIN.png" },
+    { nome: "Totoro", esgotado: false, imagem: "/produtos/RT_TOTORO.png" }
+  ],
+  descricao: "Rolling Trays variados, peça seu personalizado inbox. impressos em PLA Premium, aproximadamente 200×130×20 mm"
+  },
+  {
+    id:53,
+    nome:"Cinzeiro Barad-dûr - Senhor dos Anéis",
+    preco: 63.90,
+    imagem: "/produtos/CINZEIRO_BARAD-DUR.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Cinzeiro Barad-dûr, do Senhor dos Anéis, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas."
+  },
+  {
+    id:54,
+    nome:"Cinzeiro Hello Kitty",
+    preco: 41.90,
+    imagem: "/produtos/CINZEIRO_HELLO_KITTY.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Cinzeiro Hello Kitty, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas."
+  },
+  {
+    id:55,
+    nome:"Cuia POkemon - Ditto",
+    preco: 39.90,
+    imagem: "/produtos/CUIA_DITTO.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Cuia Ditto, impressa em PLA Premium, aproximadamente"
+  }
 ];
 
 // ─── COMO ADICIONAR UM NOVO PRODUTO ───────────────────────────────────────
