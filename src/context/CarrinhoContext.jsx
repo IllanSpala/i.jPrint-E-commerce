@@ -36,7 +36,6 @@ function carrinhoReducer(state, action) {
 }
 
 const STORAGE_KEY_CARRINHO = "ijprint_carrinho";
-const STORAGE_KEY_CLIENTE = "ijprint_cliente";
 
 export function CarrinhoProvider({ children }) {
   const [itens, dispatch] = useReducer(
@@ -52,25 +51,11 @@ export function CarrinhoProvider({ children }) {
     }
   );
 
-  const [cliente, setClienteState] = useState(() => {
-    try {
-      const salvo = localStorage.getItem(STORAGE_KEY_CLIENTE);
-      return salvo ? JSON.parse(salvo) : { nome: "", endereco: "" };
-    } catch {
-      return { nome: "", endereco: "" };
-    }
-  });
-
   const [sidebarAberta, setSidebarAberta] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_CARRINHO, JSON.stringify(itens));
   }, [itens]);
-
-  function setCliente(dados) {
-    setClienteState(dados);
-    localStorage.setItem(STORAGE_KEY_CLIENTE, JSON.stringify(dados));
-  }
 
   const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0);
   const totalPreco = itens.reduce((acc, i) => acc + (i.precoPromocional || i.preco) * i.quantidade, 0);
@@ -99,9 +84,7 @@ export function CarrinhoProvider({ children }) {
       : "";
 
     const mensagem =
-      `Pedido I.J Print\n` +
-      `Cliente: ${cliente.nome}\n` +
-      `Endereço: ${cliente.endereco}\n\n` +
+      `Pedido I.J Print\n\n` +
       `Itens:\n${linhasItens}\n\n` +
       `Total: R$ ${totalPreco.toFixed(2).replace(".", ",")}` +
       avisoPersonalizacao;
@@ -114,8 +97,6 @@ export function CarrinhoProvider({ children }) {
       value={{
         itens,
         dispatch,
-        cliente,
-        setCliente,
         totalItens,
         totalPreco,
         sidebarAberta,

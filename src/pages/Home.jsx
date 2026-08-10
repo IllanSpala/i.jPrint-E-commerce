@@ -1,14 +1,42 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, X, MoreVertical } from "lucide-react";
-import { produtos, categorias } from "../data/produtos";
+import { supabase } from "../lib/supabase";
 import CardProduto from "../components/CardProduto";
 
 export default function Home() {
+  const [produtos, setProdutos] = useState([]);
+  const [categorias, setCategorias] = useState(["Todos"]);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
+  const [ordenacao, setOrdenacao] = useState("Padrao");
   const [buscaAberta, setBuscaAberta] = useState(false);
   const [termoBusca, setTermoBusca] = useState("");
   const [menuCategoriasAberto, setMenuCategoriasAberto] = useState(false);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    async function carregarProdutos() {
+      const { data } = await supabase.from('produtos').select('*').order('id');
+      if (data) {
+        const camelData = data.map(p => ({
+          ...p,
+          precoPromocional: p.preco_promocional,
+          exigePersonalizacao: p.exige_personalizacao
+        }));
+        setProdutos(camelData);
+        
+        const catSet = new Set(camelData.map(p => p.categoria));
+        const temPromo = camelData.some(p => p.precoPromocional);
+        const catArray = ["Todos", ...Array.from(catSet).sort()];
+        if (temPromo) catArray.splice(1, 0, "Promoção");
+        
+        setCategorias(catArray);
+      }
+      setIsLoading(false);
+    }
+    carregarProdutos();
+  }, []);
 
   useEffect(() => {
     if (buscaAberta) inputRef.current?.focus();
@@ -40,6 +68,17 @@ export default function Home() {
   });
 
   const filtradosOrdenados = [...filtrados].sort((a, b) => {
+    if (ordenacao === "MenorMaior") {
+      const precoA = a.precoPromocional || a.preco;
+      const precoB = b.precoPromocional || b.preco;
+      return precoA - precoB;
+    }
+    if (ordenacao === "MaiorMenor") {
+      const precoA = a.precoPromocional || a.preco;
+      const precoB = b.precoPromocional || b.preco;
+      return precoB - precoA;
+    }
+
     if (categoriaAtiva === "Todos") {
       if (a.precoPromocional && !b.precoPromocional) return -1;
       if (!a.precoPromocional && b.precoPromocional) return 1;
@@ -90,8 +129,20 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Ícone de busca + input expansível */}
-        <div className="relative flex items-center">
+        {/* Ordenação + Ícone de busca */}
+        <div className="relative flex items-center gap-2">
+          
+          <select
+            value={ordenacao}
+            onChange={(e) => setOrdenacao(e.target.value)}
+            className="appearance-none bg-transparent text-zinc-400 hover:text-sand-400 text-xs font-bold uppercase tracking-widest text-center cursor-pointer transition-colors outline-none pr-2 focus:outline-none"
+            style={{ textAlignLast: 'center' }}
+          >
+            <option value="Padrao" className="bg-zinc-950 text-zinc-300">ORDEM PADRÃO</option>
+            <option value="MenorMaior" className="bg-zinc-950 text-zinc-300">MENOR PREÇO</option>
+            <option value="MaiorMenor" className="bg-zinc-950 text-zinc-300">MAIOR PREÇO</option>
+          </select>
+
           <div
             className="flex items-center overflow-hidden transition-all duration-300 ease-in-out rounded-full"
             style={{
@@ -147,12 +198,14 @@ export default function Home() {
 
       {/* Grid de produtos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtradosOrdenados.map((produto) => (
+        {isLoading ? (
+          <p className="col-span-full text-center text-zinc-500 py-16">Carregando catálogo...</p>
+        ) : filtradosOrdenados.map((produto) => (
           <CardProduto key={produto.id} produto={produto} />
         ))}
       </div>
 
-      {filtrados.length === 0 && (
+      {!isLoading && filtrados.length === 0 && (
         <p className="text-center text-zinc-500 py-16">
           {termoBusca ? `Nenhum produto encontrado para "${termoBusca}".` : "Nenhum produto nesta categoria."}
         </p>

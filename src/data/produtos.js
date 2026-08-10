@@ -714,7 +714,53 @@ export const produtos = [
     categoria: "Casa e Decoração",
     exigePersonalizacao: false,
     descricao: "Cuia Ditto, impressa em PLA Premium, aproximadamente"
+  },
+  {
+    id:56,
+    nome:"Busto Eddie - Powerslave / Iron Maiden",
+    preco: 339.90,
+    imagem: "/produtos/BUSTO_EDDIE.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Busto Eddie, do álbum Powerslave da banda Iron Maiden, impresso em PLA Cinza Premium e pintado posteriormente, aproximadamente 30cm. Peça suscetível a mudança de cor dada a variação de pintura"
+  },
+  {
+    id:57,
+    nome:"Busto Têmis - Deusa da Justiça",
+    preco: 119.90,
+    imagem: "/produtos/BUSTO_TÊMIS.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Busto Têmis, da deusa da justiça, impresso em PLA Premium, aproximadamente 20cm. Aceitamos tamanhos personalizados, entre em contato inbox para solicitar orçamento."
+  },
+  {
+    id:58,
+    nome:"Busto Vic Rattlehead - Megadeth",
+    preco: 339.90,
+    imagem: "/produtos/BUSTO_VIC.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Busto Vic Rattlehead, mascote da banda Megadeth, impresso em PLA Cinza Premium e pintado posteriormente, aproximadamente 22cm. Peça suscetível a mudança de cor dada a variação de pintura"
+  },
+  {
+    id:59,
+    nome:"Totem Metallica - One",
+    preco: 219.90,
+    imagem: "/produtos/TOTEM_ONE.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Totem Metallica - One, impresso em PLA Premium, aproximadamente 20cm. Aceitamos tamanhos personalizados, entre em contato inbox para solicitar orçamento. Peça suscetível a mudança de cor dada a variação de pintura"
+  },
+  {
+    id:60,
+    nome:"Totem DeadByDaylight",
+    preco: 459.90,
+    imagem: "/produtos/TOTEM_DBD.png",
+    categoria: "Casa e Decoração",
+    exigePersonalizacao: false,
+    descricao: "Totem DeadByDaylight, impresso em PLA Premium, aproximadamente 30cm. Acompanha BASE. Peça suscetível a mudança de cor dada a variação de pintura"
   }
+  
 ];
 
 // ─── COMO ADICIONAR UM NOVO PRODUTO ───────────────────────────────────────

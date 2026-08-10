@@ -1,7 +1,7 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight } from "lucide-react";
-import { produtos } from "../data/produtos";
+import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell } from "lucide-react";
+import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 
 export default function PaginaProduto() {
@@ -9,21 +9,47 @@ export default function PaginaProduto() {
   const navigate = useNavigate();
   const { dispatch, setSidebarAberta } = useCarrinho();
 
-  const produto = produtos.find((p) => p.id === Number(id));
+  const [produto, setProduto] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [personalizacao, setPersonalizacao] = useState("");
   const [adicionado, setAdicionado] = useState(false);
   const [opcaoSelecionada, setOpcaoSelecionada] = useState("");
   const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
   const [imagemAtual, setImagemAtual] = useState("");
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
 
   useEffect(() => {
+    async function fetchProduto() {
+      const { data } = await supabase.from('produtos').select('*').eq('id', id).single();
+      if (data) {
+        const camelData = {
+          ...data,
+          precoPromocional: data.preco_promocional,
+          exigePersonalizacao: data.exige_personalizacao
+        };
+        setProduto(camelData);
+        setImagemAtual(camelData.imagem);
+      }
+      setIsLoading(false);
+    }
+    fetchProduto();
+    
     setPersonalizacao("");
     setAdicionado(false);
     setOpcaoSelecionada("");
     setVariacaoSelecionada("");
-    if (produto) setImagemAtual(produto.imagem);
-  }, [id, produto]);
+  }, [id]);
 
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-zinc-500">
+        <p>Carregando produto...</p>
+      </div>
+    );
+  }
 
   if (!produto) {
     return (
@@ -78,8 +104,6 @@ export default function PaginaProduto() {
     setImagemAtual(produto.imagens[next]);
   }
 
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
@@ -175,6 +199,17 @@ export default function PaginaProduto() {
           </div>
 
           <p className="text-zinc-400 text-sm leading-relaxed">{produto.descricao}</p>
+
+          <div className="flex items-center gap-6 mt-1 mb-2">
+            <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
+              <Ruler size={16} className="text-sand-400" />
+              <span className="text-xs font-bold tracking-wide">{produto.dimensoes || "150x100x200"} mm</span>
+            </div>
+            <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
+              <Dumbbell size={16} className="text-sand-400" />
+              <span className="text-xs font-bold tracking-wide">{produto.peso_gramas || 300} g</span>
+            </div>
+          </div>
 
           {/* Campo de personalização */}
           {produto.exigePersonalizacao && (
