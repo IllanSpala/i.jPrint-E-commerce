@@ -102,34 +102,27 @@ export default function SidebarCarrinho() {
 
     // ── MODO RETIRADA ──────────────────────────────────────────────────
     if (modoEntrega === 'retirada') {
-      const novoPedido = {
-        user_id: user.id,
-        endereco: { logradouro: 'Quadra da Guararema', numero: 'S/N', bairro: 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
-        itens,
-        total: totalPreco,
-        status: 'Aguardando Pagamento',
-      };
-      const { data: insertedPed, error: pedError } = await supabase.from('pedidos').insert(novoPedido).select().single();
-      if (pedError) { alert("Erro ao criar pedido: " + pedError.message); setLoading(false); return; }
-
       if (import.meta.env.DEV) {
         setSidebarAberta(false);
         setLoading(false);
-        alert(`PEDIDO DE RETIRADA #${insertedPed.id.slice(0, 8).toUpperCase()} criado!\n\n(Modo Dev: Chamada de pagamento ignorada)`);
+        alert(`PEDIDO DE RETIRADA em modo Dev!\n\n(Modo Dev: Chamada de pagamento simulada e pedido seria criado no painel)`);
         return;
       }
 
-
-
       try {
+        const { data: { session } } = await supabase.auth.getSession();
         const siteUrl = window.location.origin;
         const payRes = await fetch('/api/pagamento', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`
+          },
           body: JSON.stringify({
-            pedido_id: insertedPed.id, valor_total: novoPedido.total, frete_valor: 0, itens,
-            redirect_url: `${siteUrl}/pedido-confirmado?pedido_id=${insertedPed.id}`,
-            cliente: { nome: user.user_metadata?.full_name || 'Cliente', email: user.email },
+            endereco: { logradouro: 'Quadra da Guararema', numero: 'S/N', bairro: 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
+            frete_valor: 0, 
+            itens,
+            redirect_base_url: `${siteUrl}/pedido-confirmado`
           }),
         });
         const payData = await payRes.json();
@@ -159,39 +152,28 @@ export default function SidebarCarrinho() {
       return;
     }
 
-    const novoPedido = {
-      user_id: user.id,
-      endereco: enderecoSelecionado,
-      itens,
-      total: totalPreco + (freteSelecionado ? freteSelecionado.preco : 0),
-      status: 'Aguardando Pagamento',
-    };
-
-    const { data: insertedPed, error: pedError } = await supabase.from('pedidos').insert(novoPedido).select().single();
-    if (pedError) { alert("Erro ao criar pedido: " + pedError.message); setLoading(false); return; }
-
     if (import.meta.env.DEV) {
       await new Promise(r => setTimeout(r, 800));
       setSidebarAberta(false);
       setLoading(false);
-      alert(`PEDIDO #${insertedPed.id.slice(0, 8).toUpperCase()} criado!\n\n(Modo Dev: Chamada de pagamento ignorada. Na Vercel, abriria a InfinitePay).`);
+      alert(`PEDIDO de envio em modo Dev!\n\n(Modo Dev: Chamada de pagamento simulada e pedido seria criado no painel).`);
       return;
     }
 
-
-
     try {
+      const { data: { session } } = await supabase.auth.getSession();
       const siteUrl = window.location.origin;
       const payRes = await fetch('/api/pagamento', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`
+        },
         body: JSON.stringify({
-          pedido_id: insertedPed.id,
-          valor_total: novoPedido.total,
+          endereco: enderecoSelecionado,
           frete_valor: freteSelecionado ? freteSelecionado.preco : 0,
           itens,
-          redirect_url: `${siteUrl}/pedido-confirmado?pedido_id=${insertedPed.id}`,
-          cliente: { nome: user.user_metadata?.full_name || "Cliente", email: user.email },
+          redirect_base_url: `${siteUrl}/pedido-confirmado`
         }),
       });
       const payData = await payRes.json();

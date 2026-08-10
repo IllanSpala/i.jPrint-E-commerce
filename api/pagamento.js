@@ -10,7 +10,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { pedido_id, valor_total, frete_valor, itens, cliente, redirect_url } = req.body;
+  const { endereco, frete_valor, itens, redirect_base_url } = req.body;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Acesso negado: Token de autenticação ausente' });
+  }
+  
+  const token = authHeader.split(' ')[1];
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+  if (authError || !user) {
+    return res.status(401).json({ error: 'Acesso negado: Token inválido ou expirado' });
+  }
+
+  const clienteNome = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+  const clienteEmail = user.email;
+
   const handle = process.env.INFINITEPAY_HANDLE;
   const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
   const webhookUrl = `${siteUrl}/api/webhook`;
@@ -60,15 +76,6 @@ export default async function handler(req, res) {
       };
     });
 
-    // 3. Atualizar o valor total do pedido no banco de dados com o valor seguro recalculado
-    let valorTotalSeguro = items_payload.reduce((acc, curr) => acc + ((curr.price / 100) * curr.quantity), 0);
-    if (frete_valor > 0) valorTotalSeguro += frete_valor;
-
-    await supabase
-      .from('pedidos')
-      .update({ total: valorTotalSeguro })
-      .eq('id', pedido_id);
-
     // Se houver frete, adicionamos como um item extra no checkout
     if (frete_valor > 0) {
       items_payload.push({
@@ -78,24 +85,20 @@ export default async function handler(req, res) {
       });
     }
 
-    const siteUrl = 'https://www.ijprint26.com';
-    const webhookUrl = `${siteUrl}/api/webhook`;
+    const pedido_id = crypto.randomUUID();
+    const siteUrl_infinite = 'https://www.ijprint26.com';
+    const webhookUrl_infinite = `${siteUrl_infinite}/api/webhook`;
 
     const body = {
       handle: handle,
       order_nsu: pedido_id.toString(),
-      items: items_payload,
+      redirect_url: `${redirect_base_url}?pedido_id=${pedido_id}`,
+      webhook_url: webhookUrl_infinite,
       customer: {
-        name: cliente.nome,
-        email: cliente.email
+        name: clienteNome,
+        email: clienteEmail
       },
-      metadata: {
-        pedido_id: pedido_id.toString()
-      },
-      // Redireciona o cliente de volta ao site após o pagamento
-      redirect_url: redirect_url || `${siteUrl}/pedido-confirmado?pedido_id=${pedido_id}`,
-      // InfinitePay vai notificar nosso backend quando o pagamento for confirmado
-      webhook_url: webhookUrl
+      items: items_payload
     };
 
     const response = await fetch('https://api.checkout.infinitepay.io/links', {
@@ -107,16 +110,56 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      const errData = await response.text();
-      console.error("Erro InfinitePay:", errData);
-      throw new Error('Falha ao gerar link na InfinitePay');
+      const errText = await response.text();
+      let errMsg = errText;
+      try {
+        const errJson = JSON.parse(errText);
+        errMsg = JSON.stringify(errJson, null, 2);
+      } catch (e) {
+        // Keeps raw text if not JSON
+      }
+      
+      console.error("\n[INFINITEPAY API REJECTED]");
+      console.error("Status:", response.status);
+      console.error("Payload enviado:", JSON.stringify(body, null, 2));
+      console.error("Mensagem exata da recusa:", errMsg);
+      console.error("---------------------------\n");
+      
+      let clientErrorMsg = errMsg;
+      try {
+        const parsed = JSON.parse(errMsg);
+        if (parsed.message) clientErrorMsg = parsed.message;
+        if (parsed.error) clientErrorMsg = parsed.error;
+        if (parsed.details) clientErrorMsg = JSON.stringify(parsed.details);
+      } catch (e) {}
+
+      throw new Error(`InfinitePay 422: ${clientErrorMsg}`);
     }
 
     const data = await response.json();
+    const link_pagamento = data.url || `https://pay.infinitepay.io/${handle}`;
+
+    // 4. Inserir o pedido no banco de dados SOMENTE após sucesso da InfinitePay
+    let valorTotalSeguro = items_payload.reduce((acc, curr) => acc + ((curr.price / 100) * curr.quantity), 0);
     
+    const novoPedido = {
+      id: pedido_id,
+      user_id: user.id,
+      endereco,
+      itens,
+      total: valorTotalSeguro,
+      status: 'Aguardando Pagamento'
+    };
+
+    const { error: insertError } = await supabase.from('pedidos').insert(novoPedido);
+    if (insertError) {
+      console.error("Erro ao salvar pedido no banco após gerar link:", insertError);
+      throw new Error('Erro ao salvar o pedido no sistema.');
+    }
+
     // O link para o cliente pagar fica em data.url
     res.status(200).json({
-      link_pagamento: data.url || `https://pay.infinitepay.io/${handle}`,
+      link_pagamento,
       status: "pending"
     });
   } catch (error) {
