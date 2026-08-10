@@ -31,27 +31,27 @@ export default async function handler(req, res) {
     // Buscar perfil do cliente (se houver) para mandar o e-mail
     let clienteNome = 'Cliente';
     let clienteEmail = null;
-    
+
     if (pedido.usuario_id) {
-       const { data: perfil } = await supabase
-         .from('perfis')
-         .select('nome, email')
-         .eq('id', pedido.usuario_id)
-         .single();
-         
-       if (perfil) {
-          clienteNome = perfil.nome || 'Cliente';
-          clienteEmail = perfil.email;
-       }
+      const { data: perfil } = await supabase
+        .from('perfis')
+        .select('nome, email')
+        .eq('id', pedido.usuario_id)
+        .single();
+
+      if (perfil) {
+        clienteNome = perfil.nome || 'Cliente';
+        clienteEmail = perfil.email;
+      }
     }
 
     // 2. Disparar o e-mail de cancelamento (se configurado e houver e-mail)
     if (process.env.RESEND_API_KEY && clienteEmail) {
       const { Resend } = await import('resend');
       const resend = new Resend(process.env.RESEND_API_KEY);
-      
+
       await resend.emails.send({
-        from: 'I.J Print <vendas@ijprint26.com>', 
+        from: 'I.J Print <vendas@ijprint26.com>',
         to: clienteEmail,
         subject: `Seu Pedido foi Cancelado - I.J Print`,
         html: `
@@ -61,7 +61,7 @@ export default async function handler(req, res) {
             </div>
             <div style="padding: 20px;">
               <p>Olá <strong>${clienteNome}</strong>,</p>
-              <p>Informamos que o seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> foi cancelado pelo nosso sistema.</p>
+              <p>Informamos que o seu pedido <strong>#${String(pedido_id).slice(0, 8).toUpperCase()}</strong> foi cancelado pelo nosso sistema.</p>
               
               <h3 style="color: #ef4444; margin-top: 24px;">Motivo do cancelamento:</h3>
               <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 8px 0; color: #7f1d1d; font-style: italic; border-radius: 0 4px 4px 0;">

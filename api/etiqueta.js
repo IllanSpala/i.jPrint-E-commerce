@@ -77,7 +77,7 @@ export default async function handler(req, res) {
 
     if (!cartRes.ok) throw new Error('Falha ao adicionar ao carrinho do Melhor Envio');
     const cartData = await cartRes.json();
-    
+
     const trackingUrl = `https://melhorenvio.com.br/envios/${cartData.id}`;
 
     // ==========================================
@@ -88,9 +88,9 @@ export default async function handler(req, res) {
         const { Resend } = await import('resend');
         const resend = new Resend(process.env.RESEND_API_KEY);
         const clienteNome = pedido.perfis.nome || 'Cliente';
-        
+
         await resend.emails.send({
-          from: 'I.J Print <vendas@ijprint26.com>', 
+          from: 'I.J Print <vendas@ijprint26.com>',
           to: pedido.perfis.email,
           subject: `Seu pedido está a caminho! 📦 - I.J Print`,
           html: `
@@ -100,7 +100,7 @@ export default async function handler(req, res) {
               </div>
               <div style="padding: 20px;">
                 <p>Olá <strong>${clienteNome}</strong>,</p>
-                <p>Seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
+                <p>Seu pedido <strong>#${String(pedido_id).slice(0, 8).toUpperCase()}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
                 <p>Para acompanhar a entrega, clique no botão abaixo:</p>
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${trackingUrl}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Acompanhar Entrega</a>
