@@ -1,3 +1,10 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+);
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -77,21 +84,33 @@ export default async function handler(req, res) {
 
     if (!cartRes.ok) throw new Error('Falha ao adicionar ao carrinho do Melhor Envio');
     const cartData = await cartRes.json();
-
+    
     const trackingUrl = `https://melhorenvio.com.br/envios/${cartData.id}`;
 
     // ==========================================
     // DISPARO DE E-MAIL: PEDIDO ENVIADO
     // ==========================================
-    if (process.env.RESEND_API_KEY && pedido?.perfis?.email) {
+    // "perfis" não tem coluna "email" (fica na tabela de autenticação), então
+    // o email é buscado via Service Role a partir de pedido.user_id.
+    let clienteEmailEnvio = null;
+    if (process.env.RESEND_API_KEY && pedido?.user_id) {
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(pedido.user_id);
+      if (authError) {
+        console.error('[Melhor Envio] Erro ao buscar email do cliente:', authError);
+      } else {
+        clienteEmailEnvio = authData?.user?.email || null;
+      }
+    }
+
+    if (process.env.RESEND_API_KEY && clienteEmailEnvio) {
       try {
         const { Resend } = await import('resend');
         const resend = new Resend(process.env.RESEND_API_KEY);
-        const clienteNome = pedido.perfis.nome || 'Cliente';
-
+        const clienteNome = pedido.perfis?.nome || 'Cliente';
+        
         await resend.emails.send({
-          from: 'I.J Print <vendas@ijprint26.com>',
-          to: pedido.perfis.email,
+          from: 'I.J Print <vendas@ijprint26.com>', 
+          to: clienteEmailEnvio,
           subject: `Seu pedido está a caminho! 📦 - I.J Print`,
           html: `
             <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
@@ -100,7 +119,7 @@ export default async function handler(req, res) {
               </div>
               <div style="padding: 20px;">
                 <p>Olá <strong>${clienteNome}</strong>,</p>
-                <p>Seu pedido <strong>#${String(pedido_id).slice(0, 8).toUpperCase()}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
+                <p>Seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
                 <p>Para acompanhar a entrega, clique no botão abaixo:</p>
                 <div style="text-align: center; margin: 30px 0;">
                   <a href="${trackingUrl}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Acompanhar Entrega</a>

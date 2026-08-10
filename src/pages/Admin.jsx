@@ -262,6 +262,7 @@ export default function Admin() {
 
   useEffect(() => {
     if (!isAdmin) return;
+
     async function fetchPedidos() {
       const { data, error } = await supabase
         .from('pedidos')
@@ -272,6 +273,37 @@ export default function Admin() {
       setLoading(false);
     }
     fetchPedidos();
+
+    // Realtime: mantém o painel sincronizado com o banco. Sem isso, se o
+    // webhook marcar um pedido como "Pago" enquanto o admin está com a
+    // página aberta, o estado local fica desatualizado e o cronômetro
+    // (que roda em cima desse estado velho) pode acabar apagando uma
+    // venda que já foi paga.
+    const canal = supabase
+      .channel('admin-pedidos')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'pedidos' },
+        (payload) => {
+          setPedidos(prev =>
+            prev.map(p =>
+              p.id === payload.new.id ? { ...p, ...payload.new } : p
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'pedidos' },
+        (payload) => {
+          setPedidos(prev => prev.filter(p => p.id !== payload.old.id));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(canal);
+    };
   }, [isAdmin]);
 
   if (!user) return (
@@ -331,11 +363,41 @@ export default function Admin() {
                       <span className="text-yellow-500/80 text-[10px] font-bold uppercase">
                         <ContagemRegressiva 
                           dataCriacao={pedido.created_at} 
-                          onExpirar={() => {
-                            // Deleta silenciosamente quando expira
-                            supabase.from('pedidos').delete().eq('id', pedido.id).then(() => {
+                          onExpirar={async () => {
+                            // Antes de deletar, confirma no banco se o pedido AINDA está
+                            // "Aguardando Pagamento". O filtro .eq('status', ...) garante
+                            // que, se o webhook já tiver marcado como "Pago" nesse meio
+                            // tempo, o delete simplesmente não afeta nenhuma linha —
+                            // evitando apagar uma venda que já foi paga.
+                            const { data: deletados, error } = await supabase
+                              .from('pedidos')
+                              .delete()
+                              .eq('id', pedido.id)
+                              .eq('status', 'Aguardando Pagamento')
+                              .select('id');
+
+                            if (error) {
+                              console.error('Erro ao expirar pedido:', error);
+                              return;
+                            }
+
+                            if (deletados && deletados.length > 0) {
+                              // Realmente estava pendente e foi removido.
                               setPedidos(prev => prev.filter(p => p.id !== pedido.id));
-                            });
+                            } else {
+                              // Não deletou nada: o status mudou antes do cronômetro
+                              // zerar. Busca o pedido atualizado pra refletir na tela.
+                              const { data: atualizado } = await supabase
+                                .from('pedidos')
+                                .select(`*, perfis ( nome, telefone )`)
+                                .eq('id', pedido.id)
+                                .single();
+                              if (atualizado) {
+                                setPedidos(prev =>
+                                  prev.map(p => (p.id === pedido.id ? atualizado : p))
+                                );
+                              }
+                            }
                           }} 
                         />
                       </span>

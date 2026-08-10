@@ -28,30 +28,39 @@ export default async function handler(req, res) {
       throw new Error(`Pedido não encontrado. Detalhe: ${fetchError ? fetchError.message : 'Sem retorno'}`);
     }
 
-    // Buscar perfil do cliente (se houver) para mandar o e-mail
+    // Buscar perfil do cliente (se houver) para mandar o e-mail.
+    // A tabela "pedidos" grava a coluna como "user_id" (ver api/pagamento.js),
+    // não "usuario_id". E a tabela "perfis" não tem coluna "email" — o email
+    // fica na tabela de autenticação e precisa ser buscado via Service Role.
     let clienteNome = 'Cliente';
     let clienteEmail = null;
 
-    if (pedido.usuario_id) {
-      const { data: perfil } = await supabase
-        .from('perfis')
-        .select('nome, email')
-        .eq('id', pedido.usuario_id)
-        .single();
+    if (pedido.user_id) {
+       const { data: perfil } = await supabase
+         .from('perfis')
+         .select('nome')
+         .eq('id', pedido.user_id)
+         .single();
 
-      if (perfil) {
-        clienteNome = perfil.nome || 'Cliente';
-        clienteEmail = perfil.email;
-      }
+       if (perfil) {
+          clienteNome = perfil.nome || 'Cliente';
+       }
+
+       const { data: authData, error: authError } = await supabase.auth.admin.getUserById(pedido.user_id);
+       if (authError) {
+         console.error('[Cancelar Pedido] Erro ao buscar email do usuário:', authError);
+       } else {
+         clienteEmail = authData?.user?.email || null;
+       }
     }
 
     // 2. Disparar o e-mail de cancelamento (se configurado e houver e-mail)
     if (process.env.RESEND_API_KEY && clienteEmail) {
       const { Resend } = await import('resend');
       const resend = new Resend(process.env.RESEND_API_KEY);
-
+      
       await resend.emails.send({
-        from: 'I.J Print <vendas@ijprint26.com>',
+        from: 'I.J Print <vendas@ijprint26.com>', 
         to: clienteEmail,
         subject: `Seu Pedido foi Cancelado - I.J Print`,
         html: `
@@ -61,7 +70,7 @@ export default async function handler(req, res) {
             </div>
             <div style="padding: 20px;">
               <p>Olá <strong>${clienteNome}</strong>,</p>
-              <p>Informamos que o seu pedido <strong>#${String(pedido_id).slice(0, 8).toUpperCase()}</strong> foi cancelado pelo nosso sistema.</p>
+              <p>Informamos que o seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> foi cancelado pelo nosso sistema.</p>
               
               <h3 style="color: #ef4444; margin-top: 24px;">Motivo do cancelamento:</h3>
               <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 8px 0; color: #7f1d1d; font-style: italic; border-radius: 0 4px 4px 0;">
