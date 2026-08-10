@@ -24,14 +24,18 @@ export const AuthProvider = ({ children }) => {
       if (session?.user) {
         const u = session.user;
         // Usa upsert para criar o perfil se não existir, sem sobrescrever dados existentes
-        await supabase.from('perfis').upsert(
+        // O erro é suprimido silenciosamente pois se o RLS bloquear (ex: conta já tem perfil), não afeta a aplicação
+        supabase.from('perfis').upsert(
           {
             id: u.id,
-            // Nome padrão: parte do email antes do @, ou o full_name do provedor social
             nome: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Cliente',
           },
-          { onConflict: 'id', ignoreDuplicates: true } // Não sobrescreve se já existir
-        );
+          { onConflict: 'id', ignoreDuplicates: true }
+        ).then(({ error }) => {
+          if (error && error.code !== '42501') { // Ignora erro de RLS (403/42501) 
+            console.warn("Aviso ao sincronizar perfil:", error.message);
+          }
+        });
       }
     });
 
