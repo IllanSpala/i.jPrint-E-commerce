@@ -6,6 +6,7 @@ import {
   Package, Truck, CreditCard, ChevronDown, ChevronUp,
   ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2
 } from "lucide-react";
+import ContagemRegressiva from "../components/ContagemRegressiva";
 
 // --------------- Componente de Detalhes de Pagamento ---------------
 function PainelPagamento({ pedido }) {
@@ -317,14 +318,29 @@ export default function Admin() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded border ${
-                    pedido.status === 'Aguardando Pagamento' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
-                    pedido.status === 'Pago' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
-                    pedido.status === 'Enviado' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                    'bg-zinc-800 text-zinc-300 border-zinc-700'
-                  }`}>
-                    {pedido.status}
-                  </span>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded border ${
+                      pedido.status === 'Aguardando Pagamento' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
+                      pedido.status === 'Pago' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                      pedido.status === 'Enviado' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                      'bg-zinc-800 text-zinc-300 border-zinc-700'
+                    }`}>
+                      {pedido.status}
+                    </span>
+                    {pedido.status === 'Aguardando Pagamento' && (
+                      <span className="text-yellow-500/80 text-[10px] font-bold uppercase">
+                        <ContagemRegressiva 
+                          dataCriacao={pedido.created_at} 
+                          onExpirar={() => {
+                            // Deleta silenciosamente quando expira
+                            supabase.from('pedidos').delete().eq('id', pedido.id).then(() => {
+                              setPedidos(prev => prev.filter(p => p.id !== pedido.id));
+                            });
+                          }} 
+                        />
+                      </span>
+                    )}
+                  </div>
                   {expandedId === pedido.id ? <ChevronUp size={20} className="text-zinc-500" /> : <ChevronDown size={20} className="text-zinc-500" />}
                 </div>
               </div>

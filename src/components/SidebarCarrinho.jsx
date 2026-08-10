@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
+import ContagemRegressiva from "./ContagemRegressiva";
 
 export default function SidebarCarrinho() {
   const {
@@ -24,6 +25,20 @@ export default function SidebarCarrinho() {
   const [todosEnderecos, setTodosEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [modoEntrega, setModoEntrega] = useState('envio'); // 'envio' | 'retirada'
+  
+  const [expiraEm, setExpiraEm] = useState(null);
+
+  useEffect(() => {
+    const savedExp = localStorage.getItem('@ijprint:checkout_expires_at');
+    if (savedExp) {
+      if (Date.now() > Number(savedExp)) {
+        localStorage.removeItem('@ijprint:checkout_expires_at');
+        dispatch({ type: "LIMPAR" });
+      } else {
+        setExpiraEm(Number(savedExp) - 15 * 60 * 1000); // Passamos a "data de criação" calculada pra trás pra ContagemRegressiva
+      }
+    }
+  }, [itens]);
 
   // Busca os endereços assim que o carrinho abre
   useEffect(() => {
@@ -127,6 +142,11 @@ export default function SidebarCarrinho() {
         });
         const payData = await payRes.json();
         if (payData.link_pagamento) { 
+          // Salva o contador de 15 minutos
+          const expTime = Date.now() + 15 * 60 * 1000;
+          localStorage.setItem('@ijprint:checkout_expires_at', expTime.toString());
+          setExpiraEm(Date.now()); // Data de criação local
+
           setSidebarAberta(false); 
           setLoading(false); 
           window.location.href = payData.link_pagamento; 
@@ -178,6 +198,11 @@ export default function SidebarCarrinho() {
       });
       const payData = await payRes.json();
       if (payData.link_pagamento) {
+        // Salva o contador de 15 minutos
+        const expTime = Date.now() + 15 * 60 * 1000;
+        localStorage.setItem('@ijprint:checkout_expires_at', expTime.toString());
+        setExpiraEm(Date.now()); // Data de criação local
+        
         setSidebarAberta(false);
         setLoading(false);
         window.location.href = payData.link_pagamento;
@@ -234,6 +259,23 @@ export default function SidebarCarrinho() {
 
         {/* Corpo com scroll */}
         <div className="flex-1 overflow-y-auto">
+          {expiraEm && itens.length > 0 && (
+             <div className="bg-yellow-500/10 border-b border-yellow-500/20 p-3 text-center">
+               <p className="text-yellow-500 text-xs font-bold uppercase tracking-wider mb-1">Pagamento Pendente</p>
+               <p className="text-yellow-400/80 text-[11px]">
+                 Seu carrinho será esvaziado automaticamente.<br/>
+                 <ContagemRegressiva 
+                    dataCriacao={expiraEm} 
+                    onExpirar={() => {
+                      localStorage.removeItem('@ijprint:checkout_expires_at');
+                      setExpiraEm(null);
+                      dispatch({ type: "LIMPAR" });
+                    }} 
+                 />
+               </p>
+             </div>
+          )}
+
           {itens.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-500 px-6 text-center">
               <ShoppingBag size={40} strokeWidth={1} />
