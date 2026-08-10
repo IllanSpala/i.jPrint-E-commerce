@@ -14,16 +14,22 @@ export default async function handler(req, res) {
     const evento = req.body;
     console.log('[Webhook InfinitePay] Evento recebido:', JSON.stringify(evento));
 
-    // A InfinitePay envia o status do pagamento e o order_nsu (que é o nosso pedido_id)
-    const status = evento?.charge?.status || evento?.status;
+    // A InfinitePay envia o order_nsu (nosso pedido_id) e transaction_nsu quando aprova.
+    // Para links de pagamento, ela NÃO envia um campo "status", apenas dispara o webhook
+    // quando a transação é aprovada e capturada com sucesso.
     const pedidoId = evento?.charge?.order_nsu || evento?.order_nsu;
+    const transactionId = evento?.transaction_nsu || evento?.charge?.transaction_nsu;
+    
+    // Fallback: se houver status, avalia, senão, se houver transaction_nsu, assume sucesso.
+    const status = evento?.charge?.status || evento?.status;
+    const isApproved = status === 'approved' || status === 'paid' || status === 'captured' || (!status && transactionId);
 
     if (!pedidoId) {
       console.log('[Webhook] order_nsu não encontrado no payload');
       return res.status(200).json({ received: true });
     }
 
-    if (status === 'approved' || status === 'paid' || status === 'captured') {
+    if (isApproved) {
       const { data: pedidoAtualizado, error } = await supabase
         .from('pedidos')
         .update({ status: 'Pago' })
@@ -33,7 +39,7 @@ export default async function handler(req, res) {
 
       if (error) {
         console.error('[Webhook] Erro ao atualizar pedido:', error);
-        return res.status(500).json({ error: 'Erro ao atualizar pedido' });
+        return res.status(500).json({ error: 'Erro ao atualizar pedido no banco (Verifique a Service Role Key no Vercel)' });
       }
 
       console.log(`[Webhook] Pedido ${pedidoId} marcado como PAGO`);
@@ -91,7 +97,7 @@ export default async function handler(req, res) {
         }
       }
     } else {
-      console.log(`[Webhook] Status recebido: ${status}. Sem ação necessária.`);
+      console.log(`[Webhook] Payload não classificado como aprovado. Status: ${status}, Transação: ${transactionId}. Sem ação necessária.`);
     }
 
     // Sempre responde 200 para a InfinitePay não ficar reenviando
