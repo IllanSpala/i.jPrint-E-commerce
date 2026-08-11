@@ -1,4 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  enviarEmailCliente,
+  enviarEmailAdmin,
+  emailClienteCompraFeita,
+  emailAdminVendaFeita,
+} from './_lib/mailer.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -155,6 +161,34 @@ export default async function handler(req, res) {
     if (insertError) {
       console.error("Erro ao salvar pedido no banco após gerar link:", insertError);
       throw new Error('Erro ao salvar o pedido no sistema.');
+    }
+
+    // ==========================================
+    // DISPARO DE E-MAILS: "Compra feita" (cliente) e "Venda feita" (admin)
+    // Não deve bloquear a resposta ao cliente caso o Resend falhe.
+    // ==========================================
+    try {
+      await Promise.all([
+        enviarEmailCliente({
+          to: clienteEmail,
+          ...emailClienteCompraFeita({
+            clienteNome,
+            pedidoId: pedido_id,
+            valor: valorTotalSeguro,
+            linkPagamento: link_pagamento,
+          }),
+        }),
+        enviarEmailAdmin(
+          emailAdminVendaFeita({
+            clienteNome,
+            clienteEmail,
+            pedidoId: pedido_id,
+            valor: valorTotalSeguro,
+          })
+        ),
+      ]);
+    } catch (emailError) {
+      console.error('[Pagamento] Erro ao enviar e-mails de novo pedido:', emailError);
     }
 
     // O link para o cliente pagar fica em data.url

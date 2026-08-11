@@ -31,7 +31,7 @@ export default function PaginaSucesso() {
         .eq('id', pedidoId)
         .single();
 
-      if (pedido?.status === 'Pago' || pedido?.status === 'Enviado' || pedido?.status === 'Concluído') {
+      if (pedido?.status === 'Pago' || pedido?.status === 'Em Produção' || pedido?.status === 'Enviado' || pedido?.status === 'Concluído') {
         // Pagamento confirmado! Agora sim, limpa o carrinho
         dispatch({ type: 'LIMPAR' });
         localStorage.removeItem('pedido_pendente_id');

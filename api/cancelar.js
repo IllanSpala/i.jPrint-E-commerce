@@ -1,4 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  enviarEmailCliente,
+  enviarEmailAdmin,
+  emailClientePedidoCancelado,
+  emailAdminCompraCancelada,
+} from './_lib/mailer.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -54,36 +60,21 @@ export default async function handler(req, res) {
        }
     }
 
-    // 2. Disparar o e-mail de cancelamento (se configurado e houver e-mail)
-    if (process.env.RESEND_API_KEY && clienteEmail) {
-      const { Resend } = await import('resend');
-      const resend = new Resend(process.env.RESEND_API_KEY);
-      
-      await resend.emails.send({
-        from: 'I.J Print <vendas@ijprint26.com>', 
-        to: clienteEmail,
-        subject: `Seu Pedido foi Cancelado - I.J Print`,
-        html: `
-          <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
-            <div style="background-color: #ef4444; padding: 20px; text-align: center;">
-              <h1 style="color: #fff; margin: 0;">Pedido Cancelado</h1>
-            </div>
-            <div style="padding: 20px;">
-              <p>Olá <strong>${clienteNome}</strong>,</p>
-              <p>Informamos que o seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> foi cancelado pelo nosso sistema.</p>
-              
-              <h3 style="color: #ef4444; margin-top: 24px;">Motivo do cancelamento:</h3>
-              <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 8px 0; color: #7f1d1d; font-style: italic; border-radius: 0 4px 4px 0;">
-                ${motivo || 'Motivo não especificado. Entre em contato para mais detalhes.'}
-              </div>
-              
-              <p style="margin-top: 24px;">Se você já havia realizado o pagamento via Pix ou Cartão, nossa equipe entrará em contato para realizar o estorno ou você pode nos chamar respondendo este e-mail.</p>
-              <br/>
-              <p>Atenciosamente,<br/><strong>Equipe I.J Print</strong></p>
-            </div>
-          </div>
-        `
-      });
+    // 2. Disparar os e-mails de cancelamento: cliente (se tiver email) e admin (sempre)
+    try {
+      await Promise.all([
+        clienteEmail
+          ? enviarEmailCliente({
+              to: clienteEmail,
+              ...emailClientePedidoCancelado({ clienteNome, pedidoId: pedido_id, motivo }),
+            })
+          : Promise.resolve(),
+        enviarEmailAdmin(
+          emailAdminCompraCancelada({ clienteNome, clienteEmail, pedidoId: pedido_id, motivo })
+        ),
+      ]);
+    } catch (emailError) {
+      console.error('[Cancelar Pedido] Erro ao enviar e-mails:', emailError);
     }
 
     // 3. Deletar o pedido do banco de dados permanentemente (conforme fluxo atual do Admin)

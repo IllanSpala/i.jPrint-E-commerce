@@ -10,7 +10,7 @@ import ContagemRegressiva from "../components/ContagemRegressiva";
 
 // --------------- Componente de Detalhes de Pagamento ---------------
 function PainelPagamento({ pedido }) {
-  const pago = pedido.status === 'Pago' || pedido.status === 'Enviado' || pedido.status === 'Concluído';
+  const pago = pedido.status === 'Pago' || pedido.status === 'Em Produção' || pedido.status === 'Enviado' || pedido.status === 'Concluído';
   const aguardando = pedido.status === 'Aguardando Pagamento';
 
   // Gera e baixa uma "nota fiscal" / comprovante em formato de texto HTML imprimível
@@ -148,6 +148,46 @@ function PainelPagamento({ pedido }) {
         Baixar Comprovante (PDF/HTML)
       </button>
     </div>
+  );
+}
+
+// --------------- Botão Marcar Em Produção ---------------
+function BotaoEmProducao({ pedido, onAtualizado }) {
+  const [status, setStatus] = useState('idle'); // idle | loading | error
+
+  if (pedido.status !== 'Pago') return null;
+
+  async function marcarEmProducao() {
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedido_id: pedido.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao atualizar status');
+      onAtualizado(data.pedido);
+    } catch (e) {
+      console.error(e);
+      setStatus('error');
+      alert('Erro ao marcar como Em Produção: ' + e.message);
+      return;
+    }
+    setStatus('idle');
+  }
+
+  return (
+    <button
+      onClick={marcarEmProducao}
+      disabled={status === 'loading'}
+      className="w-full flex items-center justify-center gap-2 py-3 bg-purple-500/10 hover:bg-purple-500/20 disabled:opacity-50 border border-purple-500/20 text-purple-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
+    >
+      {status === 'loading'
+        ? <><RefreshCw size={15} className="animate-spin" /> Atualizando...</>
+        : <>Marcar como Em Produção</>
+      }
+    </button>
   );
 }
 
@@ -354,6 +394,7 @@ export default function Admin() {
                     <span className={`px-2.5 py-1 text-xs font-bold uppercase tracking-wider rounded border ${
                       pedido.status === 'Aguardando Pagamento' ? 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' :
                       pedido.status === 'Pago' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
+                      pedido.status === 'Em Produção' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
                       pedido.status === 'Enviado' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
                       'bg-zinc-800 text-zinc-300 border-zinc-700'
                     }`}>
@@ -453,6 +494,16 @@ export default function Admin() {
 
                     {/* Detalhes de Pagamento */}
                     <PainelPagamento pedido={pedido} />
+
+                    {/* Botão Em Produção (só aparece quando status === 'Pago') */}
+                    <BotaoEmProducao
+                      pedido={pedido}
+                      onAtualizado={(atualizado) => {
+                        setPedidos(prev =>
+                          prev.map(p => (p.id === atualizado.id ? { ...p, ...atualizado } : p))
+                        );
+                      }}
+                    />
 
                     {/* Botão Etiqueta */}
                     <BotaoEtiqueta pedido={pedido} />

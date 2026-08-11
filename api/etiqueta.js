@@ -1,4 +1,9 @@
 import { createClient } from '@supabase/supabase-js';
+import {
+  enviarEmailCliente,
+  buscarEmailCliente,
+  emailClientePedidoEnviado,
+} from './_lib/mailer.js';
 
 const supabase = createClient(
   process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -92,47 +97,21 @@ export default async function handler(req, res) {
     // ==========================================
     // "perfis" não tem coluna "email" (fica na tabela de autenticação), então
     // o email é buscado via Service Role a partir de pedido.user_id.
-    let clienteEmailEnvio = null;
-    if (process.env.RESEND_API_KEY && pedido?.user_id) {
-      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(pedido.user_id);
-      if (authError) {
-        console.error('[Melhor Envio] Erro ao buscar email do cliente:', authError);
-      } else {
-        clienteEmailEnvio = authData?.user?.email || null;
-      }
-    }
+    try {
+      const clienteEmailEnvio = pedido?.user_id
+        ? await buscarEmailCliente(supabase, pedido.user_id)
+        : null;
 
-    if (process.env.RESEND_API_KEY && clienteEmailEnvio) {
-      try {
-        const { Resend } = await import('resend');
-        const resend = new Resend(process.env.RESEND_API_KEY);
+      if (clienteEmailEnvio) {
         const clienteNome = pedido.perfis?.nome || 'Cliente';
-        
-        await resend.emails.send({
-          from: 'I.J Print <vendas@ijprint26.com>', 
+        await enviarEmailCliente({
           to: clienteEmailEnvio,
-          subject: `Seu pedido está a caminho! 📦 - I.J Print`,
-          html: `
-            <div style="font-family: sans-serif; color: #111; max-width: 600px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
-              <div style="background-color: #c8a46e; padding: 20px; text-align: center;">
-                <h1 style="color: #fff; margin: 0;">Pedido Enviado!</h1>
-              </div>
-              <div style="padding: 20px;">
-                <p>Olá <strong>${clienteNome}</strong>,</p>
-                <p>Seu pedido <strong>#${String(pedido_id).slice(0,8).toUpperCase()}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
-                <p>Para acompanhar a entrega, clique no botão abaixo:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                  <a href="${trackingUrl}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Acompanhar Entrega</a>
-                </div>
-                <p>Muito obrigado pela sua compra!</p>
-              </div>
-            </div>
-          `
+          ...emailClientePedidoEnviado({ clienteNome, pedidoId: pedido_id, trackingUrl }),
         });
         console.log('[Melhor Envio] E-mail de envio disparado com sucesso.');
-      } catch (err) {
-        console.error('[Melhor Envio] Erro ao enviar e-mail de rastreio:', err);
       }
+    } catch (err) {
+      console.error('[Melhor Envio] Erro ao enviar e-mail de rastreio:', err);
     }
 
     res.status(200).json({
