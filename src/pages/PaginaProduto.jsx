@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
+import { produtos as produtosLocais } from "../data/produtos";
 
 export default function PaginaProduto() {
   const { id } = useParams();
@@ -31,6 +32,12 @@ export default function PaginaProduto() {
         };
         setProduto(camelData);
         setImagemAtual(camelData.imagem);
+      } else {
+        const localProd = produtosLocais.find(p => String(p.id) === String(id));
+        if (localProd) {
+          setProduto(localProd);
+          setImagemAtual(localProd.imagem);
+        }
       }
       setIsLoading(false);
     }

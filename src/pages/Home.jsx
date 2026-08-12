@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, X, MoreVertical } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import CardProduto from "../components/CardProduto";
+import { produtos as produtosLocais } from "../data/produtos";
 
 export default function Home() {
   const [produtos, setProdutos] = useState([]);
@@ -18,21 +19,24 @@ export default function Home() {
   useEffect(() => {
     async function carregarProdutos() {
       const { data } = await supabase.from('produtos').select('*').order('id');
-      if (data) {
-        const camelData = data.map(p => ({
-          ...p,
-          precoPromocional: p.preco_promocional,
-          exigePersonalizacao: p.exige_personalizacao
-        }));
-        setProdutos(camelData);
-        
-        const catSet = new Set(camelData.map(p => p.categoria));
-        const temPromo = camelData.some(p => p.precoPromocional);
-        const catArray = ["Todos", ...Array.from(catSet).sort()];
-        if (temPromo) catArray.splice(1, 0, "Promoção");
-        
-        setCategorias(catArray);
-      }
+      const dbProducts = data ? data.map(p => ({
+        ...p,
+        precoPromocional: p.preco_promocional,
+        exigePersonalizacao: p.exige_personalizacao
+      })) : [];
+
+      const dbIds = new Set(dbProducts.map(p => p.id));
+      const novosLocais = produtosLocais.filter(p => !dbIds.has(p.id));
+      const todosProdutos = [...dbProducts, ...novosLocais].sort((a, b) => a.id - b.id);
+
+      setProdutos(todosProdutos);
+
+      const catSet = new Set(todosProdutos.map(p => p.categoria));
+      const temPromo = todosProdutos.some(p => p.precoPromocional);
+      const catArray = ["Todos", ...Array.from(catSet).sort()];
+      if (temPromo) catArray.splice(1, 0, "Promoção");
+
+      setCategorias(catArray);
       setIsLoading(false);
     }
     carregarProdutos();
