@@ -1,30 +1,45 @@
 import { useState, useEffect } from "react";
-import { Cookie, X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Cookie, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { iniciarAnalytics } from "../lib/analytics";
 
 const STORAGE_KEY = "@ijprint:cookie_consent";
+const CONSENT_VERSION = "2"; // Mude este número para forçar o banner aparecer novamente
 
 export default function CookieBanner() {
   const [visivel, setVisivel] = useState(false);
   const [detalhesAbertos, setDetalhesAbertos] = useState(false);
 
   useEffect(() => {
-    const consentimento = localStorage.getItem(STORAGE_KEY);
-    if (!consentimento) {
-      // Pequeno delay para não aparecer imediatamente junto com a página
-      const timer = setTimeout(() => setVisivel(true), 1500);
+    try {
+      const salvo = localStorage.getItem(STORAGE_KEY);
+      if (!salvo) {
+        // Nunca respondeu — mostra o banner
+        const timer = setTimeout(() => setVisivel(true), 1200);
+        return () => clearTimeout(timer);
+      }
+      const parsed = JSON.parse(salvo);
+      // Se a versão do consentimento mudou, pede novamente
+      if (parsed.version !== CONSENT_VERSION) {
+        localStorage.removeItem(STORAGE_KEY);
+        const timer = setTimeout(() => setVisivel(true), 1200);
+        return () => clearTimeout(timer);
+      }
+      // Já respondeu nesta versão — carrega analytics se aceitou
+      if (parsed.aceito) iniciarAnalytics();
+    } catch {
+      const timer = setTimeout(() => setVisivel(true), 1200);
       return () => clearTimeout(timer);
     }
   }, []);
 
   function aceitar() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aceito: true, data: new Date().toISOString() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aceito: true, version: CONSENT_VERSION, data: new Date().toISOString() }));
     iniciarAnalytics();
     setVisivel(false);
   }
 
   function recusar() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aceito: false, data: new Date().toISOString() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ aceito: false, version: CONSENT_VERSION, data: new Date().toISOString() }));
     setVisivel(false);
   }
 

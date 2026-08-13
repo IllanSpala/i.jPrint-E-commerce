@@ -29,15 +29,18 @@ export default function SidebarCarrinho() {
   const [modalAvisoAberto, setModalAvisoAberto] = useState(false);
   
   const [expiraEm, setExpiraEm] = useState(null);
+  const estaNoCheckout = window.location.href.includes('infinitepay') || 
+                         window.location.href.includes('checkout') ||
+                         window.location.href.includes('pagamento');
 
   useEffect(() => {
     const savedExp = localStorage.getItem('@ijprint:checkout_expires_at');
     if (savedExp) {
-      if (Date.now() > Number(savedExp)) {
+      if (Date.now() > Number(savedExp) && !estaNoCheckout) {
         localStorage.removeItem('@ijprint:checkout_expires_at');
         dispatch({ type: "LIMPAR" });
       } else {
-        setExpiraEm(Number(savedExp) - 15 * 60 * 1000); // Passamos a "data de criação" calculada pra trás pra ContagemRegressiva
+        setExpiraEm(Number(savedExp) - 15 * 60 * 1000);
       }
     }
   }, [itens]);

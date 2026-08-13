@@ -1,6 +1,4 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useEffect } from "react";
-import { verificarConsentimentoSalvo } from "./lib/analytics";
 import { CarrinhoProvider } from "./context/CarrinhoContext";
 import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
@@ -15,10 +13,6 @@ import Admin from "./pages/Admin";
 import PaginaSucesso from "./pages/PaginaSucesso";
 
 export default function App() {
-  useEffect(() => {
-    verificarConsentimentoSalvo();
-  }, []);
-
   return (
     <BrowserRouter>
       <AuthProvider>
