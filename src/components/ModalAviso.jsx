@@ -16,7 +16,7 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
           onClick={(e) => e.stopPropagation()}
         >
           {/* Faixa superior decorativa */}
-          <div className="h-1 w-full bg-gradient-to-r from-yellow-500 via-amber-400 to-yellow-500" />
+          <div className="h-1 w-full bg-gradient-to-r from-sand-500 via-sand-400 to-sand-500" />
 
           {/* Botão fechar */}
           <button
@@ -31,11 +31,11 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
           <div className="p-6 pt-5">
             {/* Ícone + Título */}
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-11 h-11 rounded-full bg-yellow-500/15 border border-yellow-500/30 flex items-center justify-center">
-                <AlertTriangle size={22} className="text-yellow-400" />
+              <div className="flex-shrink-0 w-11 h-11 rounded-full bg-sand-400/15 border border-sand-400/30 flex items-center justify-center">
+                <AlertTriangle size={22} className="text-sand-400" />
               </div>
               <div>
-                <p className="text-xs text-yellow-400/80 font-semibold uppercase tracking-widest mb-0.5">
+                <p className="text-xs text-sand-400/80 font-semibold uppercase tracking-widest mb-0.5">
                   Atenção antes de prosseguir
                 </p>
                 <h2 className="text-zinc-100 font-bold text-base leading-tight">
@@ -50,7 +50,7 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
             {/* Itens do aviso */}
             <ul className="space-y-3 mb-5">
               <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <span className="flex-shrink-0 text-yellow-400 mt-0.5">🖌️</span>
+                <span className="flex-shrink-0 text-sand-400 mt-0.5">🖌️</span>
                 <span>
                   Todas as nossas peças passam por um{" "}
                   <strong className="text-zinc-100">trabalho manual de pintura e acabamento</strong>.
@@ -60,7 +60,7 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
                 </span>
               </li>
               <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <span className="flex-shrink-0 text-yellow-400 mt-0.5">📦</span>
+                <span className="flex-shrink-0 text-sand-400 mt-0.5">📦</span>
                 <span>
                   O prazo mínimo de produção é de{" "}
                   <strong className="text-zinc-100">20 dias corridos</strong> a partir da
@@ -69,7 +69,7 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
                 </span>
               </li>
               <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <span className="flex-shrink-0 text-yellow-400 mt-0.5">✉️</span>
+                <span className="flex-shrink-0 text-sand-400 mt-0.5">✉️</span>
                 <span>
                   Em caso de dúvidas, entre em contato pelo WhatsApp antes de finalizar
                   a compra.
@@ -81,7 +81,7 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
             <div className="flex flex-col gap-2">
               <button
                 onClick={onConfirmar}
-                className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-zinc-950 font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-sand-400 hover:bg-sand-300 text-zinc-950 font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 Estou ciente — Finalizar Pedido ✓
               </button>

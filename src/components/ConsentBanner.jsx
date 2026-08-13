@@ -63,7 +63,7 @@ export default function ConsentBanner() {
             </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-zinc-100 font-bold text-sm">
-                Usamos cookies para melhorar sua experiência 🍪
+                Usamos cookies para melhorar sua experiência
               </h3>
               <p className="text-zinc-400 text-xs mt-1 leading-relaxed">
                 Utilizamos cookies essenciais para o funcionamento da loja (carrinho, login e preferências).
@@ -87,13 +87,13 @@ export default function ConsentBanner() {
             {detalhesAbertos && (
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <div className="p-3 bg-zinc-800/60 border border-zinc-700/60 rounded-xl">
-                  <p className="text-zinc-200 text-xs font-semibold mb-1">🔒 Essenciais (sempre ativos)</p>
+                  <p className="text-zinc-200 text-xs font-semibold mb-1">Essenciais (sempre ativos)</p>
                   <p className="text-zinc-500 text-[11px] leading-relaxed">
                     Login, sessão, carrinho de compras. Necessários para o funcionamento da loja.
                   </p>
                 </div>
                 <div className="p-3 bg-zinc-800/60 border border-zinc-700/60 rounded-xl">
-                  <p className="text-zinc-200 text-xs font-semibold mb-1">📊 Analíticos (opcional)</p>
+                  <p className="text-zinc-200 text-xs font-semibold mb-1">Analíticos (opcional)</p>
                   <p className="text-zinc-500 text-[11px] leading-relaxed">
                     Nos ajudam a entender quais páginas são mais visitadas para melhorar o site.
                   </p>
