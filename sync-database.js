@@ -48,13 +48,7 @@ async function sync() {
   let count = 0;
   let errors = 0;
 
-  // Busca os produtos atuais para não sobrescrever pesos e dimensões
-  const { data: dbProdutos, error: fetchError } = await supabase.from('produtos').select('id, peso_gramas, dimensoes');
-  const produtosNoBanco = dbProdutos || [];
-
   for (const p of produtos) {
-    const dbP = produtosNoBanco.find(banco => banco.id === p.id);
-    
     const { error } = await supabase.from('produtos').upsert({
       id: p.id,
       nome: p.nome,
@@ -66,9 +60,8 @@ async function sync() {
       categoria: p.categoria,
       exige_personalizacao: p.exigePersonalizacao || false,
       descricao: p.descricao,
-      // Se já existe no banco, mantém o peso de lá; senão, usa 300g
-      peso_gramas: dbP ? dbP.peso_gramas : 300,
-      dimensoes: dbP ? dbP.dimensoes : '150x100x200'
+      peso_gramas: p.peso_gramas || 300,
+      dimensoes: p.dimensoes || '15x10x20'
     });
 
     if (error) {
