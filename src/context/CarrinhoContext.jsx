@@ -1,4 +1,5 @@
-import { createContext, useContext, useReducer, useEffect, useState } from "react";
+import { createContext, useContext, useReducer, useEffect, useState, useCallback } from "react";
+import { useAuth } from "./AuthContext";
 
 const CarrinhoContext = createContext(null);
 
@@ -53,9 +54,26 @@ export function CarrinhoProvider({ children }) {
 
   const [sidebarAberta, setSidebarAberta] = useState(false);
 
+  const { user } = useAuth();
+
+  // Persiste no localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_CARRINHO, JSON.stringify(itens));
   }, [itens]);
+
+  // Sincroniza com Supabase se o usuário estiver logado
+  // Debounced: aguarda 2s após última mudança para não sobrecarregar a API
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
+      fetch('/api/carrinho-abandonado', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: user.id, itens }),
+      }).catch((err) => console.warn('[CarrinhoSync] Falha ao salvar no backend:', err));
+    }, 2000); // 2s de debounce
+    return () => clearTimeout(timer);
+  }, [itens, user]);
 
   const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0);
   const totalPreco = itens.reduce((acc, i) => acc + (i.precoPromocional || i.preco) * i.quantidade, 0);
