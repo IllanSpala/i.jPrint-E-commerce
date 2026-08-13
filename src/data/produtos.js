@@ -2,7 +2,7 @@ export const produtos = [
   {
     "id": 1,
     "nome": "Pophead Personalizado",
-    "preco": 109.9,
+    "preco": 119.9,
     "imagem": "/produtos/MINIATURA.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -24,7 +24,7 @@ export const produtos = [
   {
     "id": 3,
     "nome": "Pophead Família",
-    "preco": 249.9,
+    "preco": 279.9,
     "imagem": "/produtos/MINIATURA_FAMILIA.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -35,7 +35,7 @@ export const produtos = [
   {
     "id": 4,
     "nome": "Pophead Operadores RainbowSixSiege",
-    "preco": 109.9,
+    "preco": 119.9,
     "imagem": "/produtos/MINIATURA_R6.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -185,7 +185,7 @@ export const produtos = [
   {
     "id": 15,
     "nome": "Estatueta Worms-TD Granada Santa",
-    "preco": 149.9,
+    "preco": 119.9,
     "imagem": "/produtos/WORMS_GRANADA_SANTA.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -217,7 +217,7 @@ export const produtos = [
   {
     "id": 17,
     "nome": "Mario-Elvis",
-    "preco": 79.9,
+    "preco": 83.9,
     "imagem": "/produtos/MARIO_ELVIS.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -251,7 +251,7 @@ export const produtos = [
   {
     "id": 21,
     "nome": "Action Figure Monkey D. Luffy",
-    "preco": 109.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_LUFFY.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -284,7 +284,7 @@ export const produtos = [
   {
     "id": 24,
     "nome": "Pokemon Chibi",
-    "preco": 109.9,
+    "preco": 139.9,
     "imagem": "/produtos/CHIBI_POKEMON.png",
     "imagens": [
       "/produtos/CHIBI_POKEMON.png",
@@ -456,7 +456,7 @@ export const produtos = [
   {
     "id": 30,
     "nome": "Smough, O executor - Dark Souls",
-    "preco": 109.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_SMOUGH.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -467,7 +467,7 @@ export const produtos = [
   {
     "id": 31,
     "nome": "Figure Makima - Chainsaw Man",
-    "preco": 109.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_MAKIMA.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -523,7 +523,7 @@ export const produtos = [
   {
     "id": 35,
     "nome": "Coleção Hello Kitty",
-    "preco": 49.9,
+    "preco": 119.9,
     "imagem": "/produtos/COLECAO_KITTY.png",
     "imagens": [
       "/produtos/COLECAO_KITTY.png",
@@ -541,150 +541,38 @@ export const produtos = [
     "opcoes": [
       {
         "nome": "SAILOR MOON",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_MOON.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_MOON.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "BRANCA DE NEVE",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_NEVE.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_NEVE.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "DIABINHA",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_DIABINHA.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_DIABINHA.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "COWGIRL",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_COWGIRL.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_COWGIRL.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "PIRATA",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_PIRATA.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_PIRATA.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "CARANGUEJO",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_CRAB.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_CRAB.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "STITCH",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_STITCH.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_STITCH.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       },
       {
         "nome": "HOLLOW KNIGHT",
-        "esgotado": false,
-        "variacoes": [
-          {
-            "nome": "Não Pintado",
-            "preco": 49.9,
-            "imagem": "/produtos/KITTY_KNIGHT.png",
-            "esgotado": false
-          },
-          {
-            "nome": "Pintado",
-            "preco": 119.9,
-            "imagem": "/produtos/KITTY_KNIGHT.png",
-            "esgotado": false
-          }
-        ]
+        "esgotado": false
       }
     ],
-    "descricao": "Figures diversas da Hello Kitty, impressas em PLA Premium e disponíveis para pintura (ACOMPANHA UMA FIGURE DA SUA ESCOLHA, PINTADA OU NÃO)",
+    "descricao": "Figures diversas da Hello Kitty, impressas em PLA Premium, pintadas à mão com atenção aos mínimos detalhes.",
     "peso_gramas": 300,
     "dimensoes": "15x10x20"
   },
