@@ -49,9 +49,9 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
 
             {/* Itens do aviso */}
             <ul className="space-y-4 mb-6">
-              <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <div className="flex-shrink-0 mt-0.5 text-sand-400 p-1.5 bg-sand-400/10 rounded-lg">
-                  <Paintbrush size={16} />
+              <li className="flex items-start gap-3 text-sm text-zinc-300 leading-relaxed">
+                <div className="flex-shrink-0 mt-0.5 text-sand-400 w-7 h-7 flex items-center justify-center bg-sand-400/10 rounded-full">
+                  <Paintbrush size={14} />
                 </div>
                 <span>
                   Todas as nossas peças passam por um{" "}
@@ -61,9 +61,9 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
                   variações de tonalidade em relação às fotos do produto.
                 </span>
               </li>
-              <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <div className="flex-shrink-0 mt-0.5 text-sand-400 p-1.5 bg-sand-400/10 rounded-lg">
-                  <Package size={16} />
+              <li className="flex items-start gap-3 text-sm text-zinc-300 leading-relaxed">
+                <div className="flex-shrink-0 mt-0.5 text-sand-400 w-7 h-7 flex items-center justify-center bg-sand-400/10 rounded-full">
+                  <Package size={14} />
                 </div>
                 <span>
                   O prazo mínimo de produção é de{" "}
@@ -72,9 +72,9 @@ export default function ModalAviso({ onConfirmar, onCancelar }) {
                   levar mais tempo.
                 </span>
               </li>
-              <li className="flex gap-3 text-sm text-zinc-300 leading-relaxed">
-                <div className="flex-shrink-0 mt-0.5 text-sand-400 p-1.5 bg-sand-400/10 rounded-lg">
-                  <MessageCircle size={16} />
+              <li className="flex items-start gap-3 text-sm text-zinc-300 leading-relaxed">
+                <div className="flex-shrink-0 mt-0.5 text-sand-400 w-7 h-7 flex items-center justify-center bg-sand-400/10 rounded-full">
+                  <MessageCircle size={14} />
                 </div>
                 <span>
                   Em caso de dúvidas, entre em contato pelo WhatsApp antes de finalizar
