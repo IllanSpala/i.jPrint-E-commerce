@@ -16,7 +16,7 @@
   "crons": [
     {
       "path": "/api/carrinho-abandonado",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
