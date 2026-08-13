@@ -81,7 +81,7 @@ export function CarrinhoProvider({ children }) {
     return () => clearTimeout(timer);
   }, [itens, user]);
 
-  const totalItens = itens.reduce((acc, i) => acc + i.quantidade, 0);
+  const totalItens = itens.length;
   const totalPreco = itens.reduce((acc, i) => acc + (i.precoPromocional || i.preco) * i.quantidade, 0);
 
   function gerarLinkWhatsApp() {

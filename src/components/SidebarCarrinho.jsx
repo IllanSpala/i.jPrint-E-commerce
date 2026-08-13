@@ -328,20 +328,41 @@ export default function SidebarCarrinho() {
                       />
                     )}
 
+                    {item.multiplaPersonalizacao && item.parametrosMultiplos && (
+                      <div className="mt-2 text-xs text-zinc-500 bg-zinc-900/50 p-2 rounded border border-zinc-800/80">
+                        <p className="font-semibold text-zinc-400 mb-1">Nomes ({item.quantidade}):</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          {item.parametrosMultiplos.map((nome, idx) => (
+                            <li key={idx} className="truncate">{nome}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 mt-2">
-                      <button
-                        onClick={() => dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade - 1 })}
-                        className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
-                      >
-                        <Minus size={12} />
-                      </button>
-                      <span className="text-zinc-100 text-sm w-5 text-center">{item.quantidade}</span>
-                      <button
-                        onClick={() => dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade + 1 })}
-                        className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
-                      >
-                        <Plus size={12} />
-                      </button>
+                      {!item.multiplaPersonalizacao && (
+                        <>
+                          <button
+                            onClick={() => dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade - 1 })}
+                            className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
+                          >
+                            <Minus size={12} />
+                          </button>
+                          <span className="text-zinc-100 text-sm w-5 text-center">{item.quantidade}</span>
+                          <button
+                            onClick={() => dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade + 1 })}
+                            className="w-6 h-6 rounded bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
+                          >
+                            <Plus size={12} />
+                          </button>
+                        </>
+                      )}
+                      
+                      {item.multiplaPersonalizacao && (
+                        <span className="text-zinc-400 text-xs font-medium px-2 py-1 bg-zinc-800/50 rounded border border-zinc-700/50">
+                          Qtd: {item.quantidade}
+                        </span>
+                      )}
                       <button
                         onClick={() => dispatch({ type: "REMOVER", cartId: item.cartId || item.id })}
                         className="ml-auto p-1 text-zinc-600 hover:text-red-400 transition-colors"
