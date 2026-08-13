@@ -512,7 +512,7 @@ export const produtos = [
   {
     "id": 34,
     "nome": "Kuromi - Hello Kitty",
-    "preco": 109.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_KUROMI.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -898,7 +898,7 @@ export const produtos = [
   {
     "id": 57,
     "nome": "Busto Têmis - Deusa da Justiça",
-    "preco": 119.9,
+    "preco": 259.9,
     "imagem": "/produtos/BUSTO_TÊMIS.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -920,7 +920,7 @@ export const produtos = [
   {
     "id": 59,
     "nome": "Totem Metallica - One",
-    "preco": 219.9,
+    "preco": 179.9,
     "imagem": "/produtos/TOTEM_ONE.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -1041,7 +1041,7 @@ export const produtos = [
     "id": 64,
     "nome": "Ponteira para Lápis personalizada",
     "imagem": "/produtos/PONTEIRA_LAPIS.png",
-    "preco": 83.7,
+    "preco": 3.5,
     "categoria": "Personalizados",
     "opcoes": [
       {
@@ -1066,7 +1066,20 @@ export const produtos = [
 
 // ─────────────────────────────────────────────────────────────────────────
 // GUIA RÁPIDO DE CADASTRO
-// ...
+//
+// Para adicionar um novo produto, basta criar um novo objeto nesta lista:
+//
+// {
+//   id: 99,
+//   nome: "Nome do Produto",
+//   preco: 149.90,                  // opcional se tiver opções com preço
+//   precoPromocional: 129.90,       // opcional, se preenchido aparece selo de promoção
+//   imagem: "/produtos/foto.jpg",   // coloque a imagem em /public/produtos/
+//   categoria: "Miniaturas",        // uma das 4 categorias abaixo
+//   exigePersonalizacao: false,     // true = cliente precisa descrever; false = produto padrão
+//   descricao: "Descrição completa do produto.",
+// },
+//
 // CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Sensoriais" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria"
 // ─────────────────────────────────────────────────────────────────────────
 
