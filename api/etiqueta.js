@@ -20,6 +20,7 @@ function gerarReciboHtml(pedido, isRetirada) {
       <td style="padding: 8px; border-bottom: 1px solid #ddd;">
         ${item.nome} ${item.opcaoEscolhida ? `(${item.opcaoEscolhida})` : ''}
         ${item.personalizacao ? `<br/><small><i>Personalização: ${item.personalizacao}</i></small>` : ''}
+        ${item.parametrosMultiplos ? `<br/><small><i>Nomes: ${item.parametrosMultiplos.join(', ')}</i></small>` : ''}
       </td>
       <td style="padding: 8px; border-bottom: 1px solid #ddd;">R$ ${((item.precoPromocional || item.preco) * item.quantidade).toFixed(2).replace('.', ',')}</td>
     </tr>

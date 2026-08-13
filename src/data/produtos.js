@@ -1057,10 +1057,21 @@ export const produtos = [
         "imagem": "/produtos/PONTEIRA_LAPIS.png"
       }
     ],
-    "exigePersonalizacao": false,
+    "multiplaPersonalizacao": true,
     "descricao": "Ponteiras para lápis e caneta, impressas em PLA Premium, escolha até duas cores e escolha o tamanho do item que sera adornado!",
     "peso_gramas": 300,
     "dimensoes": "15x10x20"
+  },
+  {
+    "id": 65,
+    "nome": "Regador Psyduck",
+    "preco": 44.9,
+    "imagem": "/produtos/REGADOR_PSY.png",
+    "categoria": "Acessórios",
+    "exigePersonalizacao": false,
+    "descricao": "Regador de plantas em formato de Psyduck, com capacidade de 400ml. Impresso em PLA Premium. Fotos ilustrativas, pode sofrer alteração de cor.",
+    "peso_gramas": 170,
+    "dimensoes": "130x110x160"
   }
 ];
 

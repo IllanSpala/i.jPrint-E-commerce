@@ -9,13 +9,19 @@ function carrinhoReducer(state, action) {
       // Find based on id and opcaoEscolhida
       const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida);
       if (existente) {
-        return state.map((i) =>
-          (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida)
-            ? { ...i, quantidade: i.quantidade + 1 }
-            : i
-        );
+        return state.map((i) => {
+          if (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida) {
+            const qtdAdicionada = action.item.quantidade || 1;
+            const novosParametros = action.item.parametrosMultiplos 
+              ? [...(i.parametrosMultiplos || []), ...action.item.parametrosMultiplos] 
+              : i.parametrosMultiplos;
+              
+            return { ...i, quantidade: i.quantidade + qtdAdicionada, parametrosMultiplos: novosParametros };
+          }
+          return i;
+        });
       }
-      return [...state, { ...action.item, quantidade: 1, cartId: action.item.cartId || `${action.item.id}-${action.item.opcaoEscolhida || 'default'}-${Date.now()}` }];
+      return [...state, { ...action.item, quantidade: action.item.quantidade || 1, cartId: action.item.cartId || `${action.item.id}-${action.item.opcaoEscolhida || 'default'}-${Date.now()}` }];
     }
     case "REMOVER":
       return state.filter((i) => (i.cartId || i.id) !== action.cartId);
@@ -89,12 +95,16 @@ export function CarrinhoProvider({ children }) {
         if (item.exigePersonalizacao && item.personalizacao) {
           return `${idx + 1}. ${base}\n   Detalhes: ${item.personalizacao}`;
         }
+        if (item.multiplaPersonalizacao && item.parametrosMultiplos) {
+          const formatados = item.parametrosMultiplos.map((p, i) => `     ${i+1}) ${p}`).join("\n");
+          return `${idx + 1}. ${base}\n   Nomes Parametrizados:\n${formatados}`;
+        }
         return `${idx + 1}. ${base}`;
       })
       .join("\n");
 
     const temPersonalizacao = itens.some(
-      (i) => i.exigePersonalizacao && i.personalizacao
+      (i) => (i.exigePersonalizacao && i.personalizacao) || (i.multiplaPersonalizacao && i.parametrosMultiplos)
     );
 
     const avisoPersonalizacao = temPersonalizacao
