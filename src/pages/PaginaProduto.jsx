@@ -91,7 +91,10 @@ export default function PaginaProduto() {
 
   const opcaoAtual = produto.opcoes?.find((o) => o.nome === opcaoSelecionada);
   const variacaoAtual = opcaoAtual?.variacoes?.find((v) => v.nome === variacaoSelecionada);
-  const precoFinal = variacaoAtual?.preco || opcaoAtual?.preco || produto.precoPromocional || produto.preco;
+  const precoBase = variacaoAtual?.preco || opcaoAtual?.preco || produto.precoPromocional || produto.preco;
+  const multiplier = produto.multiplaPersonalizacao ? quantidadeLocal : 1;
+  const precoFinal = precoBase * multiplier;
+  const precoOriginalExibicao = (produto.preco || 0) * multiplier;
   const exibePromocao = !opcaoAtual?.preco && !variacaoAtual?.preco && produto.precoPromocional;
 
   function adicionar() {
@@ -391,10 +394,10 @@ export default function PaginaProduto() {
             {exibePromocao ? (
               <div className="flex items-end gap-3">
                 <p className="text-sand-400 font-bold text-3xl">
-                  R$ {produto.precoPromocional.toFixed(2).replace(".", ",")}
+                  R$ {precoFinal.toFixed(2).replace(".", ",")}
                 </p>
                 <p className="text-zinc-500 line-through text-lg mb-0.5">
-                  R$ {produto.preco.toFixed(2).replace(".", ",")}
+                  R$ {precoOriginalExibicao.toFixed(2).replace(".", ",")}
                 </p>
               </div>
             ) : (
