@@ -151,8 +151,6 @@ export default async function handler(req, res) {
     const novoPedido = {
       id: pedido_id,
       user_id: user.id,
-      cliente_nome: clienteNome,
-      cliente_email: clienteEmail,
       endereco,
       itens,
       total: valorTotalSeguro,
