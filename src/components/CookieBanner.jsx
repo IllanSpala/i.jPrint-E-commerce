@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Cookie, X, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { iniciarAnalytics } from "../lib/analytics";
 
 const STORAGE_KEY = "@ijprint:cookie_consent";
 
@@ -18,6 +19,7 @@ export default function CookieBanner() {
 
   function aceitar() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ aceito: true, data: new Date().toISOString() }));
+    iniciarAnalytics();
     setVisivel(false);
   }
 
