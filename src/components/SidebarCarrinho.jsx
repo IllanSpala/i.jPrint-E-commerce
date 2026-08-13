@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import ContagemRegressiva from "./ContagemRegressiva";
+import ModalAviso from "./ModalAviso";
 
 export default function SidebarCarrinho() {
   const {
@@ -25,6 +26,7 @@ export default function SidebarCarrinho() {
   const [todosEnderecos, setTodosEnderecos] = useState([]);
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [modoEntrega, setModoEntrega] = useState('envio'); // 'envio' | 'retirada'
+  const [modalAvisoAberto, setModalAvisoAberto] = useState(false);
   
   const [expiraEm, setExpiraEm] = useState(null);
 
@@ -112,7 +114,12 @@ export default function SidebarCarrinho() {
       setSidebarAberta(false);
       return;
     }
+    // Mostra o modal de aviso antes de prosseguir
+    setModalAvisoAberto(true);
+  }
 
+  async function prosseguirAposAviso() {
+    setModalAvisoAberto(false);
     setLoading(true);
 
     // ── MODO RETIRADA ──────────────────────────────────────────────────
@@ -221,6 +228,14 @@ export default function SidebarCarrinho() {
 
   return (
     <>
+      {/* Modal de Aviso de Produção */}
+      {modalAvisoAberto && (
+        <ModalAviso
+          onConfirmar={prosseguirAposAviso}
+          onCancelar={() => setModalAvisoAberto(false)}
+        />
+      )}
+
       {/* Overlay */}
       {sidebarAberta && (
         <div

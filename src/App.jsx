@@ -4,6 +4,7 @@ import { AuthProvider } from "./context/AuthContext";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import SidebarCarrinho from "./components/SidebarCarrinho";
+import CookieBanner from "./components/CookieBanner";
 import Home from "./pages/Home";
 import PaginaProduto from "./pages/PaginaProduto";
 import Login from "./pages/Login";
@@ -31,6 +32,7 @@ export default function App() {
             <Footer />
           </div>
           <SidebarCarrinho />
+          <CookieBanner />
         </CarrinhoProvider>
       </AuthProvider>
     </BrowserRouter>
