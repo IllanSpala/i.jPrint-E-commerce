@@ -387,7 +387,7 @@ export default function Admin() {
                     {new Date(pedido.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </span>
                   <p className="text-zinc-100 font-medium">
-                    {pedido.perfis?.nome || pedido.cliente_nome || pedido.email_cliente || "Cliente Desconhecido"}
+                    {pedido.perfis?.nome || pedido.endereco?.cliente_nome || pedido.endereco?.cliente_email || "Cliente Desconhecido"}
                   </p>
                   <p className="text-sand-400 font-bold text-sm">R$ {Number(pedido.total).toFixed(2).replace('.', ',')}</p>
                 </div>
