@@ -327,7 +327,8 @@ export default function Admin() {
         (payload) => {
           setPedidos(prev =>
             prev.map(p =>
-              p.id === payload.new.id ? { ...p, ...payload.new } : p
+              // Preserva o relacionamento perfis que não vem no payload do realtime
+              p.id === payload.new.id ? { ...payload.new, perfis: p.perfis } : p
             )
           );
         }
@@ -385,7 +386,9 @@ export default function Admin() {
                   <span className="text-zinc-500 text-xs font-bold uppercase tracking-widest">
                     {new Date(pedido.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
                   </span>
-                  <p className="text-zinc-100 font-medium">{pedido.perfis?.nome || "Cliente Desconhecido"}</p>
+                  <p className="text-zinc-100 font-medium">
+                    {pedido.perfis?.nome || pedido.cliente_nome || pedido.email_cliente || "Cliente Desconhecido"}
+                  </p>
                   <p className="text-sand-400 font-bold text-sm">R$ {Number(pedido.total).toFixed(2).replace('.', ',')}</p>
                 </div>
 
@@ -486,7 +489,7 @@ export default function Admin() {
                           <p className="text-zinc-400">{pedido.endereco.bairro} - {pedido.endereco.cidade} / {pedido.endereco.uf}</p>
                           <p className="text-zinc-400 mt-1">CEP: <span className="text-zinc-300 font-mono">{pedido.endereco.cep}</span></p>
                           <div className="mt-3 pt-3 border-t border-zinc-800/50 text-sand-400 font-medium">
-                            WhatsApp: {pedido.perfis?.telefone || "Não informado"}
+                          WhatsApp: {pedido.perfis?.telefone || "Não informado"}
                           </div>
                         </div>
                       </div>
