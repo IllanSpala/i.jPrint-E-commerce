@@ -3,7 +3,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GA4_ID = "G-CSQZGQQNPZ";
-const META_PIXEL_ID = ""; // 🔧 Preencha com o ID do Meta Pixel quando tiver
+const META_PIXEL_ID = "1585971716420476";
 
 const STORAGE_KEY = "@ijprint:cookie_consent";
 
