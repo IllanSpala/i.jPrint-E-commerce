@@ -268,47 +268,7 @@ export default function PaginaProduto() {
             </div>
           )}
 
-          {/* Campo de personalização múltipla (Paramétrica) */}
-          {produto.multiplaPersonalizacao && (
-            <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sand-400">
-                  <List size={14} />
-                  <span className="text-sm font-medium">Quantidade e Nomes</span>
-                </div>
-                
-                <div className="flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1">
-                  <button 
-                    onClick={() => setQuantidadeLocal(q => Math.max(1, q - 1))}
-                    className="p-1 text-zinc-400 hover:text-white transition-colors"
-                  ><Minus size={14}/></button>
-                  <span className="text-zinc-200 font-bold min-w-[20px] text-center text-sm">{quantidadeLocal}</span>
-                  <button 
-                    onClick={() => setQuantidadeLocal(q => q + 1)}
-                    className="p-1 text-zinc-400 hover:text-white transition-colors"
-                  ><Plus size={14}/></button>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mt-4">
-                <p className="text-xs text-zinc-400 mb-2">Preencha o nome a ser personalizado em cada unidade:</p>
-                {parametrosMultiplos.map((param, index) => (
-                  <input
-                    key={index}
-                    type="text"
-                    placeholder={`Nome para a unidade ${index + 1}`}
-                    value={param}
-                    onChange={(e) => {
-                      const novos = [...parametrosMultiplos];
-                      novos[index] = e.target.value;
-                      setParametrosMultiplos(novos);
-                    }}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sand-400/60"
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+
 
           {/* Opções de Escolha (ex: cores) */}
           {produto.opcoes && produto.opcoes.length > 0 && (
@@ -385,6 +345,48 @@ export default function PaginaProduto() {
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Campo de personalização múltipla (Paramétrica) */}
+          {produto.multiplaPersonalizacao && (
+            <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sand-400">
+                  <List size={14} />
+                  <span className="text-sm font-medium">Quantidade e Nomes</span>
+                </div>
+                
+                <div className="flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1">
+                  <button 
+                    onClick={() => setQuantidadeLocal(q => Math.max(1, q - 1))}
+                    className="p-1 text-zinc-400 hover:text-white transition-colors"
+                  ><Minus size={14}/></button>
+                  <span className="text-zinc-200 font-bold min-w-[20px] text-center text-sm">{quantidadeLocal}</span>
+                  <button 
+                    onClick={() => setQuantidadeLocal(q => q + 1)}
+                    className="p-1 text-zinc-400 hover:text-white transition-colors"
+                  ><Plus size={14}/></button>
+                </div>
+              </div>
+              
+              <div className="space-y-2 mt-4">
+                <p className="text-xs text-zinc-400 mb-2">Preencha o nome a ser personalizado em cada unidade:</p>
+                {parametrosMultiplos.map((param, index) => (
+                  <input
+                    key={index}
+                    type="text"
+                    placeholder={`Nome para a unidade ${index + 1}`}
+                    value={param}
+                    onChange={(e) => {
+                      const novos = [...parametrosMultiplos];
+                      novos[index] = e.target.value;
+                      setParametrosMultiplos(novos);
+                    }}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sand-400/60"
+                  />
+                ))}
               </div>
             </div>
           )}
