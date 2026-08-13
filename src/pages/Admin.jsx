@@ -191,6 +191,46 @@ function BotaoEmProducao({ pedido, onAtualizado }) {
   );
 }
 
+// --------------- Botão Concluído ---------------
+function BotaoConcluido({ pedido, onAtualizado }) {
+  const [status, setStatus] = useState('idle');
+
+  if (pedido.status !== 'Enviado') return null;
+
+  async function marcarConcluido() {
+    setStatus('loading');
+    try {
+      const res = await fetch('/api/concluido', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedido_id: pedido.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Falha ao atualizar status');
+      onAtualizado(data.pedido);
+    } catch (e) {
+      console.error(e);
+      setStatus('error');
+      alert('Erro ao marcar como Concluído: ' + e.message);
+      return;
+    }
+    setStatus('idle');
+  }
+
+  return (
+    <button
+      onClick={marcarConcluido}
+      disabled={status === 'loading'}
+      className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 disabled:opacity-50 border border-emerald-500/20 text-emerald-400 font-bold text-xs uppercase tracking-wider rounded transition-colors mt-2"
+    >
+      {status === 'loading'
+        ? <><RefreshCw size={15} className="animate-spin" /> Atualizando...</>
+        : <><CheckCircle size={15} /> Marcar como Concluído</>
+      }
+    </button>
+  );
+}
+
 // --------------- Botão Gerar Etiqueta ---------------
 function BotaoEtiqueta({ pedido }) {
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
@@ -399,6 +439,7 @@ export default function Admin() {
                       pedido.status === 'Pago' ? 'bg-green-500/10 text-green-500 border-green-500/20' :
                       pedido.status === 'Em Produção' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
                       pedido.status === 'Enviado' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                      pedido.status === 'Concluído' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                       'bg-zinc-800 text-zinc-300 border-zinc-700'
                     }`}>
                       {pedido.status}
@@ -510,6 +551,16 @@ export default function Admin() {
 
                     {/* Botão Etiqueta */}
                     <BotaoEtiqueta pedido={pedido} />
+
+                    {/* Botão Concluído (só aparece quando status === 'Enviado') */}
+                    <BotaoConcluido
+                      pedido={pedido}
+                      onAtualizado={(atualizado) => {
+                        setPedidos(prev =>
+                          prev.map(p => (p.id === atualizado.id ? { ...p, ...atualizado } : p))
+                        );
+                      }}
+                    />
 
                     {/* Botão Cancelar / Deletar Pedido */}
                     <button

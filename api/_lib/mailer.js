@@ -158,6 +158,27 @@ export function emailClientePedidoEnviado({ clienteNome, pedidoId, trackingUrl }
   };
 }
 
+export function emailClientePedidoConcluido({ clienteNome, pedidoId }) {
+  return {
+    subject: 'Pedido Entregue! Muito Obrigado! 💚 - I.J Print',
+    html: wrapClienteHtml({
+      corFundo: '#10b981', // green
+      titulo: 'Pedido Entregue!',
+      corpoHtml: `
+        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Vimos que seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> foi entregue e concluído com sucesso!</p>
+        <p>Gostaríamos de agradecer imensamente pela sua compra e pela confiança na I.J Print.</p>
+        <p>Esperamos que tenha gostado das suas peças! Fique à vontade para visitar nosso site e conferir as novidades e novos produtos que estão sempre chegando.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://www.ijprint26.com" style="background-color: #111; color: #10b981; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Ver Novos Produtos</a>
+        </div>
+        <p>Um grande abraço e até a próxima!</p>
+        <p>Atenciosamente,<br/><strong>Equipe I.J Print</strong></p>
+      `
+    })
+  };
+}
+
 export function emailClientePedidoCancelado({ clienteNome, pedidoId, motivo }) {
   return {
     subject: 'Seu Pedido foi Cancelado - I.J Print',
