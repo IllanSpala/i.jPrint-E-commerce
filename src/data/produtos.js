@@ -115,7 +115,7 @@ export const produtos = [
     "nome": "Ovo de Dragão - Fidget Sensorial",
     "preco": 49.9,
     "imagem": "/produtos/FIDGET_OVO_SENSORIAL.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -140,7 +140,7 @@ export const produtos = [
     "nome": "Estrela 10 pontas - Fidget Sensorial",
     "preco": 49.9,
     "imagem": "/produtos/FIDGET_ESTRELA_SENSORIAL.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -1067,7 +1067,7 @@ export const produtos = [
 // ─────────────────────────────────────────────────────────────────────────
 // GUIA RÁPIDO DE CADASTRO
 // ...
-// CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Sensoriais" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria"
+// CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria"
 // ─────────────────────────────────────────────────────────────────────────
 
 export const categorias = [
@@ -1078,6 +1078,5 @@ export const categorias = [
   "Coleções",
   "Hot Toys",
   "Tabacaria",
-  "Personalizados",
-  "Sensoriais",
+  "Personalizados"
 ];
