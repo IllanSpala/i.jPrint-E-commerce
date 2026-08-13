@@ -898,7 +898,7 @@ export const produtos = [
   {
     "id": 57,
     "nome": "Busto Têmis - Deusa da Justiça",
-    "preco": 259.9,
+    "preco": 279.9,
     "imagem": "/produtos/BUSTO_TÊMIS.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -942,7 +942,7 @@ export const produtos = [
   {
     "id": 61,
     "nome": "Busto Agamemnon",
-    "preco": 339.9,
+    "preco": 279.9,
     "imagem": "/produtos/BUSTO_AGA.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
