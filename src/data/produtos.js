@@ -645,7 +645,7 @@ export const produtos = [
   {
     "id": 42,
     "nome": "Busto Marmorizado - Karl Marx",
-    "preco": 41.9,
+    "preco": 57.9,
     "imagem": "/produtos/BUSTO_MARX.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -656,7 +656,7 @@ export const produtos = [
   {
     "id": 43,
     "nome": "Busto Marmorizado - Lenin",
-    "preco": 41.9,
+    "preco": 57.9,
     "imagem": "/produtos/BUSTO_LENIN.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -667,7 +667,7 @@ export const produtos = [
   {
     "id": 44,
     "nome": "Busto Marmorizado - Stalin",
-    "preco": 41.9,
+    "preco": 57.9,
     "imagem": "/produtos/BUSTO_STALIN.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -678,7 +678,7 @@ export const produtos = [
   {
     "id": 45,
     "nome": "Busto Marmorizado - Ozzy Osbourne",
-    "preco": 41.9,
+    "preco": 57.9,
     "imagem": "/produtos/BUSTO_OZZY.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -689,7 +689,7 @@ export const produtos = [
   {
     "id": 46,
     "nome": "Busto Marmorizado - Dimebag Darrel",
-    "preco": 41.9,
+    "preco": 57.9,
     "imagem": "/produtos/BUSTO_DIMEBAG.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
@@ -1066,20 +1066,7 @@ export const produtos = [
 
 // ─────────────────────────────────────────────────────────────────────────
 // GUIA RÁPIDO DE CADASTRO
-//
-// Para adicionar um novo produto, basta criar um novo objeto nesta lista:
-//
-// {
-//   id: 99,
-//   nome: "Nome do Produto",
-//   preco: 149.90,                  // opcional se tiver opções com preço
-//   precoPromocional: 129.90,       // opcional, se preenchido aparece selo de promoção
-//   imagem: "/produtos/foto.jpg",   // coloque a imagem em /public/produtos/
-//   categoria: "Miniaturas",        // uma das 4 categorias abaixo
-//   exigePersonalizacao: false,     // true = cliente precisa descrever; false = produto padrão
-//   descricao: "Descrição completa do produto.",
-// },
-//
+// ...
 // CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Sensoriais" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria"
 // ─────────────────────────────────────────────────────────────────────────
 
