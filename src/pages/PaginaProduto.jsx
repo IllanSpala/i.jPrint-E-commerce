@@ -40,10 +40,13 @@ export default function PaginaProduto() {
     async function fetchProduto() {
       const { data } = await supabase.from('produtos').select('*').eq('id', id).single();
       if (data) {
+        const localProdFallback = produtosLocais.find(p => String(p.id) === String(id)) || {};
         const camelData = {
+          ...localProdFallback,
           ...data,
           precoPromocional: data.preco_promocional,
-          exigePersonalizacao: data.exige_personalizacao
+          exigePersonalizacao: data.exige_personalizacao,
+          multiplaPersonalizacao: data.multipla_personalizacao ?? localProdFallback.multiplaPersonalizacao
         };
         setProduto(camelData);
         setImagemAtual(camelData.imagem);
