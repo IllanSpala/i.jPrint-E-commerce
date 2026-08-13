@@ -232,7 +232,7 @@ function BotaoConcluido({ pedido, onAtualizado }) {
 }
 
 // --------------- Botão Gerar Etiqueta ---------------
-function BotaoEtiqueta({ pedido }) {
+function BotaoEtiqueta({ pedido, onAtualizado }) {
   const [status, setStatus] = useState('idle'); // idle | loading | success | error
   const [trackingUrl, setTrackingUrl] = useState(null);
 
@@ -250,6 +250,10 @@ function BotaoEtiqueta({ pedido }) {
         setStatus('success');
         // Atualiza status do pedido no Supabase
         await supabase.from('pedidos').update({ status: 'Enviado' }).eq('id', pedido.id);
+        
+        if (onAtualizado) {
+          onAtualizado({ id: pedido.id, status: 'Enviado' });
+        }
       } else {
         throw new Error(data.error || 'Falha');
       }
@@ -550,7 +554,14 @@ export default function Admin() {
                     />
 
                     {/* Botão Etiqueta */}
-                    <BotaoEtiqueta pedido={pedido} />
+                    <BotaoEtiqueta 
+                      pedido={pedido} 
+                      onAtualizado={(atualizado) => {
+                        setPedidos(prev =>
+                          prev.map(p => (p.id === atualizado.id ? { ...p, ...atualizado } : p))
+                        );
+                      }}
+                    />
 
                     {/* Botão Concluído (só aparece quando status === 'Enviado') */}
                     <BotaoConcluido
