@@ -245,8 +245,24 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
         body: JSON.stringify({ pedido_id: pedido.id, pedido })
       });
       const data = await res.json();
-      if (data.tracking_url || data.success) {
-        setTrackingUrl(data.tracking_url || '#');
+      
+      if (data.html_recibo) {
+        // Abre o recibo em uma nova janela para impressão
+        const newWindow = window.open('', '_blank');
+        if (newWindow) {
+          newWindow.document.write(data.html_recibo);
+          newWindow.document.close();
+          // Aguarda um instante para garantir que a renderização termine antes do print
+          setTimeout(() => {
+            newWindow.print();
+          }, 500);
+        } else {
+          alert('Por favor, permita pop-ups para imprimir o recibo.');
+        }
+      }
+
+      if (data.success) {
+        setTrackingUrl(data.tracking_url || null);
         setStatus('success');
         // Atualiza status do pedido no Supabase
         await supabase.from('pedidos').update({ status: 'Enviado' }).eq('id', pedido.id);
@@ -263,11 +279,14 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
     }
   }
 
+  const logradouro = pedido.endereco?.logradouro?.toLowerCase() || '';
+  const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
+
   if (status === 'success') {
     return (
-      <div className="space-y-2">
+      <div className="space-y-2 mt-2">
         <div className="flex items-center gap-2 text-green-400 text-sm font-bold">
-          <CheckCircle size={16} /> Etiqueta gerada!
+          <CheckCircle size={16} /> {isRetirada ? 'Recibo gerado e E-mail enviado!' : 'Etiqueta gerada!'}
         </div>
         {trackingUrl && trackingUrl !== '#' && (
           <a href={trackingUrl} target="_blank" rel="noopener noreferrer"
@@ -283,11 +302,11 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
     <button
       onClick={gerarEtiqueta}
       disabled={status === 'loading'}
-      className="w-full flex items-center justify-center gap-2 py-3 bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-50 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
+      className="w-full flex items-center justify-center gap-2 py-3 bg-blue-500/10 hover:bg-blue-500/20 disabled:opacity-50 border border-blue-500/20 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors mt-2"
     >
       {status === 'loading'
         ? <><RefreshCw size={15} className="animate-spin" /> Gerando...</>
-        : <><Truck size={15} /> Gerar Etiqueta</>
+        : <><Truck size={15} /> {isRetirada ? 'Gerar Recibo e Enviar Email de Retirada' : 'Gerar Etiqueta Correios + Recibo'}</>
       }
       {status === 'error' && <span className="text-red-400 ml-1">(Erro)</span>}
     </button>
