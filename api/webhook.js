@@ -38,6 +38,23 @@ export default async function handler(req, res) {
 
     if (isApproved) {
       // Remover "email" do select de perfis, pois a tabela perfis só tem "nome" e "telefone"
+      const { data: pedidoAtual, error: errBusca } = await supabase
+        .from('pedidos')
+        .select('status, user_id, total, perfis(nome)')
+        .eq('id', pedidoId)
+        .single();
+
+      if (errBusca || !pedidoAtual) {
+        console.error('[Webhook] Erro ao buscar pedido:', errBusca);
+        return res.status(500).json({ error: 'Erro ao buscar pedido' });
+      }
+
+      // Se o pedido já avançou de "Aguardando Pagamento", ignoramos o webhook para evitar regressão
+      if (pedidoAtual.status !== 'Aguardando Pagamento') {
+        console.log(`[Webhook] Pedido ${pedidoId} já possui status '${pedidoAtual.status}'. Ignorando atualização para 'Pago' para evitar regressão de status.`);
+        return res.status(200).json({ received: true });
+      }
+
       const { data: pedidoAtualizado, error } = await supabase
         .from('pedidos')
         .update({ status: 'Pago' })
@@ -47,7 +64,7 @@ export default async function handler(req, res) {
 
       if (error) {
         console.error('[Webhook] Erro ao atualizar pedido:', error);
-        return res.status(500).json({ error: 'Erro ao atualizar pedido no banco (Verifique a Service Role Key no Vercel)' });
+        return res.status(500).json({ error: 'Erro ao atualizar pedido no banco' });
       }
 
       console.log(`[Webhook] Pedido ${pedidoId} marcado como PAGO`);

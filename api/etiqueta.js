@@ -112,6 +112,22 @@ export default async function handler(req, res) {
   const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
 
   try {
+    // PROTEÇÃO CONTRA DUPLO CLIQUE / REGRESSÃO
+    // Busca o status atual no banco antes de fazer qualquer coisa
+    const { data: pedidoAtual, error: errBusca } = await supabase
+      .from('pedidos')
+      .select('status')
+      .eq('id', pedido_id)
+      .single();
+
+    if (errBusca || !pedidoAtual) {
+      throw new Error('Falha ao verificar status do pedido no banco.');
+    }
+
+    if (pedidoAtual.status === 'Enviado' || pedidoAtual.status === 'Concluído') {
+      return res.status(400).json({ error: `Este pedido já foi processado (Status: ${pedidoAtual.status}). Não é possível gerar etiqueta ou enviar e-mail novamente.` });
+    }
+
     let trackingUrl = null;
     let cartData = null;
 
