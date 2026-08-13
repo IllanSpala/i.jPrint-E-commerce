@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { endereco, frete_valor, itens, redirect_base_url } = req.body;
+  const { endereco: { ...endereco, cliente_nome: clienteNome, cliente_email: clienteEmail }, frete_valor, itens, redirect_base_url } = req.body;
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -151,7 +151,7 @@ export default async function handler(req, res) {
     const novoPedido = {
       id: pedido_id,
       user_id: user.id,
-      endereco,
+      endereco: { ...endereco, cliente_nome: clienteNome, cliente_email: clienteEmail },
       itens,
       total: valorTotalSeguro,
       status: 'Aguardando Pagamento'
