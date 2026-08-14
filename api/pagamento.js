@@ -30,7 +30,14 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Acesso negado: Token inválido ou expirado' });
   }
 
-  const clienteNome = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+  // Busca o nome do usuário cadastrado na tabela "perfis" primeiro
+  const { data: perfilDb } = await supabase
+    .from('perfis')
+    .select('nome')
+    .eq('id', user.id)
+    .single();
+
+  const clienteNome = perfilDb?.nome || user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
   const clienteEmail = user.email;
 
   const handle = process.env.INFINITEPAY_HANDLE;
