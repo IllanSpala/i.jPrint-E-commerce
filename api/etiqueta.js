@@ -192,7 +192,11 @@ export default async function handler(req, res) {
           })
         });
 
-        if (!cartRes.ok) throw new Error('Falha ao adicionar ao carrinho do Melhor Envio');
+        if (!cartRes.ok) {
+          const errBody = await cartRes.text();
+          console.error('[Melhor Envio] Erro na API:', cartRes.status, errBody);
+          throw new Error(`Falha ao adicionar ao carrinho do Melhor Envio (${cartRes.status}): ${errBody}`);
+        }
         cartData = await cartRes.json();
         trackingUrl = `https://melhorenvio.com.br/envios/${cartData.id}`;
       }
