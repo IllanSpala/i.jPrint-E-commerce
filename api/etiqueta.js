@@ -68,7 +68,7 @@ function gerarReciboHtml(pedido, isRetirada) {
               <h3>Endereço de ${isRetirada ? 'Retirada' : 'Entrega'}</h3>
               <p>${pedido.endereco?.logradouro || pedido.endereco?.rua || 'Não informado'}, ${pedido.endereco?.numero || 'S/N'}</p>
               <p>${pedido.endereco?.complemento ? pedido.endereco.complemento + '<br/>' : ''}</p>
-              <p>${pedido.endereco?.bairro || ''} - ${pedido.endereco?.cidade || ''} / ${pedido.endereco?.uf || ''}</p>
+              <p>${pedido.endereco?.bairro || ''} - ${pedido.endereco?.cidade || ''} ${pedido.endereco?.uf ? '/ ' + pedido.endereco.uf : ''}</p>
               <p><strong>CEP:</strong> ${pedido.endereco?.cep || '-'}</p>
             </div>
           </div>
@@ -128,6 +128,20 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: `Este pedido já foi processado (Status: ${pedidoAtual.status}). Não é possível gerar etiqueta ou enviar e-mail novamente.` });
     }
 
+    // Busca pedido completo com perfis para garantir nome e telefone
+    const { data: pedidoCompleto } = await supabase
+      .from('pedidos')
+      .select('*, perfis ( nome, telefone )')
+      .eq('id', pedido_id)
+      .single();
+
+    // Mescla: dados do banco têm prioridade para perfis, mas mantém dados do pedido recebido
+    const pedidoFinal = {
+      ...pedido,
+      ...(pedidoCompleto || {}),
+      perfis: pedidoCompleto?.perfis || pedido?.perfis || null,
+    };
+
     let trackingUrl = null;
     let cartData = null;
 
@@ -142,7 +156,7 @@ export default async function handler(req, res) {
           'User-Agent': 'Aplicação ij-print26 (i.j.print26@gmail.com)'
         };
 
-        const produtos = (pedido.itens || []).map(item => {
+        const produtos = (pedidoFinal.itens || []).map(item => {
           const dims = item.dimensoes
             ? item.dimensoes.split('x').map(n => Math.max(1, Math.ceil(parseInt(n) / 10)))
             : [11, 11, 11];
@@ -173,13 +187,13 @@ export default async function handler(req, res) {
               email: 'i.j.print26@gmail.com'
             },
             to: {
-              name: pedido.perfis?.nome || pedido.endereco?.cliente_nome || 'Cliente',
-              postal_code: pedido.endereco?.cep?.replace(/\D/g, '') || '',
-              address: pedido.endereco?.logradouro || pedido.endereco?.rua || '',
-              number: pedido.endereco?.numero || 'S/N',
-              district: pedido.endereco?.bairro || '',
-              city: pedido.endereco?.cidade || '',
-              state_abbr: pedido.endereco?.uf || '',
+              name: pedidoFinal.perfis?.nome || pedidoFinal.endereco?.cliente_nome || 'Cliente',
+              postal_code: (pedidoFinal.endereco?.cep || '').replace(/\D/g, ''),
+              address: pedidoFinal.endereco?.logradouro || pedidoFinal.endereco?.rua || '',
+              number: pedidoFinal.endereco?.numero || 'S/N',
+              district: pedidoFinal.endereco?.bairro || '',
+              city: pedidoFinal.endereco?.cidade || '',
+              state_abbr: pedidoFinal.endereco?.uf || '',
             },
             products: produtos,
             options: {
@@ -207,12 +221,12 @@ export default async function handler(req, res) {
 
       // Envia E-mail de Envio (apenas para Envios via Correios)
       try {
-        const clienteEmailEnvio = pedido?.user_id
-          ? await buscarEmailCliente(supabase, pedido.user_id)
-          : pedido.endereco?.cliente_email || null;
+        const clienteEmailEnvio = pedidoFinal?.user_id
+          ? await buscarEmailCliente(supabase, pedidoFinal.user_id)
+          : pedidoFinal.endereco?.cliente_email || null;
 
         if (clienteEmailEnvio) {
-          const clienteNome = pedido.perfis?.nome || pedido.endereco?.cliente_nome || 'Cliente';
+          const clienteNome = pedidoFinal.perfis?.nome || pedidoFinal.endereco?.cliente_nome || 'Cliente';
           await enviarEmailCliente({
             to: clienteEmailEnvio,
             ...emailClientePedidoEnviado({ clienteNome, pedidoId: pedido_id, trackingUrl }),
@@ -225,12 +239,12 @@ export default async function handler(req, res) {
     } else {
       // Se for retirada local, enviamos e-mail avisando que está pronto para retirar
       try {
-        const clienteEmailEnvio = pedido?.user_id
-          ? await buscarEmailCliente(supabase, pedido.user_id)
-          : pedido.endereco?.cliente_email || null;
+        const clienteEmailEnvio = pedidoFinal?.user_id
+          ? await buscarEmailCliente(supabase, pedidoFinal.user_id)
+          : pedidoFinal.endereco?.cliente_email || null;
 
         if (clienteEmailEnvio) {
-          const clienteNome = pedido.perfis?.nome || pedido.endereco?.cliente_nome || 'Cliente';
+          const clienteNome = pedidoFinal.perfis?.nome || pedidoFinal.endereco?.cliente_nome || 'Cliente';
           await enviarEmailCliente({
             to: clienteEmailEnvio,
             subject: 'Seu pedido está pronto para retirada! 📦 - I.J Print',
@@ -254,7 +268,7 @@ export default async function handler(req, res) {
       }
     }
 
-    const reciboHtml = gerarReciboHtml(pedido, isRetirada);
+    const reciboHtml = gerarReciboHtml(pedidoFinal, isRetirada);
 
     res.status(200).json({
       success: true,
