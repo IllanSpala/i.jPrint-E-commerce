@@ -320,7 +320,6 @@ export default function Perfil() {
                       <Trash2 size={16} />
                     </button>
                   </div>
-                  </div>
                 </div>
               )
             ))}
