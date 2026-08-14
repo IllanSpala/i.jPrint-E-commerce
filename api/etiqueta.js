@@ -12,7 +12,11 @@ const supabase = createClient(
 
 function gerarReciboHtml(pedido, isRetirada) {
   const clienteNome = pedido.perfis?.nome || pedido.endereco?.cliente_nome || 'Cliente Desconhecido';
-  const dataPedido = new Date(pedido.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const dataPedido = new Date(pedido.created_at).toLocaleString('pt-BR', {
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    timeZone: 'America/Sao_Paulo'
+  });
   
   const htmlItens = (pedido.itens || []).map(item => `
     <tr>
@@ -148,18 +152,47 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: `Este pedido já foi processado (Status: ${pedidoAtual.status}). Não é possível gerar etiqueta ou enviar e-mail novamente.` });
     }
 
-    // Busca pedido completo com perfis para garantir nome e telefone
+    // Busca pedido completo com perfis
     const { data: pedidoCompleto } = await supabase
       .from('pedidos')
       .select('*, perfis ( nome, telefone, cpf )')
       .eq('id', pedido_id)
       .single();
 
-    // Mescla: dados do banco têm prioridade para perfis, mas mantém dados do pedido recebido
+    // Busca endereço atualizado do cliente (com UF) da tabela enderecos
+    const userId = pedidoCompleto?.user_id || pedido?.user_id;
+    let enderecoAtualizado = pedido.endereco || {};
+    if (userId) {
+      const { data: endDb } = await supabase
+        .from('enderecos')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('padrao', true)
+        .maybeSingle();
+      if (endDb) {
+        // Mescla snapshot do pedido com endereço atual (atual tem prioridade para UF, cidade, bairro)
+        enderecoAtualizado = {
+          ...pedido.endereco,
+          bairro: endDb.bairro || pedido.endereco?.bairro,
+          cidade: endDb.cidade || pedido.endereco?.cidade,
+          uf: endDb.uf || pedido.endereco?.uf,
+          cep: endDb.cep || pedido.endereco?.cep,
+        };
+      }
+    }
+
+    // Calcula frete real: total - soma dos itens
+    const somaItens = (pedido.itens || []).reduce((s, item) => s + ((item.precoPromocional || item.preco) * item.quantidade), 0);
+    const totalPedido = Number(pedidoCompleto?.total || pedido.total || 0);
+    const freteCalculado = Math.max(0, totalPedido - somaItens);
+
+    // Mescla final
     const pedidoFinal = {
       ...pedido,
       ...(pedidoCompleto || {}),
+      endereco: enderecoAtualizado,
       perfis: pedidoCompleto?.perfis || pedido?.perfis || null,
+      frete_valor: pedidoCompleto?.frete_valor ?? freteCalculado,
     };
 
     let trackingUrl = null;
