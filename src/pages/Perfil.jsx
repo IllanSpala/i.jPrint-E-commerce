@@ -9,10 +9,10 @@ export default function Perfil() {
   const navigate = useNavigate();
   const [profile, setProfile] = useState({ nome: '', telefone: '' });
   const [enderecos, setEnderecos] = useState([]);
-  
+
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [phoneInput, setPhoneInput] = useState('');
-  
+
   const [editingAddress, setEditingAddress] = useState(null); // null = not editing, 'new' = creating, or id = editing
   const [addressForm, setAddressForm] = useState({ rua: '', numero: '', bairro: '', cidade: '', uf: '', cep: '', padrao: false });
 
@@ -67,13 +67,34 @@ export default function Perfil() {
     setPhoneInput(val);
   };
 
-  const handleCepChange = (e) => {
+  const handleCepChange = async (e) => {
     let val = e.target.value.replace(/\D/g, '');
     if (val.length > 8) val = val.slice(0, 8);
+    
+    let formatted = val;
     if (val.length > 5) {
-      val = `${val.slice(0, 5)}-${val.slice(5)}`;
+      formatted = `${val.slice(0, 5)}-${val.slice(5)}`;
     }
-    setAddressForm({ ...addressForm, cep: val });
+    
+    setAddressForm(prev => ({ ...prev, cep: formatted }));
+
+    if (val.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${val}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setAddressForm(prev => ({
+            ...prev,
+            rua: data.logradouro || prev.rua,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            uf: data.uf || prev.uf
+          }));
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP:", err);
+      }
+    }
   };
 
   const handleSavePhone = async () => {
@@ -82,10 +103,10 @@ export default function Perfil() {
       alert("Por favor, insira um telefone válido com DDD (Ex: 11999999999).");
       return;
     }
-    
-    const formatted = numbersOnly.length === 11 
-      ? `(${numbersOnly.slice(0,2)}) ${numbersOnly.slice(2,7)}-${numbersOnly.slice(7)}`
-      : `(${numbersOnly.slice(0,2)}) ${numbersOnly.slice(2,6)}-${numbersOnly.slice(6)}`;
+
+    const formatted = numbersOnly.length === 11
+      ? `(${numbersOnly.slice(0, 2)}) ${numbersOnly.slice(2, 7)}-${numbersOnly.slice(7)}`
+      : `(${numbersOnly.slice(0, 2)}) ${numbersOnly.slice(2, 6)}-${numbersOnly.slice(6)}`;
 
     const { error } = await supabase.from('perfis').update({ telefone: formatted }).eq('id', user.id);
     if (error) {
@@ -100,20 +121,20 @@ export default function Perfil() {
 
   const handleSaveAddress = async (e) => {
     e.preventDefault();
-    
+
     const cepNumbers = addressForm.cep.replace(/\D/g, '');
     if (cepNumbers.length !== 8) {
       alert("Por favor, insira um CEP válido de 8 dígitos.");
       return;
     }
-    const formattedCep = `${cepNumbers.slice(0,5)}-${cepNumbers.slice(5)}`;
+    const formattedCep = `${cepNumbers.slice(0, 5)}-${cepNumbers.slice(5)}`;
     const finalForm = { ...addressForm, cep: formattedCep };
 
     if (finalForm.padrao) {
       // Unset previous padrao
       await supabase.from('enderecos').update({ padrao: false }).eq('user_id', user.id);
     }
-    
+
     let err;
     if (editingAddress === 'new') {
       const { error } = await supabase.from('enderecos').insert({ ...finalForm, user_id: user.id });
@@ -135,7 +156,7 @@ export default function Perfil() {
 
   const handleDeleteAddress = async (id) => {
     if (!window.confirm("Tem certeza que deseja excluir este endereço?")) return;
-    
+
     const { error } = await supabase.from('enderecos').delete().eq('id', id);
     if (error) {
       alert("Erro ao excluir: " + error.message);
@@ -147,10 +168,10 @@ export default function Perfil() {
   const handleUpdatePassword = async (e) => {
     e.preventDefault();
     setRecoveryLoading(true);
-    
+
     // Atualiza a senha no Supabase usando a sessão atual
     const { error } = await supabase.auth.updateUser({ password: newPassword });
-    
+
     if (error) {
       alert("Erro ao atualizar senha: " + error.message);
     } else {
@@ -222,10 +243,10 @@ export default function Perfil() {
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
               <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Editar Telefone</label>
               <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  value={phoneInput} 
-                  onChange={handlePhoneChange} 
+                <input
+                  type="text"
+                  value={phoneInput}
+                  onChange={handlePhoneChange}
                   placeholder="(11) 99999-9999"
                   className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400"
                 />
@@ -251,7 +272,7 @@ export default function Perfil() {
         {/* Endereços Section */}
         <div className="mt-6">
           <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-1">Endereços</h3>
-          
+
           <div className="space-y-3">
             {enderecos.map(end => (
               editingAddress === end.id ? null : (
@@ -280,7 +301,7 @@ export default function Perfil() {
             {editingAddress ? (
               <form onSubmit={handleSaveAddress} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
                 <h4 className="text-sm font-bold text-sand-400">{editingAddress === 'new' ? 'Novo Endereço' : 'Editar Endereço'}</h4>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">CEP *</label>
@@ -288,28 +309,28 @@ export default function Perfil() {
                   </div>
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Rua *</label>
-                    <input required value={addressForm.rua} onChange={e => setAddressForm({...addressForm, rua: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                    <input required value={addressForm.rua} onChange={e => setAddressForm({ ...addressForm, rua: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Número *</label>
-                    <input required value={addressForm.numero} onChange={e => setAddressForm({...addressForm, numero: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                    <input required value={addressForm.numero} onChange={e => setAddressForm({ ...addressForm, numero: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Bairro</label>
-                    <input value={addressForm.bairro} onChange={e => setAddressForm({...addressForm, bairro: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                    <input value={addressForm.bairro} onChange={e => setAddressForm({ ...addressForm, bairro: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">Cidade *</label>
-                    <input required value={addressForm.cidade} onChange={e => setAddressForm({...addressForm, cidade: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                    <input required value={addressForm.cidade} onChange={e => setAddressForm({ ...addressForm, cidade: e.target.value })} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
                   <div>
                     <label className="block text-xs text-zinc-500 mb-1">UF *</label>
-                    <input required maxLength={2} value={addressForm.uf} onChange={e => setAddressForm({...addressForm, uf: e.target.value.toUpperCase()})} placeholder="SP" className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                    <input required maxLength={2} value={addressForm.uf} onChange={e => setAddressForm({ ...addressForm, uf: e.target.value.toUpperCase() })} placeholder="SP" className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
                 </div>
-                
+
                 <label className="flex items-center gap-2 cursor-pointer mt-2">
-                  <input type="checkbox" checked={addressForm.padrao} onChange={e => setAddressForm({...addressForm, padrao: e.target.checked})} className="accent-sand-400" />
+                  <input type="checkbox" checked={addressForm.padrao} onChange={e => setAddressForm({ ...addressForm, padrao: e.target.checked })} className="accent-sand-400" />
                   <span className="text-sm text-zinc-300">Tornar este o endereço padrão</span>
                 </label>
 
@@ -328,7 +349,7 @@ export default function Perfil() {
 
         {/* Logout */}
         <div className="pt-8 flex justify-center">
-          <button 
+          <button
             onClick={handleLogout}
             className="text-zinc-500 hover:text-zinc-300 text-sm transition-colors"
           >
