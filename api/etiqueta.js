@@ -194,6 +194,7 @@ export default async function handler(req, res) {
               district: pedidoFinal.endereco?.bairro || '',
               city: pedidoFinal.endereco?.cidade || '',
               state_abbr: pedidoFinal.endereco?.uf || '',
+              document: (pedidoFinal.perfis?.cpf || '').replace(/\D/g, '') || undefined,
             },
             products: produtos,
             options: {

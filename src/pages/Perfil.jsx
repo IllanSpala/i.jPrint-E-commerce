@@ -7,11 +7,14 @@ import { ChevronLeft, Pencil, Plus, Check, X, Trash2 } from 'lucide-react';
 export default function Perfil() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [profile, setProfile] = useState({ nome: '', telefone: '' });
+  const [profile, setProfile] = useState({ nome: '', telefone: '', cpf: '' });
   const [enderecos, setEnderecos] = useState([]);
 
   const [isEditingPhone, setIsEditingPhone] = useState(false);
   const [phoneInput, setPhoneInput] = useState('');
+
+  const [isEditingCpf, setIsEditingCpf] = useState(false);
+  const [cpfInput, setCpfInput] = useState('');
 
   const [editingAddress, setEditingAddress] = useState(null); // null = not editing, 'new' = creating, or id = editing
   const [addressForm, setAddressForm] = useState({ rua: '', numero: '', bairro: '', cidade: '', uf: '', cep: '', padrao: false });
@@ -41,8 +44,9 @@ export default function Perfil() {
     // Fetch profile
     const { data: prof } = await supabase.from('perfis').select('*').eq('id', user.id).single();
     if (prof) {
-      setProfile({ nome: prof.nome || user.email.split('@')[0], telefone: prof.telefone || '' });
+      setProfile({ nome: prof.nome || user.email.split('@')[0], telefone: prof.telefone || '', cpf: prof.cpf || '' });
       setPhoneInput(prof.telefone || '');
+      setCpfInput(prof.cpf || '');
     }
 
     // Fetch addresses
@@ -117,6 +121,28 @@ export default function Perfil() {
 
     setProfile({ ...profile, telefone: formatted });
     setIsEditingPhone(false);
+  };
+
+  const handleCpfChange = (e) => {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 11) val = val.slice(0, 11);
+    if (val.length > 9) val = `${val.slice(0,3)}.${val.slice(3,6)}.${val.slice(6,9)}-${val.slice(9)}`;
+    else if (val.length > 6) val = `${val.slice(0,3)}.${val.slice(3,6)}.${val.slice(6)}`;
+    else if (val.length > 3) val = `${val.slice(0,3)}.${val.slice(3)}`;
+    setCpfInput(val);
+  };
+
+  const handleSaveCpf = async () => {
+    const nums = cpfInput.replace(/\D/g, '');
+    if (nums.length !== 11) {
+      alert('Por favor, insira um CPF válido com 11 dígitos.');
+      return;
+    }
+    const formatted = `${nums.slice(0,3)}.${nums.slice(3,6)}.${nums.slice(6,9)}-${nums.slice(9)}`;
+    const { error } = await supabase.from('perfis').update({ cpf: formatted }).eq('id', user.id);
+    if (error) { alert('Erro ao salvar CPF: ' + error.message); return; }
+    setProfile({ ...profile, cpf: formatted });
+    setIsEditingCpf(false);
   };
 
   const handleSaveAddress = async (e) => {
@@ -294,6 +320,7 @@ export default function Perfil() {
                       <Trash2 size={16} />
                     </button>
                   </div>
+                  </div>
                 </div>
               )
             ))}
@@ -345,6 +372,39 @@ export default function Perfil() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* CPF Section */}
+        <div className="mt-4">
+          {isEditingCpf ? (
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+              <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Editar CPF</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={cpfInput}
+                  onChange={handleCpfChange}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400"
+                />
+                <button onClick={handleSaveCpf} className="p-2 bg-sand-400 text-zinc-950 rounded hover:bg-sand-300">
+                  <Check size={18} />
+                </button>
+                <button onClick={() => setIsEditingCpf(false)} className="p-2 bg-zinc-800 text-zinc-400 rounded hover:text-zinc-200">
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div onClick={() => setIsEditingCpf(true)} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-pointer">
+              <div>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">CPF <span className="text-zinc-600 normal-case">(necessário para envio)</span></span>
+                <p className="text-zinc-300 text-sm font-medium">{profile.cpf || 'Adicionar CPF'}</p>
+              </div>
+              <Pencil size={16} className="text-zinc-500 group-hover:text-sand-400 transition-colors" />
+            </div>
+          )}
         </div>
 
         {/* Logout */}
