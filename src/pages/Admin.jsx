@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import {
   Package, Truck, CreditCard, ChevronDown, ChevronUp,
-  ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2
+  ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2, FileText
 } from "lucide-react";
 import ContagemRegressiva from "../components/ContagemRegressiva";
 
@@ -233,8 +233,14 @@ function BotaoConcluido({ pedido, onAtualizado }) {
 
 // --------------- Botão Gerar Etiqueta ---------------
 function BotaoEtiqueta({ pedido, onAtualizado }) {
-  const [status, setStatus] = useState('idle'); // idle | loading | success | error
-  const [trackingUrl, setTrackingUrl] = useState(null);
+  const [status, setStatus] = useState('idle');
+  const [trackingUrl, setTrackingUrl] = useState(pedido.tracking_url || null);
+  const [cartId, setCartId] = useState(pedido.melhor_envio_cart_id || null);
+  const [htmlRecibo, setHtmlRecibo] = useState(null);
+
+  const logradouro = (pedido.endereco?.logradouro || pedido.endereco?.rua || '').toLowerCase();
+  const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
+  const jaProcessado = pedido.status === 'Enviado' || pedido.status === 'Conclu\u00eddo';
 
   async function gerarEtiqueta() {
     setStatus('loading');
@@ -245,33 +251,23 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
         body: JSON.stringify({ pedido_id: pedido.id, pedido })
       });
       const data = await res.json();
-      
-      if (data.html_recibo) {
-        // Abre o recibo em uma nova janela para impressão
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(data.html_recibo);
-          newWindow.document.close();
-          // Aguarda um instante para garantir que a renderização termine antes do print
-          setTimeout(() => {
-            newWindow.print();
-          }, 500);
-        } else {
-          alert('Por favor, permita pop-ups para imprimir o recibo.');
-        }
-      }
+      if (!data.success) throw new Error(data.error || 'Falha');
 
-      if (data.success) {
-        setTrackingUrl(data.tracking_url || null);
-        setStatus('success');
-        // Atualiza status do pedido no Supabase
-        await supabase.from('pedidos').update({ status: 'Enviado' }).eq('id', pedido.id);
-        
-        if (onAtualizado) {
-          onAtualizado({ id: pedido.id, status: 'Enviado' });
-        }
-      } else {
-        throw new Error(data.error || 'Falha');
+      const newTrackingUrl = data.tracking_url || null;
+      const newCartId = data.cart_id || null;
+      setTrackingUrl(newTrackingUrl);
+      setCartId(newCartId);
+      if (data.html_recibo) setHtmlRecibo(data.html_recibo);
+      setStatus('success');
+
+      await supabase.from('pedidos').update({
+        status: 'Enviado',
+        tracking_url: newTrackingUrl,
+        melhor_envio_cart_id: newCartId,
+      }).eq('id', pedido.id);
+
+      if (onAtualizado) {
+        onAtualizado({ id: pedido.id, status: 'Enviado', tracking_url: newTrackingUrl, melhor_envio_cart_id: newCartId });
       }
     } catch (e) {
       console.error(e);
@@ -279,21 +275,57 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
     }
   }
 
-  const logradouro = pedido.endereco?.logradouro?.toLowerCase() || '';
-  const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
+  function abrirReciboInterno() {
+    if (!htmlRecibo) { alert('Gere a etiqueta primeiro.'); return; }
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(htmlRecibo); w.document.close(); setTimeout(() => w.print(), 500); }
+    else alert('Permita pop-ups para imprimir.');
+  }
 
-  if (status === 'success') {
+  const mostrarBotoesPos = jaProcessado || status === 'success';
+
+  if (mostrarBotoesPos) {
+    const melhorEnvioCartUrl = cartId
+      ? `https://melhorenvio.com.br/impressao/${cartId}`
+      : 'https://melhorenvio.com.br/envios';
+
     return (
       <div className="space-y-2 mt-2">
-        <div className="flex items-center gap-2 text-green-400 text-sm font-bold">
-          <CheckCircle size={16} /> {isRetirada ? 'Recibo gerado e E-mail enviado!' : 'Etiqueta gerada!'}
+        <div className="flex items-center gap-2 text-green-400 text-sm font-bold mb-1">
+          <CheckCircle size={16} /> {isRetirada ? 'Recibo e e-mail de retirada enviados!' : 'Etiqueta adicionada ao Melhor Envio!'}
         </div>
-        {trackingUrl && trackingUrl !== '#' && (
-          <a href={trackingUrl} target="_blank" rel="noopener noreferrer"
-            className="text-blue-400 underline text-xs">
-            Rastrear envio ↗
-          </a>
-        )}
+        <div className="grid grid-cols-1 gap-2">
+          {!isRetirada && (
+            <>
+              <a
+                href={melhorEnvioCartUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
+              >
+                <Package size={14} /> Baixar Etiqueta (Melhor Envio)
+              </a>
+              {trackingUrl && (
+                <a
+                  href={trackingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider rounded transition-colors"
+                >
+                  <Truck size={14} /> Rastrear Envio ↗
+                </a>
+              )}
+            </>
+          )}
+          {htmlRecibo && (
+            <button
+              onClick={abrirReciboInterno}
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider rounded transition-colors"
+            >
+              <FileText size={14} /> Recibo Interno (I.J Print)
+            </button>
+          )}
+        </div>
       </div>
     );
   }
