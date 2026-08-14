@@ -285,9 +285,7 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
   const mostrarBotoesPos = jaProcessado || status === 'success';
 
   if (mostrarBotoesPos) {
-    const melhorEnvioCartUrl = cartId
-      ? `https://melhorenvio.com.br/impressao/${cartId}`
-      : 'https://melhorenvio.com.br/envios';
+    const melhorEnvioUrl = trackingUrl || 'https://melhorenvio.com.br/envios';
 
     return (
       <div className="space-y-2 mt-2">
@@ -298,12 +296,12 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
           {!isRetirada && (
             <>
               <a
-                href={melhorEnvioCartUrl}
+                href={melhorEnvioUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
               >
-                <Package size={14} /> Baixar Etiqueta (Melhor Envio)
+                <Package size={14} /> Acessar Envio (Melhor Envio)
               </a>
               {trackingUrl && (
                 <a
