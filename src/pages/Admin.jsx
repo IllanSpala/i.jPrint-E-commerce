@@ -54,7 +54,7 @@ function PainelPagamento({ pedido }) {
   <p><strong>Cliente:</strong> ${pedido.perfis?.nome || 'Não informado'}</p>
   ${pedido.endereco ? `
   <p><strong>Endereço de Entrega:</strong><br>
-    ${pedido.endereco.logradouro}, ${pedido.endereco.numero}${pedido.endereco.complemento ? ', ' + pedido.endereco.complemento : ''}<br>
+    ${pedido.endereco.logradouro || pedido.endereco.rua || ''}, ${pedido.endereco.numero}${pedido.endereco.complemento ? ', ' + pedido.endereco.complemento : ''}<br>
     ${pedido.endereco.bairro} — ${pedido.endereco.cidade} / ${pedido.endereco.uf}<br>
     CEP: ${pedido.endereco.cep}
   </p>` : ''}
@@ -548,7 +548,7 @@ export default function Admin() {
                       <div className="space-y-2">
                         <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Endereço de Entrega</h3>
                         <div className="text-sm text-zinc-300 bg-zinc-950 p-4 rounded border border-zinc-800/50 leading-relaxed">
-                          <p className="font-medium text-white mb-1">{pedido.endereco.logradouro}, {pedido.endereco.numero}</p>
+                          <p className="font-medium text-white mb-1">{(pedido.endereco.logradouro || pedido.endereco.rua)}, {pedido.endereco.numero}</p>
                           {pedido.endereco.complemento && <p className="text-zinc-400">{pedido.endereco.complemento}</p>}
                           <p className="text-zinc-400">{pedido.endereco.bairro} - {pedido.endereco.cidade} / {pedido.endereco.uf}</p>
                           <p className="text-zinc-400 mt-1">CEP: <span className="text-zinc-300 font-mono">{pedido.endereco.cep}</span></p>

@@ -66,7 +66,7 @@ function gerarReciboHtml(pedido, isRetirada) {
             </div>
             <div class="info-box">
               <h3>Endereço de ${isRetirada ? 'Retirada' : 'Entrega'}</h3>
-              <p>${pedido.endereco?.logradouro || 'Não informado'}, ${pedido.endereco?.numero || 'S/N'}</p>
+              <p>${pedido.endereco?.logradouro || pedido.endereco?.rua || 'Não informado'}, ${pedido.endereco?.numero || 'S/N'}</p>
               <p>${pedido.endereco?.complemento ? pedido.endereco.complemento + '<br/>' : ''}</p>
               <p>${pedido.endereco?.bairro || ''} - ${pedido.endereco?.cidade || ''} / ${pedido.endereco?.uf || ''}</p>
               <p><strong>CEP:</strong> ${pedido.endereco?.cep || '-'}</p>
@@ -108,7 +108,7 @@ export default async function handler(req, res) {
   const token = process.env.MELHOR_ENVIO_TOKEN;
   const cepOrigem = process.env.ORIGEM_CEP;
 
-  const logradouro = pedido.endereco?.logradouro?.toLowerCase() || '';
+  const logradouro = (pedido.endereco?.logradouro || pedido.endereco?.rua || '').toLowerCase();
   const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
 
   try {
@@ -171,7 +171,7 @@ export default async function handler(req, res) {
             to: {
               name: pedido.perfis?.nome || pedido.endereco?.cliente_nome || 'Cliente',
               postal_code: pedido.endereco?.cep?.replace(/\D/g, '') || '',
-              address: pedido.endereco?.logradouro || '',
+              address: pedido.endereco?.logradouro || pedido.endereco?.rua || '',
               number: pedido.endereco?.numero || 'S/N',
               district: pedido.endereco?.bairro || '',
               city: pedido.endereco?.cidade || '',

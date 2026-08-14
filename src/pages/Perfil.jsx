@@ -14,7 +14,7 @@ export default function Perfil() {
   const [phoneInput, setPhoneInput] = useState('');
   
   const [editingAddress, setEditingAddress] = useState(null); // null = not editing, 'new' = creating, or id = editing
-  const [addressForm, setAddressForm] = useState({ rua: '', numero: '', bairro: '', cidade: '', cep: '', padrao: false });
+  const [addressForm, setAddressForm] = useState({ rua: '', numero: '', bairro: '', cidade: '', uf: '', cep: '', padrao: false });
 
   // Password Recovery States
   const [isRecovery, setIsRecovery] = useState(false);
@@ -302,6 +302,10 @@ export default function Perfil() {
                     <label className="block text-xs text-zinc-500 mb-1">Cidade *</label>
                     <input required value={addressForm.cidade} onChange={e => setAddressForm({...addressForm, cidade: e.target.value})} className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
                   </div>
+                  <div>
+                    <label className="block text-xs text-zinc-500 mb-1">UF *</label>
+                    <input required maxLength={2} value={addressForm.uf} onChange={e => setAddressForm({...addressForm, uf: e.target.value.toUpperCase()})} placeholder="SP" className="w-full bg-zinc-950 border border-zinc-800 rounded px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-sand-400" />
+                  </div>
                 </div>
                 
                 <label className="flex items-center gap-2 cursor-pointer mt-2">
@@ -315,7 +319,7 @@ export default function Perfil() {
                 </div>
               </form>
             ) : (
-              <button onClick={() => { setEditingAddress('new'); setAddressForm({ rua: '', numero: '', bairro: '', cidade: '', cep: '', padrao: enderecos.length === 0 }); }} className="w-full flex items-center justify-center gap-2 border border-dashed border-zinc-800 hover:border-sand-400/50 rounded-xl p-4 text-zinc-400 hover:text-sand-400 text-xs font-bold uppercase tracking-widest transition-colors">
+              <button onClick={() => { setEditingAddress('new'); setAddressForm({ rua: '', numero: '', bairro: '', cidade: '', uf: '', cep: '', padrao: enderecos.length === 0 }); }} className="w-full flex items-center justify-center gap-2 border border-dashed border-zinc-800 hover:border-sand-400/50 rounded-xl p-4 text-zinc-400 hover:text-sand-400 text-xs font-bold uppercase tracking-widest transition-colors">
                 <Plus size={16} /> Adicionar Endereço
               </button>
             )}
