@@ -86,10 +86,30 @@ function gerarReciboHtml(pedido, isRetirada) {
             </tbody>
           </table>
 
-          <div class="total-box">
-            TOTAL PAGO: R$ ${Number(pedido.total).toFixed(2).replace('.', ',')}
+          <div style="text-align: right; margin-bottom: 30px;">
+            ${(() => {
+              const subtotal = (pedido.itens || []).reduce((s, item) => s + ((item.precoPromocional || item.preco) * item.quantidade), 0);
+              const freteValor = Number(pedido.frete_valor || 0);
+              const fretNome = pedido.frete_nome || (isRetirada ? 'Retirada Local' : 'Envio via Correios');
+              return `
+                <table style="width:100%; border-collapse:collapse;">
+                  <tr>
+                    <td style="padding:6px 8px; color:#666; font-size:14px;">Subtotal dos Produtos</td>
+                    <td style="padding:6px 8px; text-align:right; font-size:14px;">R$ ${subtotal.toFixed(2).replace('.', ',')}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 8px; color:#666; font-size:14px;">Frete (${fretNome})</td>
+                    <td style="padding:6px 8px; text-align:right; font-size:14px;">R$ ${freteValor.toFixed(2).replace('.', ',')}</td>
+                  </tr>
+                  <tr style="border-top: 2px solid #333;">
+                    <td style="padding:10px 8px; font-weight:bold; font-size:18px;">TOTAL PAGO</td>
+                    <td style="padding:10px 8px; text-align:right; font-weight:bold; font-size:18px;">R$ ${Number(pedido.total).toFixed(2).replace('.', ',')}</td>
+                  </tr>
+                </table>
+              `;
+            })()}
           </div>
-          
+
           <div class="footer">
             Documento auxiliar de conferência de estoque gerado pelo sistema I.J Print.
           </div>
