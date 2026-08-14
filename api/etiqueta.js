@@ -131,7 +131,7 @@ export default async function handler(req, res) {
     // Busca pedido completo com perfis para garantir nome e telefone
     const { data: pedidoCompleto } = await supabase
       .from('pedidos')
-      .select('*, perfis ( nome, telefone )')
+      .select('*, perfis ( nome, telefone, cpf )')
       .eq('id', pedido_id)
       .single();
 
