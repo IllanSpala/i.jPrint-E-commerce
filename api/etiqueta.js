@@ -166,6 +166,10 @@ export default async function handler(req, res) {
             from: {
               name: 'I.J Print',
               postal_code: cepOrigem.replace(/\D/g, ''),
+              address: 'Quadra da Guararema',
+              number: 'S/N',
+              city: 'Alegre',
+              state_abbr: 'ES',
               email: 'i.j.print26@gmail.com'
             },
             to: {
