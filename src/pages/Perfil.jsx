@@ -285,10 +285,19 @@ export default function Perfil() {
               </div>
             </div>
           ) : (
-            <div onClick={() => setIsEditingPhone(true)} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-pointer">
+            <div onClick={() => setIsEditingPhone(true)} className={`bg-zinc-900 border rounded-xl p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-pointer ${
+              !profile.telefone ? 'border-red-500/40' : 'border-zinc-800'
+            }`}>
               <div>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">Telefone</span>
-                <p className="text-zinc-300 text-sm font-medium">{profile.telefone || 'Adicionar telefone'}</p>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                  Telefone
+                  {!profile.telefone && (
+                    <span className="text-[9px] font-bold text-red-400 border border-red-500/40 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Obrigatório</span>
+                  )}
+                </span>
+                <p className={`text-sm font-medium ${!profile.telefone ? 'text-red-400/70 italic' : 'text-zinc-300'}`}>
+                  {profile.telefone || 'Adicionar telefone para finalizar pedidos'}
+                </p>
               </div>
               <Pencil size={16} className="text-zinc-500 group-hover:text-sand-400 transition-colors" />
             </div>
@@ -396,10 +405,21 @@ export default function Perfil() {
               </div>
             </div>
           ) : (
-            <div onClick={() => setIsEditingCpf(true)} className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-pointer">
+            <div onClick={() => setIsEditingCpf(true)} className={`bg-zinc-900 border rounded-xl p-4 flex items-center justify-between group hover:border-zinc-700 transition-colors cursor-pointer ${
+              !profile.cpf ? 'border-red-500/40' : 'border-zinc-800'
+            }`}>
               <div>
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 block">CPF <span className="text-zinc-600 normal-case">(necessário para envio)</span></span>
-                <p className="text-zinc-300 text-sm font-medium">{profile.cpf || 'Adicionar CPF'}</p>
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                  CPF
+                  {!profile.cpf ? (
+                    <span className="text-[9px] font-bold text-red-400 border border-red-500/40 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Obrigatório</span>
+                  ) : (
+                    <span className="text-zinc-600 normal-case text-[9px]">(necessário para envio)</span>
+                  )}
+                </span>
+                <p className={`text-sm font-medium ${!profile.cpf ? 'text-red-400/70 italic' : 'text-zinc-300'}`}>
+                  {profile.cpf || 'Adicionar CPF para finalizar pedidos'}
+                </p>
               </div>
               <Pencil size={16} className="text-zinc-500 group-hover:text-sand-400 transition-colors" />
             </div>

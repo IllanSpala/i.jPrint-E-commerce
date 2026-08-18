@@ -117,6 +117,27 @@ export default function SidebarCarrinho() {
       setSidebarAberta(false);
       return;
     }
+
+    // Valida CPF e telefone obrigatórios
+    const { data: perfil } = await supabase
+      .from('perfis')
+      .select('cpf, telefone')
+      .eq('id', user.id)
+      .single();
+
+    const cpfOk = perfil?.cpf && perfil.cpf.replace(/\D/g, '').length === 11;
+    const telefoneOk = perfil?.telefone && perfil.telefone.replace(/\D/g, '').length >= 10;
+
+    if (!cpfOk || !telefoneOk) {
+      const campos = [];
+      if (!cpfOk) campos.push('CPF');
+      if (!telefoneOk) campos.push('Telefone');
+      alert(`Para finalizar o pedido, preencha o(s) campo(s) obrigatório(s) no seu Perfil:\n\n• ${campos.join('\n• ')}\n\nVocê será redirecionado para a página de Perfil.`);
+      navigate('/perfil');
+      setSidebarAberta(false);
+      return;
+    }
+
     // Mostra o modal de aviso antes de prosseguir
     setModalAvisoAberto(true);
   }

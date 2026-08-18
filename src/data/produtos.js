@@ -7,8 +7,8 @@ export const produtos = [
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
     "descricao": "Miniatura Pophead personalizada em estilo Funko Pop totalmente personalizada com suas características. Impressão FDM com acabamento premium. Acompanha base conjunta",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "100x90x155"
   },
   {
     "id": 2,
@@ -18,8 +18,8 @@ export const produtos = [
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
     "descricao": "Kit com dois Popheads em estilo Funko Pop totalmente personalizados para casais. Ideal para presentes de noivado, casamento e aniversário. Acompanha base conjunta",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 280,
+    "dimensoes": "200x90x155"
   },
   {
     "id": 3,
@@ -29,8 +29,8 @@ export const produtos = [
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
     "descricao": "Kit com três Popheads em estilo Funko Pop totalmente personalizados para famílias.Acompanha base conjunta",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 420,
+    "dimensoes": "300x90x155"
   },
   {
     "id": 4,
@@ -40,8 +40,8 @@ export const produtos = [
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
     "descricao": "Miniatura PopHead estilo FunkoPop do seu operador favorito de R6Siege. Enviar operador selecionado e skin no Whatsapp. Acompanha base conjunta",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "100x90x155"
   },
   {
     "id": 5,
@@ -51,8 +51,8 @@ export const produtos = [
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
     "descricao": "Miniatura personalizada temática exclusiva baseada em sua profissão, hobbie ou caracteristica desejada. Acompanha base conjunta",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 230,
+    "dimensoes": "110x100x180"
   },
   {
     "id": 6,
@@ -63,8 +63,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Hot Toy Tony Montana Filme Scarface, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 190,
+    "dimensoes": "90x90x200"
   },
   {
     "id": 7,
@@ -74,8 +74,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Miniatura Siegmeyer of Catarina, versão Cebolão, do jogo DarkSouls, sentadinho na sua estante (refs) impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 250,
+    "dimensoes": "160x160x200"
   },
   {
     "id": 8,
@@ -85,8 +85,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Organizador de mesa/Porta lápis em formato de Pokebola. Aproximadamente 450g",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 120,
+    "dimensoes": "100x100x130"
   },
   {
     "id": 9,
@@ -96,8 +96,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Torre de dados para RPG estilo Malboro. Ideal para mercenários fumantes, não recomendado para quem joga de Gnomo por causar insuficiencia respiratória.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 65,
+    "dimensoes": "65x30x95"
   },
   {
     "id": 10,
@@ -107,8 +107,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Organizador de mesa/Porta lápis em formato dO Jake o cachorro do Hora de Aventura. Aproximadamente 350g",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 100,
+    "dimensoes": "90x90x105"
   },
   {
     "id": 11,
@@ -132,8 +132,8 @@ export const produtos = [
       }
     ],
     "descricao": "Ovo de dragão fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil. Aproximadamente 150g",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 60,
+    "dimensoes": "75x75x100"
   },
   {
     "id": 12,
@@ -157,19 +157,19 @@ export const produtos = [
       }
     ],
     "descricao": "Estrela 10 pontas fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 40,
+    "dimensoes": "90x90x20"
   },
   {
     "id": 13,
-    "nome": "Estatua Gandalf - Senhor dos anéis (16cm)",
-    "preco": 169.9,
+    "nome": "Estatua Gandalf - Senhor dos anéis",
+    "preco": 319.9,
     "imagem": "/produtos/ESTATUA_GANDALF.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Estatua Gandalf do Senhor dos anéis, impressa em Pla Stone Marmore e Pla SIlk Dourado",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 500,
+    "dimensoes": "160x140x250"
   },
   {
     "id": 14,
@@ -179,8 +179,8 @@ export const produtos = [
     "categoria": "Coleções",
     "exigePersonalizacao": false,
     "descricao": "Kit Fallout contendo: \n Action Figure do Vault Boy  pintado a mão \n 4 POrta-copos \n 1 Hueforge (20x20)",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 250,
+    "dimensoes": "200x200x160"
   },
   {
     "id": 15,
@@ -190,8 +190,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Estatueta de Minhoca com Granada Santa, do jogo Worms. Impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 380,
+    "dimensoes": "135x135x160"
   },
   {
     "id": 16,
@@ -211,8 +211,8 @@ export const produtos = [
       }
     ],
     "descricao": "Porta Escova de Dentes Gatinho, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 100,
+    "dimensoes": "45x50x65"
   },
   {
     "id": 17,
@@ -222,8 +222,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Hot-Toys Mario-Elvis, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "100x90x170"
   },
   {
     "id": 18,
@@ -234,8 +234,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Edward Mãos de Tesoura (Hot-Toys), impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 180,
+    "dimensoes": "80x80x190"
   },
   {
     "id": 20,
@@ -245,8 +245,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Porta Lapís do castelo de Hogwarts, da franquia HarryPotter, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "100x100x120"
   },
   {
     "id": 21,
@@ -256,8 +256,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Luffy, One Piece, impresso em PLA Premium Cinza e pintado a mão após",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "90x90x170"
   },
   {
     "id": 22,
@@ -267,8 +267,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Action FIgure Vault Boy, de Fallout, impresso em PLA Cinza e pintado a mão após",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "80x80x165"
   },
   {
     "id": 23,
@@ -278,8 +278,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Smeagol, do Senhor dos Anéis, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "100x100x160"
   },
   {
     "id": 24,
@@ -330,8 +330,8 @@ export const produtos = [
       }
     ],
     "descricao": "Miniaturas Chibi de Pokémon impressos em PLA Premium. Escolha o seu favorito!",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 160,
+    "dimensoes": "110x110x160"
   },
   {
     "id": 25,
@@ -341,31 +341,19 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Pomni do desenho The Amazing Digital Circus, impresso em PLA Premium e acompanha base",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 110,
+    "dimensoes": "80x80x140"
   },
   {
     "id": 26,
     "nome": "Busto Malenia - Elden Ring",
-    "preco": 159.9,
+    "preco": 339.9,
     "imagem": "/produtos/BUSTO_MALENIA.png",
     "categoria": "Bustos",
     "exigePersonalizacao": false,
-    "opcoes": [
-      {
-        "nome": "Não Pintado",
-        "preco": 159.9,
-        "esgotado": false
-      },
-      {
-        "nome": "Pintado",
-        "preco": 339.9,
-        "esgotado": false
-      }
-    ],
     "descricao": "Busto de Malenia do jogo Elden Ring, impresso em PLA Premium e pintado a mão",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 500,
+    "dimensoes": "170x160x250"
   },
   {
     "id": 27,
@@ -428,8 +416,8 @@ export const produtos = [
       }
     ],
     "descricao": "Presilha/Grampos de cabelo impressas em PLA, aceitamos referencias.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 25,
+    "dimensoes": "70x35x25"
   },
   {
     "id": 28,
@@ -439,8 +427,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Chapeleiro Maluco, da franquia Alice no Pais das Maravilhas, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 145,
+    "dimensoes": "90x90x170"
   },
   {
     "id": 29,
@@ -450,8 +438,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Talismã Pote Companheiro, do jogo Elden Ring, impresso em PLA Premium, ideal para usar como chaveiro, colar ou pingente",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 15,
+    "dimensoes": "35x35x40"
   },
   {
     "id": 30,
@@ -461,8 +449,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Smough, O executor, do jogo Dark Souls, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 280,
+    "dimensoes": "140x120x170"
   },
   {
     "id": 31,
@@ -472,8 +460,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Makima, do mangá Chainsaw Man, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 120,
+    "dimensoes": "80x80x165"
   },
   {
     "id": 32,
@@ -495,8 +483,8 @@ export const produtos = [
       }
     ],
     "descricao": "Escultura The Division Bell, album do Pink Floyd impressa em PLA",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 450,
+    "dimensoes": "200x120x250"
   },
   {
     "id": 33,
@@ -506,8 +494,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Android 18, de DragonBall, impressa em PLA premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "80x80x170"
   },
   {
     "id": 34,
@@ -517,8 +505,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Kuromi, do universo Hello Kitty, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "100x90x160"
   },
   {
     "id": 35,
@@ -573,8 +561,8 @@ export const produtos = [
       }
     ],
     "descricao": "Figures diversas da Hello Kitty, impressas em PLA Premium, pintadas à mão com atenção aos mínimos detalhes.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "90x90x150"
   },
   {
     "id": 36,
@@ -584,8 +572,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Lemmy Kilmister, vocalista e baixista do Motorhead, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "100x90x175"
   },
   {
     "id": 37,
@@ -595,8 +583,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Joey Jordison, baterista do Slipknot, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "90x90x165"
   },
   {
     "id": 38,
@@ -606,8 +594,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Alice Cooper, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 135,
+    "dimensoes": "90x85x170"
   },
   {
     "id": 39,
@@ -617,8 +605,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure A freira (The Nun), impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "80x80x175"
   },
   {
     "id": 40,
@@ -628,19 +616,19 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure A outra mãe (Coraline), impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 120,
+    "dimensoes": "90x80x180"
   },
   {
     "id": 41,
     "nome": "Tux",
-    "preco": 39.9,
+    "preco": 69.9,
     "imagem": "/produtos/TUX.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Tux, o mascote do Linux, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 160,
+    "dimensoes": "110x100x150"
   },
   {
     "id": 42,
@@ -650,8 +638,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Marmorizado de Karl Marx, Impresso em PLA STONE MARMORE",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "90x80x130"
   },
   {
     "id": 43,
@@ -661,8 +649,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Marmorizado de Vladmir Ilyich Ulyanov (LENIN), Impresso em PLA STONE MARMORE",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "85x75x130"
   },
   {
     "id": 44,
@@ -672,19 +660,19 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Marmorizado de Joseph Stalin, Impresso em PLA STONE MARMORE",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "85x75x130"
   },
   {
     "id": 45,
     "nome": "Busto Marmorizado - Ozzy Osbourne",
-    "preco": 57.9,
     "imagem": "/produtos/BUSTO_OZZY.png",
+    "preco": 57.9,
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Marmorizado do Ozzy Osbourne, Impresso em PLA STONE MARMORE",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 145,
+    "dimensoes": "90x85x140"
   },
   {
     "id": 46,
@@ -694,8 +682,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Marmorizado do Dimebag Darrel, Impresso em PLA STONE MARMORE",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 160,
+    "dimensoes": "95x90x140"
   },
   {
     "id": 47,
@@ -705,8 +693,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Chibi Chococat - Sanrio, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "110x100x150"
   },
   {
     "id": 48,
@@ -716,8 +704,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Patolino - Looney Tunes, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "90x90x170"
   },
   {
     "id": 49,
@@ -727,8 +715,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Skye - Patrulha Canina, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 145,
+    "dimensoes": "100x120x150"
   },
   {
     "id": 50,
@@ -738,8 +726,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Angel - Lilo & Stitch, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 150,
+    "dimensoes": "120x90x150"
   },
   {
     "id": 51,
@@ -749,8 +737,8 @@ export const produtos = [
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
     "descricao": "Figure Shaun - O carneiro, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 135,
+    "dimensoes": "90x100x160"
   },
   {
     "id": 52,
@@ -848,8 +836,8 @@ export const produtos = [
       }
     ],
     "descricao": "Rolling Trays variados, peça seu personalizado inbox. impressos em PLA Premium, aproximadamente 200×130×20 mm",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 120,
+    "dimensoes": "210x150x20"
   },
   {
     "id": 53,
@@ -859,8 +847,8 @@ export const produtos = [
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
     "descricao": "Cinzeiro Barad-dûr, do Senhor dos Anéis, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 130,
+    "dimensoes": "110x110x120"
   },
   {
     "id": 54,
@@ -870,8 +858,8 @@ export const produtos = [
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
     "descricao": "Cinzeiro Hello Kitty, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 100,
+    "dimensoes": "100x95x35"
   },
   {
     "id": 55,
@@ -881,8 +869,8 @@ export const produtos = [
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
     "descricao": "Cuia Ditto, impressa em PLA Premium, aproximadamente",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 80,
+    "dimensoes": "85x85x50"
   },
   {
     "id": 56,
@@ -892,8 +880,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Eddie, do álbum Powerslave da banda Iron Maiden, impresso em PLA Cinza Premium e pintado posteriormente. Peça suscetível a mudança de cor dada a variação de pintura",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 520,
+    "dimensoes": "175x165x275"
   },
   {
     "id": 57,
@@ -903,8 +891,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Têmis, da deusa da justiça, impresso em PLA Premium. Aceitamos tamanhos personalizados, entre em contato inbox para solicitar orçamento.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 480,
+    "dimensoes": "160x150x270"
   },
   {
     "id": 58,
@@ -914,8 +902,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Vic Rattlehead, mascote da banda Megadeth, impresso em PLA Cinza Premium e pintado posteriormente. Peça suscetível a mudança de cor dada a variação de pintura",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 540,
+    "dimensoes": "175x175x280"
   },
   {
     "id": 59,
@@ -925,8 +913,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Totem Metallica - One, impresso em PLA Premium. Aceitamos tamanhos personalizados, entre em contato inbox para solicitar orçamento. Peça suscetível a mudança de cor dada a variação de pintura",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 120,
+    "dimensoes": "80x80x150"
   },
   {
     "id": 60,
@@ -936,8 +924,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Totem DeadByDaylight, impresso em PLA Premium. Acompanha BASE. Peça suscetível a mudança de cor dada a variação de pintura",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 950,
+    "dimensoes": "200x200x350"
   },
   {
     "id": 61,
@@ -947,8 +935,8 @@ export const produtos = [
     "categoria": "Bustos",
     "exigePersonalizacao": false,
     "descricao": "Busto Agamemnon, impresso em PLA premium. Aceitamos tamanhos personalizados via inbox.",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 450,
+    "dimensoes": "160x150x250"
   },
   {
     "id": 62,
@@ -983,8 +971,8 @@ export const produtos = [
     "categoria": "Coleções",
     "exigePersonalizacao": false,
     "descricao": "Figures do jogo Cult of the Lamb, impresso em PLA Premium",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "90x90x170"
   },
   {
     "id": 63,
@@ -1034,8 +1022,8 @@ export const produtos = [
     "categoria": "Coleções",
     "exigePersonalizacao": false,
     "descricao": "Figures do jogo Dead By Daylight, impresso em PLA Premium Pintado em Acrílica posteriormente (fotos ilustrativas, tintas podem sofrer alteração de cor)",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 140,
+    "dimensoes": "90x90x170"
   },
   {
     "id": 64,
@@ -1059,8 +1047,8 @@ export const produtos = [
     ],
     "multiplaPersonalizacao": true,
     "descricao": "Ponteiras para lápis e caneta, impressas em PLA Premium, escolha até duas cores e escolha o tamanho do item que sera adornado!",
-    "peso_gramas": 300,
-    "dimensoes": "15x10x20"
+    "peso_gramas": 10,
+    "dimensoes": "25x25x35"
   },
   {
     "id": 65,
@@ -1070,8 +1058,8 @@ export const produtos = [
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "descricao": "Regador de plantas em formato de Psyduck, com capacidade de 400ml. Impresso em PLA Premium. Fotos ilustrativas, pode sofrer alteração de cor.",
-    "peso_gramas": 170,
-    "dimensoes": "130x110x160"
+    "peso_gramas": 180,
+    "dimensoes": "130x180x160"
   }
 ];
 
