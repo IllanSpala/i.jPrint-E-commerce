@@ -285,7 +285,14 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
   const mostrarBotoesPos = jaProcessado || status === 'success';
 
   if (mostrarBotoesPos) {
-    // URL interna do Melhor Envio (acesso do admin — exige login na conta)
+    // O padrão antigo (melhorenvio.com.br/envios/{uuid}) era uma URL interna que retorna 404.
+    // Detectamos esse padrão para não exibi-lo como link público de rastreio.
+    const isUrlAntiga = trackingUrl && /melhorenvio\.com\.br\/envios\/[a-z0-9-]+/i.test(trackingUrl);
+
+    // URL pública de rastreio — só válida se não for o padrão antigo quebrado
+    const publicTrackingUrl = (!isUrlAntiga && trackingUrl) ? trackingUrl : null;
+
+    // URL do admin no Melhor Envio — usa cartId se disponível, senão abre a lista
     const melhorEnvioAdminUrl = cartId
       ? `https://melhorenvio.com.br/envios/${cartId}`
       : 'https://melhorenvio.com.br/envios';
@@ -298,23 +305,30 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
         <div className="grid grid-cols-1 gap-2">
           {!isRetirada && (
             <>
+              {/* Botão admin: abre o painel do Melhor Envio (exige estar logado) */}
               <a
-                href={melhorEnvioAdminUrl}
+                href="https://melhorenvio.com.br/envios"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
               >
-                <Package size={14} /> Gerenciar Envio (Melhor Envio Admin)
+                <Package size={14} /> Abrir Painel Melhor Envio ↗
               </a>
-              {trackingUrl && (
+
+              {/* Botão de rastreio público — só aparece se a URL for válida (não o padrão antigo) */}
+              {publicTrackingUrl ? (
                 <a
-                  href={trackingUrl}
+                  href={publicTrackingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider rounded transition-colors"
                 >
-                  <Truck size={14} /> Rastrear Envio (Link Público) ↗
+                  <Truck size={14} /> Rastrear Envio (Correios) ↗
                 </a>
+              ) : (
+                <div className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-900 border border-zinc-800 text-zinc-500 text-xs rounded cursor-default">
+                  <Truck size={14} /> Código de rastreio disponível após comprar a etiqueta no Melhor Envio
+                </div>
               )}
             </>
           )}
