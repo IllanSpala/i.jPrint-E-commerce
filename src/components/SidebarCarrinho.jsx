@@ -525,7 +525,7 @@ export default function SidebarCarrinho() {
             <div className="flex justify-between items-center py-2 border-t border-zinc-800">
               <span className="text-zinc-400 text-sm">Total a Pagar</span>
               <span className="text-sand-400 font-bold text-xl">
-                R$ {(totalPreco + (freteSelecionado && modoEntrega === 'envio' ? freteSelecionado.preco : 0)).toFixed(2).replace(".", ",")}
+                R$ {(totalPreco + (freteSelecionado && modoEntrega === 'envio' && !itens.every(i => i.isPagamentoPersonalizado) ? freteSelecionado.preco : 0)).toFixed(2).replace(".", ",")}
               </span>
             </div>
 
