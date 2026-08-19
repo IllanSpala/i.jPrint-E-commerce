@@ -285,7 +285,10 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
   const mostrarBotoesPos = jaProcessado || status === 'success';
 
   if (mostrarBotoesPos) {
-    const melhorEnvioUrl = trackingUrl || 'https://melhorenvio.com.br/envios';
+    // URL interna do Melhor Envio (acesso do admin — exige login na conta)
+    const melhorEnvioAdminUrl = cartId
+      ? `https://melhorenvio.com.br/envios/${cartId}`
+      : 'https://melhorenvio.com.br/envios';
 
     return (
       <div className="space-y-2 mt-2">
@@ -296,12 +299,12 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
           {!isRetirada && (
             <>
               <a
-                href={melhorEnvioUrl}
+                href={melhorEnvioAdminUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold text-xs uppercase tracking-wider rounded transition-colors"
               >
-                <Package size={14} /> Acessar Envio (Melhor Envio)
+                <Package size={14} /> Gerenciar Envio (Melhor Envio Admin)
               </a>
               {trackingUrl && (
                 <a
@@ -310,7 +313,7 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
                   rel="noopener noreferrer"
                   className="w-full flex items-center justify-center gap-2 py-2.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 font-bold text-xs uppercase tracking-wider rounded transition-colors"
                 >
-                  <Truck size={14} /> Rastrear Envio ↗
+                  <Truck size={14} /> Rastrear Envio (Link Público) ↗
                 </a>
               )}
             </>

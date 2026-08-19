@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import {
   enviarEmailCliente,
+  enviarEmailAdmin,
   buscarEmailCliente,
   emailClientePedidoEnviado,
+  ADMIN_EMAIL,
+  formatarPedidoId,
 } from './_lib/mailer.js';
 
 const supabase = createClient(
@@ -270,25 +273,60 @@ export default async function handler(req, res) {
           throw new Error(`Falha ao adicionar ao carrinho do Melhor Envio (${cartRes.status}): ${errBody}`);
         }
         cartData = await cartRes.json();
-        trackingUrl = `https://melhorenvio.com.br/envios/${cartData.id}`;
+
+        // Usa o código de rastreio retornado pela API para montar a URL pública dos Correios.
+        // O campo "tracking" pode já vir preenchido na resposta do /me/cart (sandbox ou após
+        // compra de etiqueta). Se vier vazio, usamos o link público do Melhor Envio como
+        // fallback — o cliente ainda consegue acessar pelo número do pedido.
+        const trackingCode = cartData.tracking || cartData.tracking_number || null;
+        if (trackingCode) {
+          trackingUrl = `https://rastreamento.correios.com.br/app/index.php?objetos=${encodeURIComponent(trackingCode)}`;
+        } else {
+          // Fallback: link público de rastreio do Melhor Envio (não exige login)
+          trackingUrl = `https://melhorenvio.com.br/tracking/${cartData.id}`;
+        }
+        console.log('[Melhor Envio] cart_id:', cartData.id, '| tracking_code:', trackingCode, '| trackingUrl:', trackingUrl);
       }
 
-      // Envia E-mail de Envio (apenas para Envios via Correios)
+      // Envia E-mails de Envio (cliente + admin) — apenas para Envios via Correios
       try {
         const clienteEmailEnvio = pedidoFinal?.user_id
           ? await buscarEmailCliente(supabase, pedidoFinal.user_id)
           : pedidoFinal.endereco?.cliente_email || null;
 
+        const clienteNome = pedidoFinal.perfis?.nome || pedidoFinal.endereco?.cliente_nome || 'Cliente';
+        const trackingCode = cartData?.tracking || cartData?.tracking_number || null;
+        const adminCartUrl = `https://melhorenvio.com.br/envios/${cartData?.id}`;
+
+        // E-mail para o cliente com link de rastreio público
         if (clienteEmailEnvio) {
-          const clienteNome = pedidoFinal.perfis?.nome || pedidoFinal.endereco?.cliente_nome || 'Cliente';
           await enviarEmailCliente({
             to: clienteEmailEnvio,
             ...emailClientePedidoEnviado({ clienteNome, pedidoId: pedido_id, trackingUrl }),
           });
-          console.log('[Melhor Envio] E-mail de envio disparado com sucesso.');
+          console.log('[Melhor Envio] E-mail de envio disparado para o cliente com sucesso.');
         }
+
+        // E-mail para o admin com link direto para o painel do Melhor Envio
+        await enviarEmailAdmin({
+          subject: `📦 Etiqueta gerada — Pedido #${formatarPedidoId(pedido_id)}`,
+          html: `
+            <div style="font-family: sans-serif; color: #111;">
+              <h2 style="margin: 0 0 12px;">Etiqueta gerada para o pedido #${formatarPedidoId(pedido_id)}</h2>
+              <p><strong>Cliente:</strong> ${clienteNome}</p>
+              <p><strong>Código de Rastreio:</strong> ${trackingCode || 'Ainda não disponível (aguarde a compra da etiqueta)'}</p>
+              <p style="margin-top: 16px;">
+                <a href="${adminCartUrl}" style="background-color: #3b82f6; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                  Acessar no Melhor Envio ↗
+                </a>
+              </p>
+              ${trackingUrl ? `<p style="margin-top: 12px;"><strong>Link de rastreio (cliente):</strong> <a href="${trackingUrl}">${trackingUrl}</a></p>` : ''}
+            </div>
+          `
+        });
+        console.log('[Melhor Envio] E-mail de notificação enviado para o admin.');
       } catch (err) {
-        console.error('[Melhor Envio] Erro ao enviar e-mail de rastreio:', err);
+        console.error('[Melhor Envio] Erro ao enviar e-mails de rastreio:', err);
       }
     } else {
       // Se for retirada local, enviamos e-mail avisando que está pronto para retirar
