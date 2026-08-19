@@ -74,12 +74,17 @@ export default async function handler(req, res) {
       // Determina o preço base (promocional ou normal)
       let precoReal = produtoReal.preco_promocional || produtoReal.preco;
       
-      // Se houver uma opção escolhida e ela tiver acréscimo de preço, recalcula
-      if (item.opcaoEscolhida && produtoReal.opcoes) {
-         const opcaoReal = produtoReal.opcoes.find(o => o.nome === item.opcaoEscolhida);
-         if (opcaoReal && opcaoReal.precoAcrescimo) {
-            precoReal += opcaoReal.precoAcrescimo;
-         }
+      // Se for o Pagamento Personalizado, o preço vem do frontend
+      if (item.isPagamentoPersonalizado) {
+        precoReal = parseFloat(item.preco);
+      } else {
+        // Se houver uma opção escolhida e ela tiver acréscimo de preço, recalcula
+        if (item.opcaoEscolhida && produtoReal.opcoes) {
+           const opcaoReal = produtoReal.opcoes.find(o => o.nome === item.opcaoEscolhida);
+           if (opcaoReal && opcaoReal.precoAcrescimo) {
+              precoReal += opcaoReal.precoAcrescimo;
+           }
+        }
       }
 
       return {

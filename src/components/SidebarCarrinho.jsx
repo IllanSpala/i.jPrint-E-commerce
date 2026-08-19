@@ -146,8 +146,10 @@ export default function SidebarCarrinho() {
     setModalAvisoAberto(false);
     setLoading(true);
 
-    // ── MODO RETIRADA ──────────────────────────────────────────────────
-    if (modoEntrega === 'retirada') {
+    const isApenasPagamentoCustom = itens.every(i => i.isPagamentoPersonalizado);
+
+    // ── MODO RETIRADA OU PAGAMENTO CUSTOMIZADO ────────────────────────
+    if (modoEntrega === 'retirada' || isApenasPagamentoCustom) {
       if (import.meta.env.DEV) {
         setSidebarAberta(false);
         setLoading(false);
@@ -165,7 +167,7 @@ export default function SidebarCarrinho() {
             'Authorization': `Bearer ${session?.access_token}`
           },
           body: JSON.stringify({
-            endereco: { logradouro: 'Quadra da Guararema', numero: 'S/N', bairro: 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
+            endereco: { logradouro: isApenasPagamentoCustom ? 'Pagamento Online' : 'Quadra da Guararema', numero: 'S/N', bairro: isApenasPagamentoCustom ? 'N/A' : 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
             frete_valor: 0, 
             itens,
             redirect_base_url: `${siteUrl}/pedido-confirmado`
@@ -412,99 +414,108 @@ export default function SidebarCarrinho() {
             {/* Seção de Entrega */}
             {user ? (
               <div className="py-2 border-t border-zinc-800">
-                <span className="text-zinc-400 text-sm block mb-3">Opções de Entrega</span>
-
-                {/* Toggle Envio / Retirada */}
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setModoEntrega('envio')}
-                    className={`flex-1 py-2 text-xs font-bold rounded border transition-colors ${
-                      modoEntrega === 'envio'
-                        ? 'bg-sand-400/10 border-sand-400/50 text-sand-400'
-                        : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
-                    }`}
-                  >
-                    🚚 Envio pelos Correios
-                  </button>
-                  <button
-                    onClick={() => { setModoEntrega('retirada'); setFreteSelecionado(null); }}
-                    className={`flex-1 py-2 text-xs font-bold rounded border transition-colors ${
-                      modoEntrega === 'retirada'
-                        ? 'bg-green-500/10 border-green-500/40 text-green-400'
-                        : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
-                    }`}
-                  >
-                    📦 Retirar
-                  </button>
-                </div>
-
-                {/* Aviso de Retirada */}
-                {modoEntrega === 'retirada' && (
-                  <div className="mb-3 p-3 bg-green-500/5 border border-green-500/20 rounded text-xs text-green-300 leading-relaxed">
-                    ✅ <strong>Frete Grátis!</strong><br />
-                    ⚠️ A retirada será realizada na <strong>Quadra da Guararema</strong>.
-                    O horário da entrega será combinado pelo WhatsApp.
+                {/* Verifica se o carrinho tem APENAS itens de Pagamento Personalizado */}
+                {itens.every(i => i.isPagamentoPersonalizado) ? (
+                  <div className="p-3 bg-sand-400/5 border border-sand-400/20 rounded text-xs text-sand-300 leading-relaxed">
+                    💳 <strong>Pagamento Personalizado</strong> — sem necessidade de endereço ou envio. O pagamento será processado diretamente pela nossa plataforma.
                   </div>
-                )}
-
-                {/* Seletor de endereço e opções de frete — só no modo envio */}
-                {modoEntrega === 'envio' && (
+                ) : (
                   <>
-                    {todosEnderecos.length > 0 && (
-                      <div className="mb-4">
-                        <label className="text-xs text-zinc-500 mb-1 block">Enviar para:</label>
-                        <select
-                          value={enderecoSelecionado?.id || ''}
-                          onChange={(e) => {
-                            const selecionado = todosEnderecos.find(end => end.id === e.target.value);
-                            setEnderecoSelecionado(selecionado);
-                          }}
-                          className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-sm text-zinc-300 focus:outline-none focus:border-sand-400"
-                        >
-                          {todosEnderecos.map(end => (
-                            <option key={end.id} value={end.id}>
-                              {end.rua}, {end.numero} — {end.cidade}/{end.uf} {end.padrao ? '(Padrão)' : ''}
-                            </option>
-                          ))}
-                        </select>
+                    <span className="text-zinc-400 text-sm block mb-3">Opções de Entrega</span>
+
+                    {/* Toggle Envio / Retirada */}
+                    <div className="flex gap-2 mb-4">
+                      <button
+                        onClick={() => setModoEntrega('envio')}
+                        className={`flex-1 py-2 text-xs font-bold rounded border transition-colors ${
+                          modoEntrega === 'envio'
+                            ? 'bg-sand-400/10 border-sand-400/50 text-sand-400'
+                            : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        🚚 Envio pelos Correios
+                      </button>
+                      <button
+                        onClick={() => { setModoEntrega('retirada'); setFreteSelecionado(null); }}
+                        className={`flex-1 py-2 text-xs font-bold rounded border transition-colors ${
+                          modoEntrega === 'retirada'
+                            ? 'bg-green-500/10 border-green-500/40 text-green-400'
+                            : 'border-zinc-700 text-zinc-400 hover:border-zinc-600'
+                        }`}
+                      >
+                        📦 Retirar
+                      </button>
+                    </div>
+
+                    {/* Aviso de Retirada */}
+                    {modoEntrega === 'retirada' && (
+                      <div className="mb-3 p-3 bg-green-500/5 border border-green-500/20 rounded text-xs text-green-300 leading-relaxed">
+                        ✅ <strong>Frete Grátis!</strong><br />
+                        ⚠️ A retirada será realizada na <strong>Quadra da Guararema</strong>.
+                        O horário da entrega será combinado pelo WhatsApp.
                       </div>
                     )}
 
-                    {calculandoFrete ? (
-                      <p className="text-xs text-zinc-500 animate-pulse">Calculando opções...</p>
-                    ) : !enderecoSelecionado ? (
-                      <p className="text-xs text-zinc-500">
-                        <button
-                          onClick={() => { setSidebarAberta(false); navigate("/perfil"); }}
-                          className="text-sand-400 underline"
-                        >
-                          Cadastre um endereço
-                        </button>{" "}para ver o frete.
-                      </p>
-                    ) : opcoesFrete.length > 0 ? (
-                      <div className="space-y-2">
-                        {opcoesFrete.map((opcao) => (
-                          <label
-                            key={opcao.id}
-                            className="flex items-center justify-between p-2 rounded border border-zinc-700 bg-zinc-800/50 cursor-pointer hover:border-sand-400/50 transition-colors"
-                          >
-                            <div className="flex items-center gap-2">
-                              <input
-                                type="radio"
-                                name="frete"
-                                className="accent-sand-400"
-                                checked={freteSelecionado?.id === opcao.id}
-                                onChange={() => setFreteSelecionado(opcao)}
-                              />
-                              <span className="text-zinc-300 text-sm">{opcao.nome} ({opcao.prazo} dias)</span>
-                            </div>
-                            <span className="text-zinc-300 text-sm font-medium">
-                              R$ {opcao.preco.toFixed(2).replace('.', ',')}
-                            </span>
-                          </label>
-                        ))}
-                      </div>
-                    ) : null}
+                    {/* Seletor de endereço e opções de frete — só no modo envio */}
+                    {modoEntrega === 'envio' && (
+                      <>
+                        {todosEnderecos.length > 0 && (
+                          <div className="mb-4">
+                            <label className="text-xs text-zinc-500 mb-1 block">Enviar para:</label>
+                            <select
+                              value={enderecoSelecionado?.id || ''}
+                              onChange={(e) => {
+                                const selecionado = todosEnderecos.find(end => end.id === e.target.value);
+                                setEnderecoSelecionado(selecionado);
+                              }}
+                              className="w-full bg-zinc-900 border border-zinc-700 rounded p-2 text-sm text-zinc-300 focus:outline-none focus:border-sand-400"
+                            >
+                              {todosEnderecos.map(end => (
+                                <option key={end.id} value={end.id}>
+                                  {end.rua}, {end.numero} — {end.cidade}/{end.uf} {end.padrao ? '(Padrão)' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {calculandoFrete ? (
+                          <p className="text-xs text-zinc-500 animate-pulse">Calculando opções...</p>
+                        ) : !enderecoSelecionado ? (
+                          <p className="text-xs text-zinc-500">
+                            <button
+                              onClick={() => { setSidebarAberta(false); navigate("/perfil"); }}
+                              className="text-sand-400 underline"
+                            >
+                              Cadastre um endereço
+                            </button>{" "}para ver o frete.
+                          </p>
+                        ) : opcoesFrete.length > 0 ? (
+                          <div className="space-y-2">
+                            {opcoesFrete.map((opcao) => (
+                              <label
+                                key={opcao.id}
+                                className="flex items-center justify-between p-2 rounded border border-zinc-700 bg-zinc-800/50 cursor-pointer hover:border-sand-400/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="radio"
+                                    name="frete"
+                                    className="accent-sand-400"
+                                    checked={freteSelecionado?.id === opcao.id}
+                                    onChange={() => setFreteSelecionado(opcao)}
+                                  />
+                                  <span className="text-zinc-300 text-sm">{opcao.nome} ({opcao.prazo} dias)</span>
+                                </div>
+                                <span className="text-zinc-300 text-sm font-medium">
+                                  R$ {opcao.preco.toFixed(2).replace('.', ',')}
+                                </span>
+                              </label>
+                            ))}
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </>
                 )}
               </div>

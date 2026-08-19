@@ -60,6 +60,8 @@ export default function Home() {
   }
 
   const filtrados = produtos.filter((p) => {
+    // O Pagamento Personalizado aparece em todas as categorias
+    if (p.isPagamentoPersonalizado) return true;
     const passaCategoria = categoriaAtiva === "Todos" 
       ? true 
       : (categoriaAtiva === "Promoção" ? p.precoPromocional : p.categoria === categoriaAtiva);
@@ -71,24 +73,33 @@ export default function Home() {
     return passaCategoria && passaBusca;
   });
 
-  const filtradosOrdenados = [...filtrados].sort((a, b) => {
-    if (ordenacao === "MenorMaior") {
-      const precoA = a.precoPromocional || a.preco;
-      const precoB = b.precoPromocional || b.preco;
-      return precoA - precoB;
-    }
-    if (ordenacao === "MaiorMenor") {
-      const precoA = a.precoPromocional || a.preco;
-      const precoB = b.precoPromocional || b.preco;
-      return precoB - precoA;
-    }
+  const filtradosOrdenados = (() => {
+    // Separa o Pagamento Personalizado dos demais
+    const pagPersonalizado = filtrados.filter(p => p.isPagamentoPersonalizado);
+    const demais = filtrados.filter(p => !p.isPagamentoPersonalizado);
 
-    if (categoriaAtiva === "Todos") {
-      if (a.precoPromocional && !b.precoPromocional) return -1;
-      if (!a.precoPromocional && b.precoPromocional) return 1;
-    }
-    return 0;
-  });
+    const demaisOrdenados = [...demais].sort((a, b) => {
+      if (ordenacao === "MenorMaior") {
+        const precoA = a.precoPromocional || a.preco;
+        const precoB = b.precoPromocional || b.preco;
+        return precoA - precoB;
+      }
+      if (ordenacao === "MaiorMenor") {
+        const precoA = a.precoPromocional || a.preco;
+        const precoB = b.precoPromocional || b.preco;
+        return precoB - precoA;
+      }
+
+      if (categoriaAtiva === "Todos") {
+        if (a.precoPromocional && !b.precoPromocional) return -1;
+        if (!a.precoPromocional && b.precoPromocional) return 1;
+      }
+      return 0;
+    });
+
+    // Pagamento Personalizado sempre primeiro
+    return [...pagPersonalizado, ...demaisOrdenados];
+  })();
 
   return (
     <main className="pt-24 pb-16 px-4 max-w-7xl mx-auto">

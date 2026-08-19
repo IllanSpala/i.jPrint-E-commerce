@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
@@ -23,6 +23,7 @@ export default function PaginaProduto() {
 
   const [quantidadeLocal, setQuantidadeLocal] = useState(1);
   const [parametrosMultiplos, setParametrosMultiplos] = useState([""]);
+  const [valorCustom, setValorCustom] = useState("");
 
   useEffect(() => {
     setParametrosMultiplos(prev => {
@@ -98,18 +99,32 @@ export default function PaginaProduto() {
   const exibePromocao = !opcaoAtual?.preco && !variacaoAtual?.preco && produto.precoPromocional;
 
   function adicionar() {
-    const itemToAdd = {
-      ...produto,
-      preco: variacaoAtual?.preco || opcaoAtual?.preco || produto.preco,
-      precoPromocional: (opcaoAtual?.preco || variacaoAtual?.preco) ? null : produto.precoPromocional,
-      personalizacao: produto.exigePersonalizacao ? personalizacao : undefined,
-      parametrosMultiplos: produto.multiplaPersonalizacao ? parametrosMultiplos : undefined,
-      quantidade: produto.multiplaPersonalizacao ? quantidadeLocal : 1,
-      opcaoEscolhida: opcaoSelecionada 
-        ? (variacaoSelecionada ? `${opcaoSelecionada} - ${variacaoSelecionada}` : opcaoSelecionada) 
-        : undefined,
-      cartId: `${produto.id}-${opcaoSelecionada || 'default'}-${variacaoSelecionada || 'default'}-${Date.now()}`,
-    };
+    let itemToAdd;
+
+    if (produto.isPagamentoPersonalizado) {
+      const valorNum = parseFloat(valorCustom.replace(',', '.'));
+      itemToAdd = {
+        ...produto,
+        preco: valorNum,
+        precoPromocional: null,
+        isPagamentoPersonalizado: true,
+        quantidade: 1,
+        cartId: `pagamento-custom-${Date.now()}`,
+      };
+    } else {
+      itemToAdd = {
+        ...produto,
+        preco: variacaoAtual?.preco || opcaoAtual?.preco || produto.preco,
+        precoPromocional: (opcaoAtual?.preco || variacaoAtual?.preco) ? null : produto.precoPromocional,
+        personalizacao: produto.exigePersonalizacao ? personalizacao : undefined,
+        parametrosMultiplos: produto.multiplaPersonalizacao ? parametrosMultiplos : undefined,
+        quantidade: produto.multiplaPersonalizacao ? quantidadeLocal : 1,
+        opcaoEscolhida: opcaoSelecionada 
+          ? (variacaoSelecionada ? `${opcaoSelecionada} - ${variacaoSelecionada}` : opcaoSelecionada) 
+          : undefined,
+        cartId: `${produto.id}-${opcaoSelecionada || 'default'}-${variacaoSelecionada || 'default'}-${Date.now()}`,
+      };
+    }
 
     dispatch({ type: "ADICIONAR", item: itemToAdd });
     setAdicionado(true);
@@ -119,6 +134,7 @@ export default function PaginaProduto() {
       setQuantidadeLocal(1);
       setParametrosMultiplos([""]);
       setPersonalizacao("");
+      setValorCustom("");
     }, 600);
   }
 
@@ -161,7 +177,11 @@ export default function PaginaProduto() {
                            (opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && !variacaoSelecionada);
   const isPersonalizacaoUnicaValida = !produto.exigePersonalizacao || personalizacao.trim().length > 0;
   const isPersonalizacaoMultiplaValida = !produto.multiplaPersonalizacao || parametrosMultiplos.every(p => p.trim().length > 0);
-  const podeAdicionar = isPersonalizacaoUnicaValida && isPersonalizacaoMultiplaValida && !temOpcaoPendente;
+  const valorCustomNum = parseFloat((valorCustom || '0').replace(',', '.'));
+  const isPagCustomValido = !produto.isPagamentoPersonalizado || (valorCustomNum >= 1);
+  const podeAdicionar = produto.isPagamentoPersonalizado
+    ? isPagCustomValido
+    : (isPersonalizacaoUnicaValida && isPersonalizacaoMultiplaValida && !temOpcaoPendente);
 
   return (
     <main className="pt-24 pb-16 px-4 max-w-5xl mx-auto">
@@ -237,204 +257,260 @@ export default function PaginaProduto() {
 
           <p className="text-zinc-400 text-sm leading-relaxed">{produto.descricao}</p>
 
-          <div className="flex items-center gap-6 mt-1 mb-2">
-            <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
-              <Ruler size={16} className="text-sand-400" />
-              <span className="text-xs font-bold tracking-wide">{produto.dimensoes || "150x100x200"} mm</span>
-            </div>
-            <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
-              <Dumbbell size={16} className="text-sand-400" />
-              <span className="text-xs font-bold tracking-wide">{produto.peso_gramas || 300} g</span>
-            </div>
-          </div>
-
-          {/* Campo de personalização única */}
-          {produto.exigePersonalizacao && (
-            <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-2">
-              <div className="flex items-center gap-2 text-sand-400">
-                <Pencil size={14} />
-                <span className="text-sm font-medium">Personalização</span>
-              </div>
-              <textarea
-                rows={4}
-                placeholder="Descreva sua peça (cor de cabelo, roupa, acessórios, estilo…)"
-                value={personalizacao}
-                onChange={(e) => setPersonalizacao(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-sand-400/60"
-              />
-              <p className="text-xs text-zinc-500 italic">
-                Nota: Fotos e áudios de referência deverão ser enviados diretamente no WhatsApp após a finalização do pedido.
-              </p>
-            </div>
-          )}
-
-
-
-          {/* Opções de Escolha (ex: cores) */}
-          {produto.opcoes && produto.opcoes.length > 0 && (
-            <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
-              <span className="text-sm font-medium text-sand-400">Opções Disponíveis</span>
-              <div className="flex flex-wrap gap-3">
-                {produto.opcoes.map((opcao) => {
-                  const isSelected = opcaoSelecionada === opcao.nome;
-                  return (
-                    <button
-                      key={opcao.nome}
-                      disabled={opcao.esgotado}
-                      onClick={() => {
-                        if (opcaoSelecionada !== opcao.nome) {
-                          setVariacaoSelecionada(""); // Reseta a sub-opção se trocar o modelo
-                        }
-                        setOpcaoSelecionada(opcao.nome);
-                        if (opcao.imagem) {
-                          setImagemAtual(opcao.imagem);
-                        } else if (opcao.variacoes && opcao.variacoes.length > 0 && opcao.variacoes[0].imagem) {
-                          setImagemAtual(opcao.variacoes[0].imagem);
-                        }
-                      }}
-                      className={`relative px-4 py-2 rounded-full border text-sm font-medium transition-all duration-300 ${
-                        opcao.esgotado
-                          ? "bg-zinc-900/40 backdrop-blur-sm border-zinc-800/50 text-zinc-600 cursor-not-allowed overflow-hidden"
-                          : isSelected
-                          ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_12px_rgba(255,255,255,0.1)] scale-[1.02]"
-                          : "bg-zinc-800/40 backdrop-blur-sm border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60 hover:border-sand-400/60 hover:text-white"
-                      }`}
-                    >
-                      {opcao.nome}
-                      {opcao.esgotado && (
-                        <div className="absolute inset-0 w-full h-full pointer-events-none">
-                          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-600/50 -rotate-[20deg] transform origin-center"></div>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Variações da opção escolhida (ex: pintado/não pintado) */}
-          {opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && (
-            <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
-              <span className="text-sm font-medium text-sand-400">Opções de Acabamento</span>
-              <div className="flex flex-wrap gap-3">
-                {opcaoAtual.variacoes.map((variacao) => {
-                  const isSelected = variacaoSelecionada === variacao.nome;
-                  return (
-                    <button
-                      key={variacao.nome}
-                      disabled={variacao.esgotado}
-                      onClick={() => {
-                        setVariacaoSelecionada(variacao.nome);
-                        if (variacao.imagem) setImagemAtual(variacao.imagem);
-                      }}
-                      className={`relative px-4 py-2 rounded-full border text-sm font-medium transition-all duration-300 ${
-                        variacao.esgotado
-                          ? "bg-zinc-900/40 backdrop-blur-sm border-zinc-800/50 text-zinc-600 cursor-not-allowed overflow-hidden"
-                          : isSelected
-                          ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_12px_rgba(255,255,255,0.1)] scale-[1.02]"
-                          : "bg-zinc-800/40 backdrop-blur-sm border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60 hover:border-sand-400/60 hover:text-white"
-                      }`}
-                    >
-                      {variacao.nome}
-                      {variacao.esgotado && (
-                        <div className="absolute inset-0 w-full h-full pointer-events-none">
-                          <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-600/50 -rotate-[20deg] transform origin-center"></div>
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Campo de personalização múltipla (Paramétrica) */}
-          {produto.multiplaPersonalizacao && (
-            <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-3">
-              <div className="flex items-center justify-between">
+          {/* ===== PAGAMENTO PERSONALIZADO: UI Especial ===== */}
+          {produto.isPagamentoPersonalizado ? (
+            <>
+              <div className="rounded-lg border border-sand-400/30 bg-sand-400/5 p-5 space-y-4 mt-2">
                 <div className="flex items-center gap-2 text-sand-400">
-                  <List size={14} />
-                  <span className="text-sm font-medium">Quantidade e Nomes</span>
+                  <DollarSign size={18} />
+                  <span className="text-sm font-bold uppercase tracking-wider">Informe o Valor</span>
                 </div>
-                
-                <div className="flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1">
-                  <button 
-                    onClick={() => setQuantidadeLocal(q => Math.max(1, q - 1))}
-                    className="p-1 text-zinc-400 hover:text-white transition-colors"
-                  ><Minus size={14}/></button>
-                  <span className="text-zinc-200 font-bold min-w-[20px] text-center text-sm">{quantidadeLocal}</span>
-                  <button 
-                    onClick={() => setQuantidadeLocal(q => q + 1)}
-                    className="p-1 text-zinc-400 hover:text-white transition-colors"
-                  ><Plus size={14}/></button>
-                </div>
-              </div>
-              
-              <div className="space-y-2 mt-4">
-                <p className="text-xs text-zinc-400 mb-2">Preencha o nome a ser personalizado em cada unidade:</p>
-                {parametrosMultiplos.map((param, index) => (
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Digite o valor combinado para o seu produto. O pagamento será processado de forma segura pela nossa plataforma.
+                </p>
+                <div className="flex items-center gap-3">
+                  <span className="text-sand-400 font-bold text-2xl">R$</span>
                   <input
-                    key={index}
                     type="text"
-                    placeholder={`Nome para a unidade ${index + 1}`}
-                    value={param}
+                    inputMode="decimal"
+                    placeholder="0,00"
+                    value={valorCustom}
                     onChange={(e) => {
-                      const novos = [...parametrosMultiplos];
-                      novos[index] = e.target.value;
-                      setParametrosMultiplos(novos);
+                      // Permite apenas números, vírgula e ponto
+                      const v = e.target.value.replace(/[^0-9.,]/g, '');
+                      setValorCustom(v);
                     }}
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sand-400/60"
+                    className="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-2xl text-zinc-100 font-bold placeholder-zinc-600 focus:outline-none focus:border-sand-400/60 text-center tracking-wider"
                   />
-                ))}
+                </div>
+                {valorCustom && valorCustomNum < 1 && (
+                  <p className="text-xs text-red-400">O valor mínimo é R$ 1,00.</p>
+                )}
               </div>
-            </div>
+
+              {/* Preço e botão para pagamento personalizado */}
+              <div className="mt-auto space-y-3">
+                {valorCustomNum >= 1 && (
+                  <p className="text-sand-400 font-bold text-3xl text-center">
+                    R$ {valorCustomNum.toFixed(2).replace(".", ",")}
+                  </p>
+                )}
+
+                <button
+                  onClick={adicionar}
+                  disabled={!podeAdicionar || adicionado}
+                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all ${
+                    adicionado
+                      ? "bg-green-500/20 border border-green-500/40 text-green-400 cursor-default"
+                      : podeAdicionar
+                      ? "bg-sand-400 hover:bg-sand-300 text-zinc-950"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-600 cursor-not-allowed"
+                  }`}
+                >
+                  <ShoppingCart size={16} />
+                  {adicionado ? "Adicionado!" : "Gerar Pagamento"}
+                </button>
+
+                {!isPagCustomValido && valorCustom && (
+                  <p className="text-xs text-zinc-600 text-center">
+                    Informe um valor válido (mínimo R$ 1,00).
+                  </p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* ===== PRODUTO NORMAL: UI Padrão ===== */}
+              <div className="flex items-center gap-6 mt-1 mb-2">
+                <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
+                  <Ruler size={16} className="text-sand-400" />
+                  <span className="text-xs font-bold tracking-wide">{produto.dimensoes || "150x100x200"} mm</span>
+                </div>
+                <div className="flex items-center gap-2 text-zinc-300 bg-zinc-900/50 px-3 py-1.5 rounded border border-zinc-800">
+                  <Dumbbell size={16} className="text-sand-400" />
+                  <span className="text-xs font-bold tracking-wide">{produto.peso_gramas || 300} g</span>
+                </div>
+              </div>
+
+              {/* Campo de personalização única */}
+              {produto.exigePersonalizacao && (
+                <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sand-400">
+                    <Pencil size={14} />
+                    <span className="text-sm font-medium">Personalização</span>
+                  </div>
+                  <textarea
+                    rows={4}
+                    placeholder="Descreva sua peça (cor de cabelo, roupa, acessórios, estilo…)"
+                    value={personalizacao}
+                    onChange={(e) => setPersonalizacao(e.target.value)}
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-sand-400/60"
+                  />
+                  <p className="text-xs text-zinc-500 italic">
+                    Nota: Fotos e áudios de referência deverão ser enviados diretamente no WhatsApp após a finalização do pedido.
+                  </p>
+                </div>
+              )}
+
+              {/* Opções de Escolha (ex: cores) */}
+              {produto.opcoes && produto.opcoes.length > 0 && (
+                <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
+                  <span className="text-sm font-medium text-sand-400">Opções Disponíveis</span>
+                  <div className="flex flex-wrap gap-3">
+                    {produto.opcoes.map((opcao) => {
+                      const isSelected = opcaoSelecionada === opcao.nome;
+                      return (
+                        <button
+                          key={opcao.nome}
+                          disabled={opcao.esgotado}
+                          onClick={() => {
+                            if (opcaoSelecionada !== opcao.nome) {
+                              setVariacaoSelecionada("");
+                            }
+                            setOpcaoSelecionada(opcao.nome);
+                            if (opcao.imagem) {
+                              setImagemAtual(opcao.imagem);
+                            } else if (opcao.variacoes && opcao.variacoes.length > 0 && opcao.variacoes[0].imagem) {
+                              setImagemAtual(opcao.variacoes[0].imagem);
+                            }
+                          }}
+                          className={`relative px-4 py-2 rounded-full border text-sm font-medium transition-all duration-300 ${
+                            opcao.esgotado
+                              ? "bg-zinc-900/40 backdrop-blur-sm border-zinc-800/50 text-zinc-600 cursor-not-allowed overflow-hidden"
+                              : isSelected
+                              ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_12px_rgba(255,255,255,0.1)] scale-[1.02]"
+                              : "bg-zinc-800/40 backdrop-blur-sm border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60 hover:border-sand-400/60 hover:text-white"
+                          }`}
+                        >
+                          {opcao.nome}
+                          {opcao.esgotado && (
+                            <div className="absolute inset-0 w-full h-full pointer-events-none">
+                              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-600/50 -rotate-[20deg] transform origin-center"></div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Variações da opção escolhida */}
+              {opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && (
+                <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
+                  <span className="text-sm font-medium text-sand-400">Opções de Acabamento</span>
+                  <div className="flex flex-wrap gap-3">
+                    {opcaoAtual.variacoes.map((variacao) => {
+                      const isSelected = variacaoSelecionada === variacao.nome;
+                      return (
+                        <button
+                          key={variacao.nome}
+                          disabled={variacao.esgotado}
+                          onClick={() => {
+                            setVariacaoSelecionada(variacao.nome);
+                            if (variacao.imagem) setImagemAtual(variacao.imagem);
+                          }}
+                          className={`relative px-4 py-2 rounded-full border text-sm font-medium transition-all duration-300 ${
+                            variacao.esgotado
+                              ? "bg-zinc-900/40 backdrop-blur-sm border-zinc-800/50 text-zinc-600 cursor-not-allowed overflow-hidden"
+                              : isSelected
+                              ? "bg-sand-400 border-sand-400 text-zinc-950 shadow-[0_0_12px_rgba(255,255,255,0.1)] scale-[1.02]"
+                              : "bg-zinc-800/40 backdrop-blur-sm border-zinc-700/50 text-zinc-300 hover:bg-zinc-700/60 hover:border-sand-400/60 hover:text-white"
+                          }`}
+                        >
+                          {variacao.nome}
+                          {variacao.esgotado && (
+                            <div className="absolute inset-0 w-full h-full pointer-events-none">
+                              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-zinc-600/50 -rotate-[20deg] transform origin-center"></div>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Campo de personalização múltipla */}
+              {produto.multiplaPersonalizacao && (
+                <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sand-400">
+                      <List size={14} />
+                      <span className="text-sm font-medium">Quantidade e Nomes</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-zinc-800 border border-zinc-700 rounded-lg px-2 py-1">
+                      <button onClick={() => setQuantidadeLocal(q => Math.max(1, q - 1))} className="p-1 text-zinc-400 hover:text-white transition-colors"><Minus size={14}/></button>
+                      <span className="text-zinc-200 font-bold min-w-[20px] text-center text-sm">{quantidadeLocal}</span>
+                      <button onClick={() => setQuantidadeLocal(q => q + 1)} className="p-1 text-zinc-400 hover:text-white transition-colors"><Plus size={14}/></button>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <p className="text-xs text-zinc-400 mb-2">Preencha o nome a ser personalizado em cada unidade:</p>
+                    {parametrosMultiplos.map((param, index) => (
+                      <input
+                        key={index}
+                        type="text"
+                        placeholder={`Nome para a unidade ${index + 1}`}
+                        value={param}
+                        onChange={(e) => {
+                          const novos = [...parametrosMultiplos];
+                          novos[index] = e.target.value;
+                          setParametrosMultiplos(novos);
+                        }}
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-sand-400/60"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Preço e botão */}
+              <div className="mt-auto space-y-3">
+                {exibePromocao ? (
+                  <div className="flex items-end gap-3">
+                    <p className="text-sand-400 font-bold text-3xl">
+                      R$ {precoFinal.toFixed(2).replace(".", ",")}
+                    </p>
+                    <p className="text-zinc-500 line-through text-lg mb-0.5">
+                      R$ {precoOriginalExibicao.toFixed(2).replace(".", ",")}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sand-400 font-bold text-3xl">
+                    R$ {precoFinal.toFixed(2).replace(".", ",")}
+                  </p>
+                )}
+
+                <button
+                  onClick={adicionar}
+                  disabled={!podeAdicionar || adicionado}
+                  className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all ${
+                    adicionado
+                      ? "bg-green-500/20 border border-green-500/40 text-green-400 cursor-default"
+                      : podeAdicionar
+                      ? "bg-sand-400 hover:bg-sand-300 text-zinc-950"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-600 cursor-not-allowed"
+                  }`}
+                >
+                  <ShoppingCart size={16} />
+                  {adicionado ? "Adicionado!" : "Adicionar ao carrinho"}
+                </button>
+
+                {produto.exigePersonalizacao && !personalizacao.trim() && (
+                  <p className="text-xs text-zinc-600 text-center">
+                    Preencha a personalização para continuar.
+                  </p>
+                )}
+                
+                {temOpcaoPendente && (
+                  <p className="text-xs text-zinc-600 text-center">
+                    Selecione uma opção para continuar.
+                  </p>
+                )}
+              </div>
+            </>
           )}
-
-          {/* Preço e botão */}
-          <div className="mt-auto space-y-3">
-            {exibePromocao ? (
-              <div className="flex items-end gap-3">
-                <p className="text-sand-400 font-bold text-3xl">
-                  R$ {precoFinal.toFixed(2).replace(".", ",")}
-                </p>
-                <p className="text-zinc-500 line-through text-lg mb-0.5">
-                  R$ {precoOriginalExibicao.toFixed(2).replace(".", ",")}
-                </p>
-              </div>
-            ) : (
-              <p className="text-sand-400 font-bold text-3xl">
-                R$ {precoFinal.toFixed(2).replace(".", ",")}
-              </p>
-            )}
-
-            <button
-              onClick={adicionar}
-              disabled={!podeAdicionar || adicionado}
-              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all ${
-                adicionado
-                  ? "bg-green-500/20 border border-green-500/40 text-green-400 cursor-default"
-                  : podeAdicionar
-                  ? "bg-sand-400 hover:bg-sand-300 text-zinc-950"
-                  : "bg-zinc-800 border border-zinc-700 text-zinc-600 cursor-not-allowed"
-              }`}
-            >
-              <ShoppingCart size={16} />
-              {adicionado ? "Adicionado!" : "Adicionar ao carrinho"}
-            </button>
-
-            {produto.exigePersonalizacao && !personalizacao.trim() && (
-              <p className="text-xs text-zinc-600 text-center">
-                Preencha a personalização para continuar.
-              </p>
-            )}
-            
-            {temOpcaoPendente && (
-              <p className="text-xs text-zinc-600 text-center">
-                Selecione uma opção para continuar.
-              </p>
-            )}
-          </div>
         </div>
       </div>
     </main>

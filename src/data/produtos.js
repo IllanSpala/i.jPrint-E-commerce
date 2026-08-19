@@ -1,5 +1,17 @@
 export const produtos = [
   {
+    "id": 0,
+    "nome": "Pagamento Personalizado",
+    "preco": 0,
+    "imagem": "/produtos/PAGAMENTO.png",
+    "categoria": "Pagamento",
+    "exigePersonalizacao": false,
+    "isPagamentoPersonalizado": true,
+    "descricao": "Comprou um produto da I.J Print pessoalmente e quer pagar pelo site? Basta informar o valor combinado e gerar o pagamento. Sem necessidade de endereço ou envio — apenas insira o valor e finalize com segurança pela nossa plataforma de pagamentos.",
+    "peso_gramas": 0,
+    "dimensoes": "0x0x0"
+  },
+  {
     "id": 1,
     "nome": "Pophead Personalizado",
     "preco": 119.9,
