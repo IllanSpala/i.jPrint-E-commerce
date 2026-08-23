@@ -4,7 +4,7 @@ export const produtos = [
     "nome": "Pagamento Personalizado",
     "preco": 0,
     "imagem": "/produtos/PAGAMENTO.png",
-    "categoria": "Pagamento",
+    "categoria": "Personalizados",
     "exigePersonalizacao": false,
     "isPagamentoPersonalizado": true,
     "descricao": "Comprou um produto da I.J Print pessoalmente e quer pagar pelo site? Basta informar o valor combinado e gerar o pagamento. Sem necessidade de endereço ou envio — apenas insira o valor e finalize com segurança pela nossa plataforma de pagamentos.",
@@ -64,7 +64,7 @@ export const produtos = [
     "exigePersonalizacao": true,
     "descricao": "Miniatura personalizada temática exclusiva baseada em sua profissão, hobbie ou caracteristica desejada. Acompanha base conjunta",
     "peso_gramas": 230,
-    "dimensoes": "110x100x180"
+    "dimensoes": "120x110x180"
   },
   {
     "id": 6,
@@ -127,7 +127,7 @@ export const produtos = [
     "nome": "Ovo de Dragão - Fidget Sensorial",
     "preco": 49.9,
     "imagem": "/produtos/FIDGET_OVO_SENSORIAL.png",
-    "categoria": "Acessórios",
+    "categoria": "Sensoriais",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -152,7 +152,7 @@ export const produtos = [
     "nome": "Estrela 10 pontas - Fidget Sensorial",
     "preco": 49.9,
     "imagem": "/produtos/FIDGET_ESTRELA_SENSORIAL.png",
-    "categoria": "Acessórios",
+    "categoria": "Sensoriais",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -1072,18 +1072,57 @@ export const produtos = [
     "descricao": "Regador de plantas em formato de Psyduck, com capacidade de 400ml. Impresso em PLA Premium. Fotos ilustrativas, pode sofrer alteração de cor.",
     "peso_gramas": 180,
     "dimensoes": "130x180x160"
+  },
+  {
+    "id": 66,
+    "nome": "Teia Aranha - Fidget Sensorial",
+    'preco': 49.9,
+    "imagem": "/produtos/FIDGET_TEIA_ARANHA.png",
+    "categoria": "Sensoriais",
+    "exigePersonalizacao": false,
+    "opcoes": [
+      {
+        "nome": "Sortido",
+        "esgotado": false
+      },
+      {
+        "nome": "Bicolor",
+        "esgotado": false
+      }
+    ],
+    "descricao": "Teia de Aranha fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil.",
+    "peso_gramas": 60,
+    "dimensoes": "75x75x100"
+  },
+  {
+    "id": 67,
+    "nome": "Hello Kitty - Fidget Sensorial",
+    "preco": 49.9,
+    "imagem": "/produtos/FIDGET_HELLO_KITTY.png",
+    "categoria": "Sensoriais",
+    "exigePersonalizacao": false,
+    "opcoes": [
+      {
+        "nome": "Sortido",
+        "esgotado": false
+      },
+    ],
+    "descricao": "Fidget Hello Kitty em PLA Premium, perfeito para quem precisa de estímulo tátil.",
+    "peso_gramas": 60,
+    "dimensoes": "75x75x100"
   }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────
 // GUIA RÁPIDO DE CADASTRO
 // ...
-// CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria"
+// CATEGORIAS VÁLIDAS: "Miniaturas" | "Personalizados" | "Acessórios" | "Bustos" | "Coleções" | "Hot Toys" | "Tabacaria" | "Sensoriais"
 // ─────────────────────────────────────────────────────────────────────────
 
 export const categorias = [
   "Todos",
   ...(produtos.some(p => p.precoPromocional) ? ["Promoção"] : []),
+  "Sensoriais",
   "Bustos",
   "Acessórios",
   "Coleções",

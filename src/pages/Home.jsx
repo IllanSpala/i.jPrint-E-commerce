@@ -31,7 +31,7 @@ export default function Home() {
 
       setProdutos(todosProdutos);
 
-      const catSet = new Set(todosProdutos.map(p => p.categoria));
+      const catSet = new Set(todosProdutos.map(p => p.categoria).filter(c => c && c !== "Pagamento"));
       const temPromo = todosProdutos.some(p => p.precoPromocional);
       const catArray = ["Todos", ...Array.from(catSet).sort()];
       if (temPromo) catArray.splice(1, 0, "Promoção");
