@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
           {
             id: u.id,
             nome: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Cliente',
+            email: u.email
           },
           { onConflict: 'id', ignoreDuplicates: true }
         ).then(({ error }) => {
