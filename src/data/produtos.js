@@ -14,7 +14,7 @@ export const produtos = [
   {
     "id": 1,
     "nome": "Pophead Personalizado",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/MINIATURA.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -25,7 +25,7 @@ export const produtos = [
   {
     "id": 2,
     "nome": "Pophead Casal",
-    "preco": 199.9,
+    "preco": 209.9,
     "imagem": "/produtos/MINIATURA_CASAL.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -36,7 +36,7 @@ export const produtos = [
   {
     "id": 3,
     "nome": "Pophead Família",
-    "preco": 279.9,
+    "preco": 299.9,
     "imagem": "/produtos/MINIATURA_FAMILIA.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -47,7 +47,7 @@ export const produtos = [
   {
     "id": 4,
     "nome": "Pophead Operadores RainbowSixSiege",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/MINIATURA_R6.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -58,7 +58,7 @@ export const produtos = [
   {
     "id": 5,
     "nome": "Miniatura Personalizada Temática",
-    "preco": 149.9,
+    "preco": 169.9,
     "imagem": "/produtos/MINIATURA_TEMATICA.png",
     "categoria": "Personalizados",
     "exigePersonalizacao": true,
@@ -197,7 +197,7 @@ export const produtos = [
   {
     "id": 15,
     "nome": "Estatueta Worms-TD Granada Santa",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/WORMS_GRANADA_SANTA.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -523,7 +523,7 @@ export const produtos = [
   {
     "id": 35,
     "nome": "Coleção Hello Kitty",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/COLECAO_KITTY.png",
     "imagens": [
       "/produtos/COLECAO_KITTY.png",
@@ -579,7 +579,7 @@ export const produtos = [
   {
     "id": 36,
     "nome": "Figure Lemmy Kilmister - Motorhead",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_LEMMY.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -590,7 +590,7 @@ export const produtos = [
   {
     "id": 37,
     "nome": "Figure Joey Jordison - Slipknot",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_JOEY.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -601,7 +601,7 @@ export const produtos = [
   {
     "id": 38,
     "nome": "Figure Alice Cooper",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_COOPER.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -612,7 +612,7 @@ export const produtos = [
   {
     "id": 39,
     "nome": "Figure A freira (The Nun)",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_FREIRA.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -623,7 +623,7 @@ export const produtos = [
   {
     "id": 40,
     "nome": "Figure A outra mãe (Coraline)",
-    "preco": 119.9,
+    "preco": 139.9,
     "imagem": "/produtos/FIGURE_CORAMAE.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -1065,7 +1065,7 @@ export const produtos = [
   {
     "id": 65,
     "nome": "Regador Psyduck",
-    "preco": 44.9,
+    "preco": 53.9,
     "imagem": "/produtos/REGADOR_PSY.png",
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
