@@ -2,10 +2,12 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
+import { criarProjecaoX } from "../lib/projecaoSuperficie.js";
 
 function limparGravura(grupo) {
   while (grupo.children.length) {
-    const filho = grupo.children.pop();
+    const filho = grupo.children[0];
+    grupo.remove(filho);
     filho.traverse((obj) => {
       obj.geometry?.dispose?.();
       obj.material?.dispose?.();
@@ -21,6 +23,7 @@ function aplicarSvgComoGeometria(grupo, svg, cor, angulo = 0) {
   resultado.paths.forEach((path) => {
     SVGLoader.createShapes(path).forEach((shape) => {
       const geometry = new THREE.ShapeGeometry(shape, 10);
+      geometry.userData.posicoesOriginais = geometry.attributes.position.array.slice();
       const material = new THREE.MeshBasicMaterial({ color: cor, side: THREE.DoubleSide, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -4 });
       const mesh = new THREE.Mesh(geometry, material);
       mesh.renderOrder = 10;
@@ -137,29 +140,33 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
         } else {
           atual.decal.position.set(base.x + (p.x || 0) / 85, base.y - (p.y || 0) / 85, base.z + 0.008);
         }
-        const key = `${p.corGravura}:${p.svg}:${p.escala}:${p.x}:${p.y}:${p.anguloSvg}`;
-        if (atual.gravuraKey !== key) {
+        const svgMudou = atual.svgAnterior !== p.svg;
+        if (svgMudou) {
           aplicarSvgComoGeometria(atual.decal, p.svg, p.corGravura, p.anguloSvg);
+          atual.svgAnterior = p.svg;
+        }
+        atual.decal.children[0]?.rotation.set(0, 0, THREE.MathUtils.degToRad(-p.anguloSvg));
+        atual.decal.traverse(child => child.material?.color?.set(p.corGravura));
+        const key = `${p.escala}:${p.x}:${p.y}:${p.anguloSvg}`;
+        if (svgMudou || atual.gravuraKey !== key) {
           if (aplicacaoSvg?.tipo === "corpo" && atual.mesh) {
             group.updateMatrixWorld(true);
-            const ray = new THREE.Raycaster();
             atual.decal.traverse(child => {
               if (!child.geometry) return;
               const positions = child.geometry.attributes.position;
+              positions.array.set(child.geometry.userData.posicoesOriginais);
               const point = new THREE.Vector3();
               for (let i = 0; i < positions.count; i++) {
                 point.fromBufferAttribute(positions, i);
                 child.localToWorld(point);
-                ray.set(new THREE.Vector3(10, point.y, point.z), new THREE.Vector3(-1, 0, 0));
-                const hit = ray.intersectObject(atual.mesh)[0];
-                if (hit) {
-                  point.copy(hit.point); point.x += 0.004;
+                const hit = atual.projetarX(point.y, point.z - group.position.z);
+                if (hit !== null) {
+                  point.x = hit + 0.004;
                   child.worldToLocal(point);
                   positions.setXYZ(i, point.x, point.y, point.z);
                 }
               }
               positions.needsUpdate = true;
-              child.geometry.computeVertexNormals();
               child.geometry.computeBoundingSphere();
             });
           }
@@ -168,7 +175,12 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       }
       render();
     };
-    cenaRef.current = { scene, camera, renderer, group, mesh: null, decal: null, gravuraKey: "", altura: 1.5, render, update };
+    let frame = null;
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = requestAnimationFrame(() => { frame = null; update(); });
+    };
+    cenaRef.current = { scene, camera, renderer, group, mesh: null, decal: null, gravuraKey: "", altura: 1.5, render, update, schedule };
     if (capturaRef) capturaRef.current = () => {
       if (!cenaRef.current?.mesh) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       update();
@@ -195,7 +207,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     let descartado = false;
 
     new STLLoader().load(arquivo, (geometry) => {
-      if (descartado) return;
+      if (descartado) { geometry.dispose(); return; }
       geometry.computeVertexNormals();
       if (aplicacaoSvg?.rotacaoZ) geometry.rotateZ(THREE.MathUtils.degToRad(aplicacaoSvg.rotacaoZ));
       geometry.center();
@@ -204,6 +216,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       geometry.boundingBox.getSize(size);
       const fator = 3.4 / Math.max(size.x, size.y, size.z);
       geometry.scale(fator, fator, fator);
+      if (aplicacaoSvg?.tipo === "corpo") cenaRef.current.projetarX = criarProjecaoX(geometry);
       geometry.computeBoundingBox();
       const material = new THREE.MeshStandardMaterial({ color: corObjeto, roughness: 0.42, metalness: 0.05 });
       const mesh = new THREE.Mesh(geometry, material);
@@ -253,6 +266,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     resize();
     return () => {
       descartado = true;
+      if (frame !== null) cancelAnimationFrame(frame);
       if (capturaRef) capturaRef.current = null;
       observer.disconnect();
       cenaRef.current = null;
@@ -262,6 +276,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
         else obj.material?.dispose?.();
       });
       renderer.dispose();
+      renderer.forceContextLoss();
       cube.geometry.dispose();
       cubeMaterials.forEach((m) => { m.map.dispose(); m.dispose(); });
       renderer.domElement.remove();
@@ -269,7 +284,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
   }, [arquivo]);
 
   useEffect(() => {
-    cenaRef.current?.update();
+    cenaRef.current?.schedule();
   }, [corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom, panCamera]);
 
   return <div ref={containerRef} className="absolute inset-0" aria-label="Modelo 3D do produto" />;
