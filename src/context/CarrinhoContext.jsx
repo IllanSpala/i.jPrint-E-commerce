@@ -7,7 +7,7 @@ function carrinhoReducer(state, action) {
   switch (action.type) {
     case "ADICIONAR": {
       // Find based on id and opcaoEscolhida
-      const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida);
+      const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida && !action.item.personalizador3d);
       if (existente) {
         return state.map((i) => {
           if (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida) {
@@ -81,7 +81,7 @@ export function CarrinhoProvider({ children }) {
     return () => clearTimeout(timer);
   }, [itens, user]);
 
-  const totalItens = itens.length;
+  const totalItens = itens.reduce((total, item) => total + (item.quantidade || 1), 0);
   const totalPreco = itens.reduce((acc, i) => acc + (i.precoPromocional || i.preco) * i.quantidade, 0);
 
   function gerarLinkWhatsApp() {
@@ -99,12 +99,16 @@ export function CarrinhoProvider({ children }) {
           const formatados = item.parametrosMultiplos.map((p, i) => `     ${i+1}) ${p}`).join("\n");
           return `${idx + 1}. ${base}\n   Nomes Parametrizados:\n${formatados}`;
         }
+        if (item.personalizador3d && item.personalizacoes) {
+          const detalhes = item.personalizacoes.map((p, i) => `     ${i + 1}) Objeto ${p.corObjetoNome}, gravura ${p.corGravuraNome} (${p.nomeArquivo})`).join("\n");
+          return `${idx + 1}. ${base}\n   Personalizações 3D:\n${detalhes}`;
+        }
         return `${idx + 1}. ${base}`;
       })
       .join("\n");
 
     const temPersonalizacao = itens.some(
-      (i) => (i.exigePersonalizacao && i.personalizacao) || (i.multiplaPersonalizacao && i.parametrosMultiplos)
+      (i) => (i.exigePersonalizacao && i.personalizacao) || (i.multiplaPersonalizacao && i.parametrosMultiplos) || (i.personalizador3d && i.personalizacoes)
     );
 
     const avisoPersonalizacao = temPersonalizacao

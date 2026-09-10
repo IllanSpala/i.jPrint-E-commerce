@@ -329,7 +329,9 @@ export default function SidebarCarrinho() {
             <ul className="divide-y divide-zinc-800">
               {itens.map((item) => (
                 <li key={item.cartId || item.id} className="p-4 flex gap-3">
-                  <img src={item.imagem} alt={item.nome} className="w-14 h-14 rounded object-cover flex-shrink-0" />
+                  <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-zinc-800">
+                    <img src={item.imagem} alt={item.nome} className="w-full h-full object-cover" />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-zinc-100 text-sm font-medium truncate">
                       {item.nome}{" "}
@@ -338,6 +340,12 @@ export default function SidebarCarrinho() {
                     <p className="text-sand-400 text-sm font-bold mt-0.5">
                       R$ {((item.precoPromocional || item.preco) * item.quantidade).toFixed(2).replace(".", ",")}
                     </p>
+
+                    {item.personalizador3d && item.personalizacoes?.[0] && (
+                      <p className="mt-1 text-[11px] text-zinc-500">
+                        Objeto {item.personalizacoes[0].corObjetoNome} · Gravura {item.personalizacoes[0].corGravuraNome}
+                      </p>
+                    )}
 
                     {item.exigePersonalizacao && (
                       <textarea
@@ -363,7 +371,7 @@ export default function SidebarCarrinho() {
                     )}
 
                     <div className="flex items-center gap-2 mt-2">
-                      {!item.multiplaPersonalizacao && (
+                      {!item.multiplaPersonalizacao && !item.personalizador3d && (
                         <>
                           <button
                             onClick={() => dispatch({ type: "ALTERAR_QUANTIDADE", cartId: item.cartId || item.id, quantidade: item.quantidade - 1 })}
@@ -381,7 +389,7 @@ export default function SidebarCarrinho() {
                         </>
                       )}
                       
-                      {item.multiplaPersonalizacao && (
+                      {(item.multiplaPersonalizacao || item.personalizador3d) && (
                         <span className="text-zinc-400 text-xs font-medium px-2 py-1 bg-zinc-800/50 rounded border border-zinc-700/50">
                           Qtd: {item.quantidade}
                         </span>

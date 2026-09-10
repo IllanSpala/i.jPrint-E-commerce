@@ -17,6 +17,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.23.1",
     "resend": "^6.18.1",
+    "three": "^0.186.0",
     "ws": "^8.21.3"
   },
   "devDependencies": {

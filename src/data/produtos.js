@@ -1314,5 +1314,53 @@ export const produtos = [
     "imagens": [
       "/produtos/FIDGET_HELLO_KITTY_2.png"
     ]
+  },
+  {
+    "id": 70,
+    "nome": "Dichavador Personalizado",
+    "preco": 23.9,
+    "imagem": "/produtos/DICHAVADOR_PERSONALIZADO.png",
+    "categoria": "Tabacaria",
+    "categorias": ["Tabacaria", "Personalizados"],
+    "personalizador3d": true,
+    "modelo3d": "/svg/DICHAVADOR_BASE.stl",
+    "exigePersonalizacao": false,
+    "descricao": "Dichavador impresso em PLA Premium com gravação personalizada. Envie seu SVG, escolha as cores dos filamentos e posicione a arte diretamente sobre o modelo 3D antes de comprar.",
+    "peso_gramas": 80,
+    "dimensoes": "64x64x29",
+    "imagens": ["/logo.png"]
+  },
+  {
+    "id": 71,
+    "nome": "Cinzeiro Cruz - ChromeHearts",
+    "preco": 24.9,
+    "imagem": "/produtos/CINZEIRO_CHROME.png",
+    "categoria": "Tabacaria",
+    "exigePersonalizacao": false,
+    "descricao": "Cinzeiro impresso em PLA Premium piramidal com gravura de cruz",
+    "peso_gramas": 70,
+    "dimensoes": "65x65x30"
+  },
+  {
+    "id": 72,
+    "nome": "Porta bic - Banana",
+    "preco": 24.9,
+    "imagem": "/produtos/PORTA_BIC_BANANA.png",
+    "categoria": "Tabacaria",
+    "exigePersonalizacao": false,
+    "descricao": "Porta isqueiros (TIPO BIC) impresso em PLA Premiun em formato de banana (VEM COM 1 ISQUEIRO)",
+    "peso_gramas": 50,
+    "dimensoes": "80x25x12"
+  },
+  {
+    "id": 73,
+    "nome": "Porta bic - munição Slug",
+    "preco": 17.9,
+    "imagem": "/produtos/PORTA_BIC_SLUG.png",
+    "categoria": "Tabacaria",
+    "exigePersonalizacao": false,
+    "descricao": "Porta isqueiros (TIPO BIC) impresso em PLA Premiun em formato de munição de espingarda (VEM COM 1 ISQUEIRO)",
+    "peso_gramas": 50,
+    "dimensoes": "80x25x12"
   }
 ];

@@ -1,9 +1,10 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign, Palette, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
+import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
 
 export default function PaginaProduto() {
   const { id } = useParams();
@@ -24,6 +25,8 @@ export default function PaginaProduto() {
   const [quantidadeLocal, setQuantidadeLocal] = useState(1);
   const [parametrosMultiplos, setParametrosMultiplos] = useState([""]);
   const [valorCustom, setValorCustom] = useState("");
+  const [personalizadorAberto, setPersonalizadorAberto] = useState(false);
+  const [personalizacoes3d, setPersonalizacoes3d] = useState([]);
 
   useEffect(() => {
     setParametrosMultiplos(prev => {
@@ -68,6 +71,7 @@ export default function PaginaProduto() {
     setAdicionado(false);
     setOpcaoSelecionada("");
     setVariacaoSelecionada("");
+    setPersonalizacoes3d([]);
   }, [id]);
 
 
@@ -110,6 +114,13 @@ export default function PaginaProduto() {
         isPagamentoPersonalizado: true,
         quantidade: 1,
         cartId: `pagamento-custom-${Date.now()}`,
+      };
+    } else if (produto.personalizador3d) {
+      itemToAdd = {
+        ...produto,
+        quantidade: personalizacoes3d.length,
+        personalizacoes: personalizacoes3d,
+        cartId: `${produto.id}-3d-${Date.now()}`,
       };
     } else {
       itemToAdd = {
@@ -181,10 +192,13 @@ export default function PaginaProduto() {
   const isPagCustomValido = !produto.isPagamentoPersonalizado || (valorCustomNum >= 1);
   const podeAdicionar = produto.isPagamentoPersonalizado
     ? isPagCustomValido
-    : (isPersonalizacaoUnicaValida && isPersonalizacaoMultiplaValida && !temOpcaoPendente);
+    : produto.personalizador3d
+      ? personalizacoes3d.length > 0
+      : (isPersonalizacaoUnicaValida && isPersonalizacaoMultiplaValida && !temOpcaoPendente);
 
   return (
-    <main className="pt-24 pb-16 px-4 max-w-5xl mx-auto">
+    <>
+    <main className={`pt-24 pb-16 px-4 mx-auto ${produto.personalizador3d ? "max-w-6xl" : "max-w-5xl"}`}>
       {/* Botão voltar */}
       <button
         onClick={() => navigate(-1)}
@@ -194,7 +208,7 @@ export default function PaginaProduto() {
         Voltar
       </button>
 
-      <div className="grid md:grid-cols-2 gap-10">
+      <div className={`grid md:grid-cols-2 ${produto.personalizador3d ? "gap-6 lg:gap-8" : "gap-10"}`}>
         <div className="flex flex-col gap-4">
           <div 
             className="relative aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900 group/carousel"
@@ -248,7 +262,7 @@ export default function PaginaProduto() {
         <div className="flex flex-col gap-5">
           <div>
             <span className="text-xs text-zinc-500 uppercase tracking-widest">
-              {produto.categoria}
+              {(produto.categorias || [produto.categoria]).join(" · ")}
             </span>
             <h1 className="font-display text-3xl md:text-4xl text-white uppercase tracking-tight mt-1">
               {produto.nome}
@@ -333,7 +347,7 @@ export default function PaginaProduto() {
               </div>
 
               {/* Campo de personalização única */}
-              {produto.exigePersonalizacao && (
+              {produto.exigePersonalizacao && !produto.personalizador3d && (
                 <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-2">
                   <div className="flex items-center gap-2 text-sand-400">
                     <Pencil size={14} />
@@ -465,6 +479,37 @@ export default function PaginaProduto() {
                 </div>
               )}
 
+              {produto.personalizador3d && (
+                <div className="space-y-4">
+                  {personalizacoes3d.length > 0 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <h2 className="text-sm font-semibold text-zinc-200">Suas personalizações</h2>
+                        <span className="text-xs text-zinc-500">{personalizacoes3d.length}/4</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        {personalizacoes3d.map((item, index) => (
+                          <div key={item.id} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+                            <PreviewPersonalizacao compact personalizacao={item}/>
+                            <div className="p-3 flex items-start justify-between gap-2">
+                              <div className="text-[11px] leading-relaxed text-zinc-400">
+                                <p>Objeto: <span className="text-zinc-200">{item.corObjetoNome}</span></p>
+                                <p>Gravura: <span className="text-zinc-200">{item.corGravuraNome}</span></p>
+                              </div>
+                              <button onClick={() => setPersonalizacoes3d((atuais) => atuais.filter((_, i) => i !== index))} className="p-1.5 text-zinc-500 hover:text-red-400" aria-label={`Remover personalização ${index + 1}`}><Trash2 size={14}/></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <button onClick={() => setPersonalizadorAberto(true)} disabled={personalizacoes3d.length >= 4} className="w-full flex items-center justify-center gap-2 py-3.5 rounded border border-sand-400/60 bg-sand-400/10 text-sand-300 hover:bg-sand-400 hover:text-zinc-950 font-bold text-sm uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                    <Palette size={17}/>{personalizacoes3d.length ? "Adicionar outra personalização" : "Personalizar"}
+                  </button>
+                </div>
+              )}
+
               {/* Preço e botão */}
               <div className="mt-auto space-y-3">
                 {exibePromocao ? (
@@ -478,11 +523,11 @@ export default function PaginaProduto() {
                   </div>
                 ) : (
                   <p className="text-sand-400 font-bold text-3xl">
-                    R$ {precoFinal.toFixed(2).replace(".", ",")}
+                    R$ {(produto.personalizador3d ? precoBase * Math.max(1, personalizacoes3d.length) : precoFinal).toFixed(2).replace(".", ",")}
                   </p>
                 )}
 
-                <button
+                {!produto.personalizador3d || personalizacoes3d.length > 0 ? <button
                   onClick={adicionar}
                   disabled={!podeAdicionar || adicionado}
                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all ${
@@ -495,7 +540,7 @@ export default function PaginaProduto() {
                 >
                   <ShoppingCart size={16} />
                   {adicionado ? "Adicionado!" : "Adicionar ao carrinho"}
-                </button>
+                </button> : null}
 
                 {produto.exigePersonalizacao && !personalizacao.trim() && (
                   <p className="text-xs text-zinc-600 text-center">
@@ -514,5 +559,15 @@ export default function PaginaProduto() {
         </div>
       </div>
     </main>
+    <Personalizador3D
+      aberto={personalizadorAberto}
+      modelo3d={produto.modelo3d}
+      onFechar={() => setPersonalizadorAberto(false)}
+      onConcluir={(configuracao) => {
+        setPersonalizacoes3d((atuais) => [...atuais, { ...configuracao, id: `${Date.now()}-${atuais.length}` }].slice(0, 4));
+        setPersonalizadorAberto(false);
+      }}
+    />
+    </>
   );
 }

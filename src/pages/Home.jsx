@@ -31,7 +31,7 @@ export default function Home() {
 
       setProdutos(todosProdutos);
 
-      const catSet = new Set(todosProdutos.map(p => p.categoria).filter(c => c && c !== "Pagamento"));
+      const catSet = new Set(todosProdutos.flatMap(p => p.categorias || [p.categoria]).filter(c => c && c !== "Pagamento"));
       const temPromo = todosProdutos.some(p => p.precoPromocional);
       const catArray = ["Todos", ...Array.from(catSet).sort()];
       if (temPromo) catArray.splice(1, 0, "Promoção");
@@ -64,7 +64,7 @@ export default function Home() {
     if (p.isPagamentoPersonalizado) return true;
     const passaCategoria = categoriaAtiva === "Todos" 
       ? true 
-      : (categoriaAtiva === "Promoção" ? p.precoPromocional : p.categoria === categoriaAtiva);
+      : (categoriaAtiva === "Promoção" ? p.precoPromocional : (p.categorias || [p.categoria]).includes(categoriaAtiva));
     const passaBusca =
       termoBusca.trim() === "" ||
       p.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
