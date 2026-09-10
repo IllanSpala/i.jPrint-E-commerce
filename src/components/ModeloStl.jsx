@@ -42,11 +42,11 @@ function aplicarSvgComoGeometria(grupo, svg, cor, angulo = 0) {
   grupo.add(giro);
 }
 
-export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicacaoSvg, anguloSvg = 0, zoom = 1 }) {
+export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicacaoSvg, anguloSvg = 0, zoom = 1, panCamera = { x: 0, y: 0 } }) {
   const containerRef = useRef(null);
   const cenaRef = useRef(null);
   const propsRef = useRef(null);
-  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom };
+  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom, panCamera };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -58,6 +58,8 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     camera.lookAt(0, 0.75, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // O buffer usa pixels físicos; o tamanho exibido sempre usa pixels CSS.
+    Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block" });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     container.appendChild(renderer.domElement);
@@ -116,10 +118,12 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       const alvo = new THREE.Vector3(0, 0, atual.altura / 2);
       const azimute = THREE.MathUtils.degToRad(42 + (p.povY || 0));
       const elevacao = THREE.MathUtils.degToRad(Math.max(0, Math.min(90, 35 - (p.povX || 0))));
-      const distancia = 7 / Math.max(0.6, Math.min(2, p.zoom));
+      const distancia = 7 * Math.max(1, 1 / camera.aspect) / Math.max(0.6, Math.min(2, p.zoom));
       camera.position.set(distancia * Math.sin(azimute) * Math.cos(elevacao), -distancia * Math.cos(azimute) * Math.cos(elevacao), alvo.z + distancia * Math.sin(elevacao));
       camera.up.set(-Math.sin(azimute) * Math.sin(elevacao), Math.cos(azimute) * Math.sin(elevacao), Math.cos(elevacao));
       camera.lookAt(alvo);
+      const width = container.clientWidth || 1, height = container.clientHeight || 1;
+      camera.setViewOffset(width, height, -p.panCamera.x * width, -p.panCamera.y * height, width, height);
       atual.mesh?.material.color.set(p.corObjeto);
       if (atual.decal) {
         atual.decal.scale.setScalar((p.escala || 45) / (aplicacaoSvg?.tipo === "corpo" ? 48 : 24));
@@ -235,7 +239,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      render();
+      update();
     };
     const observer = new ResizeObserver(resize);
     observer.observe(container);
@@ -259,7 +263,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
 
   useEffect(() => {
     cenaRef.current?.update();
-  }, [corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom]);
+  }, [corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom, panCamera]);
 
   return <div ref={containerRef} className="absolute inset-0" aria-label="Modelo 3D do produto" />;
 }

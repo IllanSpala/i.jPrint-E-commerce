@@ -125,6 +125,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [escala, setEscala] = useState(46);
   const [anguloSvg, setAnguloSvg] = useState(0);
   const [zoom, setZoom] = useState(1);
+  const [panCamera, setPanCamera] = useState({ x: 0, y: 0 });
   const [posicao, setPosicao] = useState({ x: 0, y: 0 });
   const [pov, setPov] = useState(aplicacaoSvg?.camera || { x: -5, y: -10 });
   const [ferramenta, setFerramenta] = useState("rotacionar");
@@ -173,6 +174,8 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       setSvg(otimizado);
       setSvgOriginal(texto);
       setPosicao({ x: 0, y: 0 });
+      setPanCamera({ x: 0, y: 0 });
+      setZoom(1);
       setAnguloSvg(0);
       setPov(aplicacaoSvg?.camera || { x: -5, y: -10 });
       setNomeArquivo(file.name);
@@ -284,30 +287,40 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
                   <output className="text-sm">{Math.round(zoom * 100)}%</output>
                   <button type="button" aria-label="Aumentar zoom" disabled={zoom >= 2} onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(1)))} className="rounded border border-zinc-700 px-4 py-2 disabled:opacity-40">+</button>
                 </div>
-                <button type="button" onClick={() => setZoom(1)} className="text-xs text-sand-300 underline">Restaurar zoom</button>
+                <div className="flex justify-between gap-2">
+                  <button type="button" onClick={() => setZoom(1)} className="text-xs text-sand-300 underline">Restaurar zoom</button>
+                  <button type="button" onClick={() => { setPanCamera({ x: 0, y: 0 }); setZoom(1); setPov(aplicacaoSvg?.camera || { x: -5, y: -10 }); }} className="text-xs text-sand-300 underline">Centralizar câmera</button>
+                </div>
               </div>
-              <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500 leading-relaxed"><Info size={14} className="inline mr-2 text-sand-400"/>{ferramenta === "rotacionar" ? "Arraste em qualquer ponto da área para girar a peça." : "Arraste sobre a peça para posicionar a gravura."}</div>
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500 leading-relaxed"><Info size={14} className="inline mr-2 text-sand-400"/>Shift + arrastar ou botão do meio: deslocar câmera. Arrastar: {ferramenta === "rotacionar" ? "orbitar câmera." : "mover SVG."}</div>
             </aside>
             <main className={`order-1 md:order-2 relative min-h-0 min-w-0 overflow-hidden select-none touch-none ${ferramenta === "rotacionar" ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
               onPointerDown={(event) => {
-                if (ferramenta !== "rotacionar") return;
-                drag.current = { tipo: "rotacionar", clientX: event.clientX, clientY: event.clientY, x: pov.x, y: pov.y };
+                const pan = event.shiftKey || event.button === 1;
+                if (!pan && ferramenta !== "rotacionar") return;
+                event.preventDefault();
+                const rect = event.currentTarget.getBoundingClientRect();
+                drag.current = { tipo: pan ? "camera" : "rotacionar", clientX: event.clientX, clientY: event.clientY, x: pan ? panCamera.x : pov.x, y: pan ? panCamera.y : pov.y, width: rect.width, height: rect.height };
                 event.currentTarget.setPointerCapture?.(event.pointerId);
               }}
               onPointerMove={(event) => {
                 if (!drag.current) return;
-                if (drag.current.tipo === "rotacionar") {
+                if (drag.current.tipo === "camera") {
+                  setPanCamera({ x: drag.current.x + (event.clientX - drag.current.clientX) / drag.current.width, y: drag.current.y + (event.clientY - drag.current.clientY) / drag.current.height });
+                } else if (drag.current.tipo === "rotacionar") {
                   setPov({ x: Math.max(-75, Math.min(75, drag.current.x - (event.clientY - drag.current.clientY) * .45)), y: drag.current.y + (event.clientX - drag.current.clientX) * .55 });
                 } else {
                   setPosicao({ x: drag.current.x + event.clientX - drag.current.clientX, y: drag.current.y + event.clientY - drag.current.clientY });
                 }
               }}
+              onPointerCancel={() => { drag.current = null; }}
+              onLostPointerCapture={() => { drag.current = null; }}
               onPointerUp={(event) => { drag.current = null; event.currentTarget.releasePointerCapture?.(event.pointerId); }}>
-              <PreviewPersonalizacao personalizacao={{...configuracao, aplicacaoSvg}} modelo3d={modelo3d} capturaRef={capturaRef}/>
+              <PreviewPersonalizacao personalizacao={{...configuracao, aplicacaoSvg, panCamera}} modelo3d={modelo3d} capturaRef={capturaRef}/>
               {modelo3d && <div className="absolute right-4 top-28 w-[120px] grid grid-cols-3 gap-2" onPointerDown={(event) => event.stopPropagation()}>
                 {[["X", 35, 48], ["Y", 35, 138], ["Z", -55, -42]].map(([eixo, px, py]) => <button key={eixo} aria-label={`Vista ${eixo}`} className="rounded bg-zinc-900 border border-zinc-700 py-2 text-sm text-zinc-200" onClick={() => setPov({ x: px, y: py })}>{eixo}</button>)}
               </div>}
-              <button aria-label="Arrastar gravura" className={`absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-52 h-28 md:w-64 md:h-32 cursor-move ${ferramenta === "mover" ? "pointer-events-auto" : "pointer-events-none"}`} onPointerDown={(event) => { event.stopPropagation(); drag.current = { tipo: "mover", clientX: event.clientX, clientY: event.clientY, ...posicao }; event.currentTarget.parentElement.setPointerCapture?.(event.pointerId); }}/>
+              <button aria-label="Arrastar gravura" className={`absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 w-52 h-28 md:w-64 md:h-32 cursor-move ${ferramenta === "mover" ? "pointer-events-auto" : "pointer-events-none"}`} onPointerDown={(event) => { if (event.shiftKey || event.button === 1) return; event.stopPropagation(); drag.current = { tipo: "mover", clientX: event.clientX, clientY: event.clientY, ...posicao }; event.currentTarget.parentElement.setPointerCapture?.(event.pointerId); }}/>
               <div className="absolute left-4 bottom-4 flex gap-2 text-[11px] text-zinc-400"><span className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-950/80">{ferramenta === "rotacionar" ? <Rotate3D size={12}/> : <Move size={12}/>} Arrastar para {ferramenta === "rotacionar" ? "girar" : "mover"}</span><span className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-950/80"><ZoomIn size={12}/> Controle lateral</span></div>
               {!modelo3d && <div className="absolute right-6 top-7 w-24 h-28 flex flex-col items-center pointer-events-none">
                 <div className="relative w-14 h-14" style={{ perspective: "220px" }}>
