@@ -13,7 +13,7 @@ function limparGravura(grupo) {
   }
 }
 
-function aplicarSvgComoGeometria(grupo, svg, cor) {
+function aplicarSvgComoGeometria(grupo, svg, cor, angulo = 0) {
   limparGravura(grupo);
   if (!svg) return;
   const resultado = new SVGLoader().parse(svg);
@@ -36,20 +36,23 @@ function aplicarSvgComoGeometria(grupo, svg, cor) {
   const normalizacao = 1 / Math.max(tamanho.x, tamanho.y, 1);
   conteudo.position.set(-centro.x * normalizacao, centro.y * normalizacao, 0);
   conteudo.scale.set(normalizacao, -normalizacao, normalizacao);
-  grupo.add(conteudo);
+  const giro = new THREE.Group();
+  giro.rotation.z = THREE.MathUtils.degToRad(-angulo);
+  giro.add(conteudo);
+  grupo.add(giro);
 }
 
-export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef }) {
+export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicacaoSvg, anguloSvg = 0, zoom = 1 }) {
   const containerRef = useRef(null);
   const cenaRef = useRef(null);
   const propsRef = useRef(null);
-  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY };
+  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom };
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !arquivo) return;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 100);
+    const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 2000);
     camera.up.set(0, 0, 1);
     camera.position.set(4.6, 3.7, 5.6);
     camera.lookAt(0, 0.75, 0);
@@ -67,7 +70,8 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     const rimLight = new THREE.DirectionalLight(0xe8c98a, 1.5);
     rimLight.position.set(-5, 2, -3);
     scene.add(rimLight);
-    const grid = new THREE.GridHelper(12, 24, 0x8a784f, 0x34363b);
+    // Mantém o espaçamento de 0,5 unidade, sem bordas visíveis no zoom permitido.
+    const grid = new THREE.GridHelper(2000, 4000, 0x8a784f, 0x34363b);
     grid.rotation.x = Math.PI / 2;
     grid.position.z = -0.02;
     scene.add(grid);
@@ -111,17 +115,46 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       const p = propsRef.current;
       const alvo = new THREE.Vector3(0, 0, atual.altura / 2);
       const azimute = THREE.MathUtils.degToRad(42 + (p.povY || 0));
-      const elevacao = THREE.MathUtils.degToRad(Math.max(5, Math.min(90, 35 - (p.povX || 0))));
-      camera.position.set(7 * Math.sin(azimute) * Math.cos(elevacao), -7 * Math.cos(azimute) * Math.cos(elevacao), alvo.z + 7 * Math.sin(elevacao));
+      const elevacao = THREE.MathUtils.degToRad(Math.max(0, Math.min(90, 35 - (p.povX || 0))));
+      const distancia = 7 / Math.max(0.6, Math.min(2, p.zoom));
+      camera.position.set(distancia * Math.sin(azimute) * Math.cos(elevacao), -distancia * Math.cos(azimute) * Math.cos(elevacao), alvo.z + distancia * Math.sin(elevacao));
       camera.up.set(-Math.sin(azimute) * Math.sin(elevacao), Math.cos(azimute) * Math.sin(elevacao), Math.cos(elevacao));
       camera.lookAt(alvo);
       atual.mesh?.material.color.set(p.corObjeto);
       if (atual.decal) {
-        atual.decal.scale.setScalar((p.escala || 45) / 24);
-        atual.decal.position.set((p.x || 0) / 85, -(p.y || 0) / 85, atual.altura / 2 + 0.008);
-        const key = `${p.corGravura}:${p.svg}`;
+        atual.decal.scale.setScalar((p.escala || 45) / (aplicacaoSvg?.tipo === "corpo" ? 48 : 24));
+        const base = atual.baseArte || new THREE.Vector3(0, 0, atual.altura / 2);
+        if (aplicacaoSvg?.tipo === "corpo") {
+          atual.decal.position.set(base.x + 0.008, base.y + (p.x || 0) / 85, base.z - (p.y || 0) / 85);
+        } else {
+          atual.decal.position.set(base.x + (p.x || 0) / 85, base.y - (p.y || 0) / 85, base.z + 0.008);
+        }
+        const key = `${p.corGravura}:${p.svg}:${p.escala}:${p.x}:${p.y}:${p.anguloSvg}`;
         if (atual.gravuraKey !== key) {
-          aplicarSvgComoGeometria(atual.decal, p.svg, p.corGravura);
+          aplicarSvgComoGeometria(atual.decal, p.svg, p.corGravura, p.anguloSvg);
+          if (aplicacaoSvg?.tipo === "corpo" && atual.mesh) {
+            group.updateMatrixWorld(true);
+            const ray = new THREE.Raycaster();
+            atual.decal.traverse(child => {
+              if (!child.geometry) return;
+              const positions = child.geometry.attributes.position;
+              const point = new THREE.Vector3();
+              for (let i = 0; i < positions.count; i++) {
+                point.fromBufferAttribute(positions, i);
+                child.localToWorld(point);
+                ray.set(new THREE.Vector3(10, point.y, point.z), new THREE.Vector3(-1, 0, 0));
+                const hit = ray.intersectObject(atual.mesh)[0];
+                if (hit) {
+                  point.copy(hit.point); point.x += 0.004;
+                  child.worldToLocal(point);
+                  positions.setXYZ(i, point.x, point.y, point.z);
+                }
+              }
+              positions.needsUpdate = true;
+              child.geometry.computeVertexNormals();
+              child.geometry.computeBoundingSphere();
+            });
+          }
           atual.gravuraKey = key;
         }
       }
@@ -140,6 +173,8 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       // Frente (-Y), elevada em +Z, com o centro da peça no centro da foto.
       const alvo = new THREE.Vector3(0, 0, cenaRef.current.altura / 2);
       cameraPreview.position.set(0, -6.1, alvo.z + 4.6);
+      if (aplicacaoSvg?.tipo === "corpo") cameraPreview.position.set(7, -1, alvo.z + 2.5);
+      if (aplicacaoSvg?.tipo === "fundo") cameraPreview.position.set(0, -3, alvo.z + 7);
       cameraPreview.lookAt(alvo);
       try {
         captura.render(scene, cameraPreview);
@@ -154,11 +189,12 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     new STLLoader().load(arquivo, (geometry) => {
       if (descartado) return;
       geometry.computeVertexNormals();
+      if (aplicacaoSvg?.rotacaoZ) geometry.rotateZ(THREE.MathUtils.degToRad(aplicacaoSvg.rotacaoZ));
       geometry.center();
       geometry.computeBoundingBox();
       const size = new THREE.Vector3();
       geometry.boundingBox.getSize(size);
-      const fator = 3.4 / Math.max(size.x, size.y);
+      const fator = 3.4 / Math.max(size.x, size.y, size.z);
       geometry.scale(fator, fator, fator);
       geometry.computeBoundingBox();
       const material = new THREE.MeshStandardMaterial({ color: corObjeto, roughness: 0.42, metalness: 0.05 });
@@ -173,8 +209,23 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       group.position.z = finalSize.z / 2;
       cenaRef.current.altura = finalSize.z;
       const decal = new THREE.Group();
+      if (aplicacaoSvg?.tipo === "corpo") {
+        decal.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
+      }
       group.add(decal);
       cenaRef.current.decal = decal;
+      group.updateMatrixWorld(true);
+      const ray = new THREE.Raycaster();
+      if (aplicacaoSvg?.tipo === "corpo") {
+        // Centro do compartimento BIC no arquivo original (X=0), após rotação -90°.
+        const centroCorpo = 13.35 * fator;
+        ray.set(new THREE.Vector3(10, centroCorpo, finalSize.z / 2), new THREE.Vector3(-1, 0, 0));
+      } else {
+        // Primeiro encontro com o STL visto de cima: fundo interno dos cinzeiros.
+        ray.set(new THREE.Vector3(0, 0, 10), new THREE.Vector3(0, 0, -1));
+      }
+      const hit = ray.intersectObject(mesh)[0];
+      if (hit) cenaRef.current.baseArte = group.worldToLocal(hit.point.clone());
       update();
     });
 
@@ -208,7 +259,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
 
   useEffect(() => {
     cenaRef.current?.update();
-  }, [corObjeto, corGravura, svg, escala, x, y, povX, povY]);
+  }, [corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom]);
 
   return <div ref={containerRef} className="absolute inset-0" aria-label="Modelo 3D do produto" />;
 }

@@ -95,10 +95,10 @@ function SeletorCor({ titulo, valor, onChange }) {
   );
 }
 
-export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3d, capturaRef }) {
+export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3d, capturaRef, aplicacaoSvg }) {
   if (compact && personalizacao.previewImagem) return <img src={personalizacao.previewImagem} alt="Peça personalizada vista de frente, mostrando o topo e a gravura" className="w-full aspect-square object-contain bg-[#17191d]" />;
   return (
-    <div className={`relative overflow-hidden bg-[#17191d] ${compact ? "h-32" : "h-full min-h-[420px]"}`}>
+    <div className={`relative overflow-hidden bg-[#17191d] ${compact ? "h-32" : "h-full min-h-0"}`}>
       {!compact && modelo3d ? <ModeloStl arquivo={modelo3d} capturaRef={capturaRef} {...personalizacao} /> : <><div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(#71717a 1px, transparent 1px), linear-gradient(90deg, #71717a 1px, transparent 1px)", backgroundSize: compact ? "18px 18px" : "34px 34px", transform: "perspective(500px) rotateX(62deg) scale(1.45)", transformOrigin: "center 76%" }} />
       <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2">
         <div className={`${compact ? "w-24 h-16" : "w-64 h-40 md:w-80 md:h-48"} relative rounded-[48%_48%_36%_36%/30%_30%_55%_55%] shadow-[inset_-28px_-18px_45px_rgba(0,0,0,.35),0_30px_45px_rgba(0,0,0,.45)] border border-white/10`} style={{ backgroundColor: personalizacao.corObjeto, transform: `perspective(800px) rotateX(${personalizacao.povX || -5}deg) rotateY(${personalizacao.povY || -10}deg)` }}>
@@ -113,7 +113,7 @@ export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3
   );
 }
 
-export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3d }) {
+export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3d, aplicacaoSvg }) {
   const [etapa, setEtapa] = useState("guia");
   const [svg, setSvg] = useState("");
   const [svgOriginal, setSvgOriginal] = useState("");
@@ -123,8 +123,10 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [corObjeto, setCorObjeto] = useState("#3b82f6");
   const [corGravura, setCorGravura] = useState("#eab308");
   const [escala, setEscala] = useState(46);
+  const [anguloSvg, setAnguloSvg] = useState(0);
+  const [zoom, setZoom] = useState(1);
   const [posicao, setPosicao] = useState({ x: 0, y: 0 });
-  const [pov, setPov] = useState({ x: -5, y: -10 });
+  const [pov, setPov] = useState(aplicacaoSvg?.camera || { x: -5, y: -10 });
   const [ferramenta, setFerramenta] = useState("rotacionar");
   const drag = useRef(null);
   const capturaRef = useRef(null);
@@ -133,7 +135,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       if (modelo3d && !capturaRef.current) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       const previewImagem = modelo3d ? capturaRef.current() : undefined;
       setErro("");
-      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, superficie: "+Z" });
+      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, aplicacaoSvg, superficie: aplicacaoSvg?.eixo || "+Z" });
     } catch (error) {
       setErro(error.message || "Não foi possível gerar a prévia. Tente novamente.");
     }
@@ -141,12 +143,17 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
 
   useEffect(() => {
     if (!aberto) return;
+    const overflowAnterior = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
     const onKey = (event) => event.key === "Escape" && onFechar();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = overflowAnterior;
+      window.removeEventListener("keydown", onKey);
+    };
   }, [aberto, onFechar]);
 
-  const configuracao = useMemo(() => ({ svg, corObjeto, corGravura, escala, x: posicao.x, y: posicao.y, povX: pov.x, povY: pov.y, nomeArquivo, corObjetoNome: corNome(corObjeto), corGravuraNome: corNome(corGravura) }), [svg, corObjeto, corGravura, escala, posicao, pov, nomeArquivo]);
+  const configuracao = useMemo(() => ({ svg, corObjeto, corGravura, escala, anguloSvg, zoom, x: posicao.x, y: posicao.y, povX: pov.x, povY: pov.y, nomeArquivo, corObjetoNome: corNome(corObjeto), corGravuraNome: corNome(corGravura) }), [svg, corObjeto, corGravura, escala, anguloSvg, zoom, posicao, pov, nomeArquivo]);
 
   async function lerArquivo(file) {
     setErro("");
@@ -166,6 +173,8 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       setSvg(otimizado);
       setSvgOriginal(texto);
       setPosicao({ x: 0, y: 0 });
+      setAnguloSvg(0);
+      setPov(aplicacaoSvg?.camera || { x: -5, y: -10 });
       setNomeArquivo(file.name);
       setEtapa("editor");
     } catch (e) {
@@ -178,7 +187,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   if (!aberto) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] bg-zinc-950 text-zinc-100 overflow-y-auto" role="dialog" aria-modal="true" aria-label="Personalizador 3D">
+    <div className={`fixed inset-0 z-[80] bg-zinc-950 text-zinc-100 ${etapa === "guia" ? "overflow-y-auto" : "overflow-hidden"}`} role="dialog" aria-modal="true" aria-label="Personalizador 3D">
       {etapa === "guia" ? (
         <div className="max-w-5xl mx-auto px-5 py-8 md:py-12">
           <div className="flex justify-between items-start gap-5 mb-8">
@@ -231,7 +240,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
           </div>
         </div>
       ) : (
-        <div className="min-h-screen flex flex-col">
+        <div className="h-[100dvh] min-h-0 flex flex-col">
           <header className="h-16 shrink-0 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-4 md:px-6">
             <div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{nomeArquivo} · fundo removido · otimizado</span></div>
             <div className="flex gap-2">
@@ -240,8 +249,8 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
             </div>
           </header>
           {erro && <p role="alert" className="px-5 py-2 text-sm text-red-400">{erro}</p>}
-          <div className="flex-1 grid lg:grid-cols-[280px_1fr] min-h-0">
-            <aside className="order-2 lg:order-1 border-t lg:border-t-0 lg:border-r border-zinc-800 bg-zinc-900 p-5 space-y-7">
+          <div className="flex-1 grid grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-rows-1 md:grid-cols-[320px_minmax(0,1fr)] min-h-0">
+            <aside className="personalizador-controles order-2 md:order-1 min-h-0 border-t md:border-t-0 md:border-r border-zinc-800 bg-zinc-900 p-3 space-y-3 overflow-y-auto md:overflow-hidden">
               <div className="flex items-center gap-2 text-xs text-zinc-400"><LockKeyhole size={14} className="text-sand-400"/> Objeto centralizado e bloqueado</div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Ferramenta do mouse</p>
@@ -256,9 +265,30 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
                 <label htmlFor="escala-svg" className="flex justify-between text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3"><span>Tamanho do SVG</span><span>{escala}%</span></label>
                 <input id="escala-svg" type="range" min="20" max="80" value={escala} onChange={(e) => setEscala(Number(e.target.value))} className="w-full accent-sand-400"/>
               </div>
+              <div className="space-y-3">
+                <label htmlFor="angulo-svg" className="flex justify-between text-sm text-zinc-300"><span>Rotacionar SVG</span><output>{anguloSvg}°</output></label>
+                <p className="text-xs text-zinc-400">Gire à esquerda ou à direita, mantendo a arte sobre a superfície.</p>
+                <div className="flex gap-2">
+                  <button type="button" aria-label="Girar SVG 5 graus à esquerda" onClick={() => setAnguloSvg(a => Math.max(-180, a - 5))} className="flex-1 rounded border border-zinc-700 py-2 text-sm">↶ Esquerda</button>
+                  <button type="button" aria-label="Girar SVG 5 graus à direita" onClick={() => setAnguloSvg(a => Math.min(180, a + 5))} className="flex-1 rounded border border-zinc-700 py-2 text-sm">Direita ↷</button>
+                </div>
+                <input id="angulo-svg" type="range" min="-180" max="180" step="1" value={anguloSvg} onChange={e => setAnguloSvg(Number(e.target.value))} className="w-full accent-sand-400" />
+                <div aria-hidden="true" className="h-3 border-b border-zinc-600" style={{ backgroundImage: 'repeating-linear-gradient(90deg, #71717a 0 1px, transparent 1px 12.5%)' }} />
+                <div className="flex justify-between text-xs text-zinc-400"><span>−180°</span><span>−90°</span><span>0°</span><span>90°</span><span>180°</span></div>
+                <button type="button" onClick={() => setAnguloSvg(0)} className="text-xs text-sand-300 underline">Alinhar em 0°</button>
+              </div>
+              <div className="space-y-3">
+                <span className="text-sm text-zinc-300">Zoom da visualização</span>
+                <div className="flex items-center justify-between gap-2">
+                  <button type="button" aria-label="Diminuir zoom" disabled={zoom <= 0.6} onClick={() => setZoom(z => Math.max(0.6, +(z - 0.1).toFixed(1)))} className="rounded border border-zinc-700 px-4 py-2 disabled:opacity-40">−</button>
+                  <output className="text-sm">{Math.round(zoom * 100)}%</output>
+                  <button type="button" aria-label="Aumentar zoom" disabled={zoom >= 2} onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(1)))} className="rounded border border-zinc-700 px-4 py-2 disabled:opacity-40">+</button>
+                </div>
+                <button type="button" onClick={() => setZoom(1)} className="text-xs text-sand-300 underline">Restaurar zoom</button>
+              </div>
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500 leading-relaxed"><Info size={14} className="inline mr-2 text-sand-400"/>{ferramenta === "rotacionar" ? "Arraste em qualquer ponto da área para girar a peça." : "Arraste sobre a peça para posicionar a gravura."}</div>
             </aside>
-            <main className={`order-1 lg:order-2 relative min-h-[520px] overflow-hidden select-none touch-none ${ferramenta === "rotacionar" ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
+            <main className={`order-1 md:order-2 relative min-h-0 min-w-0 overflow-hidden select-none touch-none ${ferramenta === "rotacionar" ? "cursor-grab active:cursor-grabbing" : "cursor-default"}`}
               onPointerDown={(event) => {
                 if (ferramenta !== "rotacionar") return;
                 drag.current = { tipo: "rotacionar", clientX: event.clientX, clientY: event.clientY, x: pov.x, y: pov.y };
@@ -273,7 +303,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
                 }
               }}
               onPointerUp={(event) => { drag.current = null; event.currentTarget.releasePointerCapture?.(event.pointerId); }}>
-              <PreviewPersonalizacao personalizacao={configuracao} modelo3d={modelo3d} capturaRef={capturaRef}/>
+              <PreviewPersonalizacao personalizacao={{...configuracao, aplicacaoSvg}} modelo3d={modelo3d} capturaRef={capturaRef}/>
               {modelo3d && <div className="absolute right-4 top-28 w-[120px] grid grid-cols-3 gap-2" onPointerDown={(event) => event.stopPropagation()}>
                 {[["X", 35, 48], ["Y", 35, 138], ["Z", -55, -42]].map(([eixo, px, py]) => <button key={eixo} aria-label={`Vista ${eixo}`} className="rounded bg-zinc-900 border border-zinc-700 py-2 text-sm text-zinc-200" onClick={() => setPov({ x: px, y: py })}>{eixo}</button>)}
               </div>}

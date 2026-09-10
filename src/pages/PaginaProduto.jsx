@@ -560,8 +560,10 @@ export default function PaginaProduto() {
       </div>
     </main>
     <Personalizador3D
+      key={produto.id}
       aberto={personalizadorAberto}
       modelo3d={produto.modelo3d}
+      aplicacaoSvg={produto.aplicacaoSvg}
       onFechar={() => setPersonalizadorAberto(false)}
       onConcluir={(configuracao) => {
         setPersonalizacoes3d((atuais) => [...atuais, { ...configuracao, id: `${Date.now()}-${atuais.length}` }].slice(0, 4));

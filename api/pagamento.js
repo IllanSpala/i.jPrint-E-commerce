@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { anexosPersonalizacao } from './_lib/anexosPersonalizacao.js';
+import { produtos as catalogoLocal } from '../src/data/produtos.js';
 import {
   enviarEmailCliente,
   enviarEmailAdmin,
@@ -21,7 +22,7 @@ export default async function handler(req, res) {
   if (!Array.isArray(itens) || !itens.length) return res.status(400).json({ error: 'Carrinho vazio ou inválido.' });
   if (Buffer.byteLength(JSON.stringify(req.body), 'utf8') > 3500000) return res.status(413).json({ error: 'Os arquivos do pedido estão muito grandes. Reduza o tamanho dos SVGs ou divida a compra em pedidos menores.' });
   for (const item of itens) {
-    if (Number(item.id) === 70 || item.personalizador3d) {
+    if (catalogoLocal.some(p => String(p.id) === String(item.id) && p.personalizador3d) || item.personalizador3d) {
       if (!Array.isArray(item.personalizacoes) || !item.personalizacoes.length || item.personalizacoes.length !== item.quantidade || item.personalizacoes.some(p => typeof p.svg !== 'string' || !p.svg.includes('<svg'))) {
         return res.status(400).json({ error: 'Faltam arquivos de personalização. Personalize cada unidade antes de finalizar.' });
       }
