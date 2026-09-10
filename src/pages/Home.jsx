@@ -3,6 +3,7 @@ import { Search, X, MoreVertical } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import CardProduto from "../components/CardProduto";
 import { produtos as produtosLocais } from "../data/produtos";
+import { normalizarProduto } from "../lib/normalizarProduto";
 
 export default function Home() {
   const [produtos, setProdutos] = useState([]);
@@ -19,12 +20,7 @@ export default function Home() {
   useEffect(() => {
     async function carregarProdutos() {
       const { data } = await supabase.from('produtos').select('*').order('id');
-      const dbProducts = data ? data.map(p => ({
-        ...produtosLocais.find(local => String(local.id) === String(p.id)),
-        ...p,
-        precoPromocional: p.preco_promocional,
-        exigePersonalizacao: p.exige_personalizacao
-      })) : [];
+      const dbProducts = data ? data.map(normalizarProduto) : [];
 
       const dbIds = new Set(dbProducts.map(p => p.id));
       const novosLocais = produtosLocais.filter(p => !dbIds.has(p.id));

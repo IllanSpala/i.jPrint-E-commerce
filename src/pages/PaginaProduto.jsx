@@ -4,6 +4,7 @@ import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler,
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
+import { normalizarProduto } from "../lib/normalizarProduto";
 import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
 
 export default function PaginaProduto() {
@@ -44,14 +45,7 @@ export default function PaginaProduto() {
     async function fetchProduto() {
       const { data } = await supabase.from('produtos').select('*').eq('id', id).single();
       if (data) {
-        const localProdFallback = produtosLocais.find(p => String(p.id) === String(id)) || {};
-        const camelData = {
-          ...localProdFallback,
-          ...data,
-          precoPromocional: data.preco_promocional,
-          exigePersonalizacao: data.exige_personalizacao,
-          multiplaPersonalizacao: data.multipla_personalizacao ?? localProdFallback.multiplaPersonalizacao
-        };
+        const camelData = normalizarProduto(data);
         setProduto(camelData);
         setImagemAtual(camelData.imagem);
       } else {
