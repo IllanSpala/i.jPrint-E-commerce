@@ -127,7 +127,8 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [zoom, setZoom] = useState(1);
   const [panCamera, setPanCamera] = useState({ x: 0, y: 0 });
   const [posicao, setPosicao] = useState({ x: 0, y: 0 });
-  const [pov, setPov] = useState(aplicacaoSvg?.camera || { x: -5, y: -10 });
+  const cameraInicial = aplicacaoSvg?.tipo === "corpo" ? { x: 35, y: 48 } : { x: -55, y: -42 };
+  const [pov, setPov] = useState(cameraInicial);
   const [ferramenta, setFerramenta] = useState("rotacionar");
   const drag = useRef(null);
   const capturaRef = useRef(null);
@@ -177,7 +178,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       setPanCamera({ x: 0, y: 0 });
       setZoom(1);
       setAnguloSvg(0);
-      setPov(aplicacaoSvg?.camera || { x: -5, y: -10 });
+      setPov(cameraInicial);
       setNomeArquivo(file.name);
       setEtapa("editor");
     } catch (e) {
@@ -253,7 +254,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
           </header>
           {erro && <p role="alert" className="px-5 py-2 text-sm text-red-400">{erro}</p>}
           <div className="flex-1 grid grid-rows-[minmax(0,1fr)_minmax(0,1fr)] md:grid-rows-1 md:grid-cols-[320px_minmax(0,1fr)] min-h-0">
-            <aside className="personalizador-controles order-2 md:order-1 min-h-0 border-t md:border-t-0 md:border-r border-zinc-800 bg-zinc-900 p-3 space-y-3 overflow-y-auto md:overflow-hidden">
+            <aside className="personalizador-controles order-2 md:order-1 min-h-0 border-t md:border-t-0 md:border-r border-zinc-800 bg-zinc-900 p-3 space-y-3 overflow-y-auto overscroll-contain">
               <div className="flex items-center gap-2 text-xs text-zinc-400"><LockKeyhole size={14} className="text-sand-400"/> Objeto centralizado e bloqueado</div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Ferramenta do mouse</p>
@@ -289,7 +290,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
                 </div>
                 <div className="flex justify-between gap-2">
                   <button type="button" onClick={() => setZoom(1)} className="text-xs text-sand-300 underline">Restaurar zoom</button>
-                  <button type="button" onClick={() => { setPanCamera({ x: 0, y: 0 }); setZoom(1); setPov(aplicacaoSvg?.camera || { x: -5, y: -10 }); }} className="text-xs text-sand-300 underline">Centralizar câmera</button>
+                  <button type="button" onClick={() => { setPanCamera({ x: 0, y: 0 }); setZoom(1); setPov(cameraInicial); }} className="text-xs text-sand-300 underline">Centralizar câmera</button>
                 </div>
               </div>
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-500 leading-relaxed"><Info size={14} className="inline mr-2 text-sand-400"/>Shift + arrastar ou botão do meio: deslocar câmera. Arrastar: {ferramenta === "rotacionar" ? "orbitar câmera." : "mover SVG."}</div>

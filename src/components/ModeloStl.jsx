@@ -61,7 +61,8 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     // O buffer usa pixels físicos; o tamanho exibido sempre usa pixels CSS.
     Object.assign(renderer.domElement.style, { width: "100%", height: "100%", display: "block" });
     renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.shadowMap.enabled = true;
+    // Não há superfície receptora de sombra: evitar refazer o STL no shadow pass.
+    renderer.shadowMap.enabled = false;
     container.appendChild(renderer.domElement);
 
     scene.add(new THREE.HemisphereLight(0xffffff, 0x25211b, 2.6));
@@ -116,10 +117,13 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       if (!atual) return;
       const p = propsRef.current;
       const alvo = new THREE.Vector3(0, 0, atual.altura / 2);
+      // Mira no ponto real de aplicação, não no centro da caixa do STL.
+      // No porta-BIC, o compartimento lateral desloca esse centro em relação à arte.
+      if (atual.baseArte) alvo.copy(atual.baseArte).add(group.position);
       const azimute = THREE.MathUtils.degToRad(42 + (p.povY || 0));
       const elevacao = THREE.MathUtils.degToRad(Math.max(0, Math.min(90, 35 - (p.povX || 0))));
       const distancia = 7 * Math.max(1, 1 / camera.aspect) / Math.max(0.6, Math.min(2, p.zoom));
-      camera.position.set(distancia * Math.sin(azimute) * Math.cos(elevacao), -distancia * Math.cos(azimute) * Math.cos(elevacao), alvo.z + distancia * Math.sin(elevacao));
+      camera.position.set(alvo.x + distancia * Math.sin(azimute) * Math.cos(elevacao), alvo.y - distancia * Math.cos(azimute) * Math.cos(elevacao), alvo.z + distancia * Math.sin(elevacao));
       camera.up.set(-Math.sin(azimute) * Math.sin(elevacao), Math.cos(azimute) * Math.sin(elevacao), Math.cos(elevacao));
       camera.lookAt(alvo);
       const width = container.clientWidth || 1, height = container.clientHeight || 1;
@@ -236,6 +240,9 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     const resize = () => {
       const width = container.clientWidth || 1;
       const height = container.clientHeight || 1;
+      // Orçamento de pixels constante: um monitor 4K/HiDPI não deve multiplicar
+      // o custo de cada interação. O canvas continua preenchendo a área CSS.
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5, Math.sqrt(2_500_000 / (width * height))));
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
