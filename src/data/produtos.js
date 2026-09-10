@@ -1,29 +1,5 @@
 export const produtos = [
   {
-    id: 74, nome: "Cinzeiro Personalizado 01 — Teste", preco: 49.9,
-    imagem: "/logo.png", imagens: ["/logo.png"], categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
-    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE01.stl",
-    aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
-    descricao: "Produto de teste: cinzeiro com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior.",
-    dimensoes: "115x115x30.5", peso_gramas: 70
-  },
-  {
-    id: 75, nome: "Cinzeiro Personalizado 02 — Teste", preco: 49.9,
-    imagem: "/logo.png", imagens: ["/logo.png"], categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
-    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE02.stl",
-    aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
-    descricao: "Produto de teste: cinzeiro com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior.",
-    dimensoes: "115x115x26.5", peso_gramas: 70
-  },
-  {
-    id: 76, nome: "Porta-isqueiro BIC Personalizado — Teste", preco: 49.9,
-    imagem: "/logo.png", imagens: ["/logo.png"], categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
-    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CAPA_BIC_BASE01.stl",
-    aplicacaoSvg: { tipo: "corpo", eixo: "+X", rotacaoZ: -90, camera: { x: 35, y: 48 } },
-    descricao: "Produto de teste: porta-isqueiro BIC com compartimento para cigarro e arte personalizada na parte central do corpo.",
-    dimensoes: "68.4x19.2x95.5", peso_gramas: 50
-  },
-  {
     "id": 0,
     "nome": "Pagamento Personalizado",
     "preco": 0,
@@ -1408,5 +1384,29 @@ export const produtos = [
     "descricao": "Porta isqueiros (TIPO BIC) impresso em PLA Premiun em formato de munição de espingarda (VEM COM 1 ISQUEIRO)",
     "peso_gramas": 50,
     "dimensoes": "80x25x12"
-  }
+  },
+  {
+    id: 74, nome: "Cinzeiro Personalizado Piramidal", preco: 23.9,
+    imagem: "/produtos/CINZEIRO_PIRAMIDAL.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
+    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE01.stl",
+    aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
+    descricao: "cinzeiro com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior.",
+    dimensoes: "115x115x30.5", peso_gramas: 70
+  },
+  {
+    id: 75, nome: "Cinzeiro Personalizado Oval", preco: 23.9,
+    imagem: "/produtos/CINZEIRO_OVAL.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
+    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE02.stl",
+    aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
+    descricao: "cinzeiro com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior.",
+    dimensoes: "115x115x26.5", peso_gramas: 70
+  },
+  {
+    id: 76, nome: "Porta-isqueiro c/ espaço para cigarro Personalizado", preco: 19.9,
+    imagem: "/produtos/PORTA_BIC_CIGARRO.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
+    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CAPA_BIC_BASE01.stl",
+    aplicacaoSvg: { tipo: "corpo", eixo: "+X", rotacaoZ: -90, camera: { x: 35, y: 48 } },
+    descricao: "porta-isqueiro BIC com compartimento para cigarro e arte personalizada na parte central do corpo.",
+    dimensoes: "68.4x19.2x95.5", peso_gramas: 50
+  },
 ];
