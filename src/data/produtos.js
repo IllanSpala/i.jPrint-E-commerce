@@ -1337,6 +1337,28 @@ export const produtos = [
     "imagem": "/produtos/CINZEIRO_CHROME.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
+    "opcoes": [
+      {
+        "nome": "Branco",
+        "esgotado": false
+      },
+      {
+        "nome": "Preto",
+        "esgotado": false
+      },
+      {
+        "nome": "Vermelho",
+        "esgotado": false
+      },
+      {
+        "nome": "Cinza",
+        "esgotado": false
+      },
+      {
+        "nome": "Rosa",
+        "esgotado": false
+      }
+    ],
     "descricao": "Cinzeiro impresso em PLA Premium piramidal com gravura de cruz",
     "peso_gramas": 70,
     "dimensoes": "65x65x30"

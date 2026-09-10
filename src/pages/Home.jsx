@@ -20,6 +20,7 @@ export default function Home() {
     async function carregarProdutos() {
       const { data } = await supabase.from('produtos').select('*').order('id');
       const dbProducts = data ? data.map(p => ({
+        ...produtosLocais.find(local => String(local.id) === String(p.id)),
         ...p,
         precoPromocional: p.preco_promocional,
         exigePersonalizacao: p.exige_personalizacao

@@ -61,11 +61,12 @@ function wrapAdminHtml({ titulo, corpoHtml }) {
   `;
 }
 
-async function enviarEmail({ from, to, subject, html }) {
+async function enviarEmail({ from, to, subject, html, attachments }) {
   const resend = await getResend();
   if (!resend || !to) return { skipped: true };
   try {
-    await resend.emails.send({ from, to, subject, html });
+    const resultado = await resend.emails.send({ from, to, subject, html, attachments });
+    if (resultado.error) throw new Error(resultado.error.message);
     return { sent: true };
   } catch (error) {
     console.error(`[Mailer] Falha ao enviar "${subject}" para ${to}:`, error);
@@ -77,8 +78,8 @@ export function enviarEmailCliente({ to, subject, html }) {
   return enviarEmail({ from: FROM_CLIENTE, to, subject, html });
 }
 
-export function enviarEmailAdmin({ subject, html }) {
-  return enviarEmail({ from: FROM_SISTEMA, to: ADMIN_EMAIL, subject, html });
+export function enviarEmailAdmin({ subject, html, attachments }) {
+  return enviarEmail({ from: FROM_SISTEMA, to: ADMIN_EMAIL, subject, html, attachments });
 }
 
 // ==================== TEMPLATES: CLIENTE ====================

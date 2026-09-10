@@ -7,6 +7,7 @@ import {
   ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2, FileText
 } from "lucide-react";
 import ContagemRegressiva from "../components/ContagemRegressiva";
+import { arquivosPersonalizacao, baixarArquivoPersonalizacao } from "../lib/arquivosPersonalizacao";
 
 // --------------- Componente de Detalhes de Pagamento ---------------
 function PainelPagamento({ pedido }) {
@@ -576,6 +577,11 @@ export default function Admin() {
                         <li key={idx} className="text-sm text-zinc-300 bg-zinc-950 p-3 rounded border border-zinc-800/50">
                           <span className="font-bold text-sand-400 mr-2">{item.quantidade}x</span>
                           {item.nome}
+                          {item.personalizacoes?.length > 0 && <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
+                            <p className="text-sm font-semibold">Arquivos para produção</p>
+                            <p className="text-xs text-zinc-400">SVG original do cliente, versão processada e configurações. Importe o SVG no Blender e confira as medidas antes de imprimir.</p>
+                            {arquivosPersonalizacao([item]).map(arquivo => <button key={arquivo.nome} onClick={() => baixarArquivoPersonalizacao(arquivo)} className="block text-xs text-sand-300 underline break-all">Baixar {arquivo.nome}</button>)}
+                          </div>}
                           {item.opcaoEscolhida && <span className="text-zinc-500 ml-1">({item.opcaoEscolhida})</span>}
                           {item.exigePersonalizacao && item.personalizacao && (
                             <div className="mt-2 pt-2 border-t border-zinc-800/50">

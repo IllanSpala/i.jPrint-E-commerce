@@ -116,6 +116,7 @@ export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3
 export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3d }) {
   const [etapa, setEtapa] = useState("guia");
   const [svg, setSvg] = useState("");
+  const [svgOriginal, setSvgOriginal] = useState("");
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [processando, setProcessando] = useState(false);
@@ -132,7 +133,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       if (modelo3d && !capturaRef.current) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       const previewImagem = modelo3d ? capturaRef.current() : undefined;
       setErro("");
-      onConcluir({ ...configuracao, previewImagem });
+      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, superficie: "+Z" });
     } catch (error) {
       setErro(error.message || "Não foi possível gerar a prévia. Tente novamente.");
     }
@@ -163,6 +164,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       const otimizado = limparSvg(texto);
       await new Promise((resolve) => setTimeout(resolve, 550));
       setSvg(otimizado);
+      setSvgOriginal(texto);
       setPosicao({ x: 0, y: 0 });
       setNomeArquivo(file.name);
       setEtapa("editor");
@@ -189,6 +191,16 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
           </div>
 
           <div className="grid md:grid-cols-[1fr_1.1fr] gap-6">
+            <section className="md:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-sm text-zinc-300">
+              <h3 className="font-semibold text-white mb-3">Só tem uma imagem PNG? Transforme em SVG</h3>
+              <ol className="list-decimal pl-5 space-y-2">
+                <li>Escolha um desenho simples, com bom contraste e poucos detalhes.</li>
+                <li>Abra o <a href="https://convertio.co/pt/png-svg/" target="_blank" rel="noopener noreferrer" className="text-sand-300 underline">conversor PNG para SVG do Convertio</a> e selecione sua imagem.</li>
+                <li>Escolha SVG como saída, converta e baixe o arquivo. O serviço oferece conversões básicas gratuitas, sujeitas aos limites do site.</li>
+                <li>Volte aqui, carregue o SVG e confira o desenho no topo da peça antes de concluir.</li>
+              </ol>
+              <p className="mt-3 text-zinc-400">Prefira vetores com formas e caminhos; uma foto apenas embutida em um SVG não vira uma gravura. Seu arquivo e as configurações serão guardados com o pedido para preparação da impressão.</p>
+            </section>
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 md:p-6">
               <h3 className="font-semibold text-lg mb-5">O que funciona melhor</h3>
               <div className="space-y-5">

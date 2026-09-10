@@ -259,7 +259,7 @@ export default function PaginaProduto() {
         </div>
 
         {/* Detalhes */}
-        <div className="flex flex-col gap-5">
+        <div className={`flex flex-col ${produto.personalizador3d ? "gap-3" : "gap-5"}`}>
           <div>
             <span className="text-xs text-zinc-500 uppercase tracking-widest">
               {(produto.categorias || [produto.categoria]).join(" · ")}
@@ -489,10 +489,10 @@ export default function PaginaProduto() {
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         {personalizacoes3d.map((item, index) => (
-                          <div key={item.id} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
-                            <PreviewPersonalizacao compact personalizacao={item}/>
-                            <div className="p-3 flex items-start justify-between gap-2">
-                              <div className="text-[11px] leading-relaxed text-zinc-400">
+                          <div key={item.id} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 flex items-center">
+                            <div className="w-16 lg:w-20 shrink-0"><PreviewPersonalizacao compact personalizacao={item}/></div>
+                            <div className="p-2 flex flex-1 min-w-0 items-start justify-between gap-1">
+                              <div className="text-xs leading-relaxed text-zinc-400">
                                 <p>Objeto: <span className="text-zinc-200">{item.corObjetoNome}</span></p>
                                 <p>Gravura: <span className="text-zinc-200">{item.corGravuraNome}</span></p>
                               </div>

@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { anexosPersonalizacao } from './_lib/anexosPersonalizacao.js';
 import {
   enviarEmailCliente,
   enviarEmailAdmin,
@@ -86,9 +87,10 @@ export default async function handler(req, res) {
                 to: clienteEmail,
                 ...emailClientePagamentoConfirmado({ clienteNome, pedidoId, valor }),
               }),
-              enviarEmailAdmin(
-                emailAdminPagamentoRecebido({ clienteNome, clienteEmail, pedidoId, valor })
-              ),
+              enviarEmailAdmin({
+                ...emailAdminPagamentoRecebido({ clienteNome, clienteEmail, pedidoId, valor }),
+                attachments: anexosPersonalizacao(pedidoAtualizado.itens),
+              }),
             ]);
             console.log('[Webhook] E-mails de confirmação enviados com sucesso!');
           }

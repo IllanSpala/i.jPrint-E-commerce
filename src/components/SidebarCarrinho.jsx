@@ -144,6 +144,10 @@ export default function SidebarCarrinho() {
 
   async function prosseguirAposAviso() {
     setModalAvisoAberto(false);
+    if (new Blob([JSON.stringify(itens)]).size > 3400000) {
+      alert('Os arquivos do pedido estão muito grandes. Reduza os SVGs ou divida a compra em pedidos menores.');
+      return;
+    }
     setLoading(true);
 
     const isApenasPagamentoCustom = itens.every(i => i.isPagamentoPersonalizado);
