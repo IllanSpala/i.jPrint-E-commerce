@@ -88,7 +88,7 @@ export const produtos = [
     "id": 6,
     "nome": "Tony Montana - Scarface",
     "preco": 99.9,
-    "precoPromocional": 79.9,
+    "precoPromocional": 63.9,
     "imagem": "/produtos/HOTTOY_TONY.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -130,7 +130,7 @@ export const produtos = [
   {
     "id": 9,
     "nome": "Torre de Dados Malboro",
-    "preco": 34.9,
+    "preco": 27.9,
     "imagem": "/produtos/TORRE_MALBORO.png",
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
@@ -158,7 +158,7 @@ export const produtos = [
   {
     "id": 11,
     "nome": "Ovo de Dragão - Fidget Sensorial",
-    "preco": 39.9,
+    "preco": 33.9,
     "imagem": "/produtos/FIDGET_OVO_SENSORIAL.png",
     "categoria": "Sensoriais",
     "exigePersonalizacao": false,
@@ -186,7 +186,7 @@ export const produtos = [
   {
     "id": 12,
     "nome": "Estrela 10 pontas - Fidget Sensorial",
-    "preco": 44.9,
+    "preco": 39.9,
     "imagem": "/produtos/FIDGET_ESTRELA_SENSORIAL.png",
     "categoria": "Sensoriais",
     "exigePersonalizacao": false,
@@ -295,7 +295,7 @@ export const produtos = [
     "id": 18,
     "nome": "Edward Mãos de Tesoura",
     "preco": 99.9,
-    "precoPromocional": 79.9,
+    "precoPromocional": 63.9,
     "imagem": "/produtos/EDWARD.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -417,7 +417,7 @@ export const produtos = [
   {
     "id": 25,
     "nome": "Pomni - Amazing Digital Circus",
-    "preco": 139.9,
+    "preco": 119.9,
     "imagem": "/produtos/POMNI.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -745,7 +745,7 @@ export const produtos = [
   {
     "id": 41,
     "nome": "Tux",
-    "preco": 69.9,
+    "preco": 43.9,
     "imagem": "/produtos/TUX.png",
     "categoria": "Hot Toys",
     "exigePersonalizacao": false,
@@ -899,7 +899,7 @@ export const produtos = [
   {
     "id": 52,
     "nome": "Rolling Trays Variados",
-    "preco": 43.9,
+    "preco": 37.9,
     "imagem": "/produtos/RT_MIMIC.png",
     "imagens": [
       "/produtos/RT_MISTERSHAKE.png",
@@ -998,7 +998,7 @@ export const produtos = [
   {
     "id": 53,
     "nome": "Cinzeiro Barad-dûr - Senhor dos Anéis",
-    "preco": 63.9,
+    "preco": 44.9,
     "imagem": "/produtos/CINZEIRO_BARAD-DUR.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
@@ -1012,7 +1012,7 @@ export const produtos = [
   {
     "id": 54,
     "nome": "Cinzeiro Hello Kitty",
-    "preco": 41.9,
+    "preco": 33.49,
     "imagem": "/produtos/CINZEIRO_HELLO_KITTY.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
@@ -1026,7 +1026,7 @@ export const produtos = [
   {
     "id": 55,
     "nome": "Cuia Pokemon - Ditto",
-    "preco": 39.9,
+    "preco": 27.9,
     "imagem": "/produtos/CUIA_DITTO.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
@@ -1240,7 +1240,7 @@ export const produtos = [
   {
     "id": 65,
     "nome": "Regador Psyduck",
-    "preco": 53.9,
+    "preco": 41.9,
     "imagem": "/produtos/REGADOR_PSY.png",
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
@@ -1254,7 +1254,7 @@ export const produtos = [
   {
     "id": 66,
     "nome": "Teia Aranha - Fidget Sensorial",
-    "preco": 44.9,
+    "preco": 39.9,
     "imagem": "/produtos/FIDGET_TEIA_ARANHA.png",
     "categoria": "Sensoriais",
     "exigePersonalizacao": false,
@@ -1333,7 +1333,7 @@ export const produtos = [
   {
     "id": 71,
     "nome": "Cinzeiro Cruz - ChromeHearts",
-    "preco": 24.9,
+    "preco": 23.9,
     "imagem": "/produtos/CINZEIRO_CHROME.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
@@ -1409,4 +1409,12 @@ export const produtos = [
     descricao: "porta-isqueiro BIC com compartimento para cigarro e arte personalizada na parte central do corpo.",
     dimensoes: "68.4x19.2x95.5", peso_gramas: 50
   },
+  {
+    id: 77, nome: "Porta-Copos Personalizado", preco: 9.90,
+    imagem: "/produtos/PORTA_COPOS_PERSONALIZADO.jpg", categoria: "Personalizados",
+    personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/base_PORTA_COPOS.stl",
+    aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
+    descricao: "Porta-copos com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior! *FAZEMOS PREÇO MELHOR PARA ATACADO*",
+    dimensoes: "90x90x5", peso_gramas: 10
+  }
 ];
