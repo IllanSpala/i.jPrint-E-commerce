@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, ChevronRight, FileUp, Info, LockKeyhole, Move, Rotate3D, X, ZoomIn } from "lucide-react";
 import ModeloStl from "./ModeloStl";
+import ConversorImagem from "./ConversorImagem";
 
 const CORES = [
   { nome: "Vermelho", valor: "#ef4444" },
@@ -123,6 +124,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [etapa, setEtapa] = useState("guia");
   const [svg, setSvg] = useState("");
   const [svgOriginal, setSvgOriginal] = useState("");
+  const [origemImagem, setOrigemImagem] = useState(null);
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [processando, setProcessando] = useState(false);
@@ -163,7 +165,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       if (modelo3d && !capturaRef.current) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       const previewImagem = modelo3d ? capturaRef.current() : undefined;
       setErro("");
-      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, aplicacaoSvg, aplicacaoSuperficie: aplicacao, superficie: aplicacaoSvg?.eixo || "+Z" });
+      onConcluir({ ...configuracao, svgOriginal, origemImagem, previewImagem, modelo3d, aplicacaoSvg, aplicacaoSuperficie: aplicacao, superficie: aplicacaoSvg?.eixo || "+Z" });
     } catch (error) {
       setErro(error.message || "Não foi possível gerar a prévia. Tente novamente.");
     }
@@ -183,6 +185,23 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
 
   const configuracao = useMemo(() => ({ svg, corObjeto, corGravura, escala, anguloSvg, zoom, x: posicao.x, y: posicao.y, povX: pov.x, povY: pov.y, nomeArquivo, corObjetoNome: corNome(corObjeto), corGravuraNome: corNome(corGravura) }), [svg, corObjeto, corGravura, escala, anguloSvg, zoom, posicao, pov, nomeArquivo]);
 
+  function usarSvg(texto, nome, origem = null) {
+    try {
+      const otimizado = limparSvg(texto);
+      setSvg(otimizado);
+      setSvgOriginal(texto);
+      setOrigemImagem(origem);
+      setPosicao({ x: 0, y: 0 });
+      setPanCamera({ x: 0, y: 0 });
+      setZoom(1);
+      setAnguloSvg(0);
+      setPov(cameraInicial);
+      setNomeArquivo(nome);
+      setErro("");
+      setEtapa("editor");
+    } catch (error) { setErro(error.message || "Não foi possível preparar o SVG."); }
+  }
+
   async function lerArquivo(file) {
     setErro("");
     if (!file || (!file.name.toLowerCase().endsWith(".svg") && file.type !== "image/svg+xml")) {
@@ -196,17 +215,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
     setProcessando(true);
     try {
       const texto = await file.text();
-      const otimizado = limparSvg(texto);
-      await new Promise((resolve) => setTimeout(resolve, 550));
-      setSvg(otimizado);
-      setSvgOriginal(texto);
-      setPosicao({ x: 0, y: 0 });
-      setPanCamera({ x: 0, y: 0 });
-      setZoom(1);
-      setAnguloSvg(0);
-      setPov(cameraInicial);
-      setNomeArquivo(file.name);
-      setEtapa("editor");
+      usarSvg(texto, file.name);
     } catch (e) {
       setErro(e.message || "Não foi possível processar o SVG.");
     } finally {
@@ -223,31 +232,34 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
           <div className="flex justify-between items-start gap-5 mb-8">
             <div>
               <span className="text-sand-400 text-xs font-bold uppercase tracking-[.2em]">Antes de personalizar</span>
-              <h2 className="font-display text-3xl md:text-5xl uppercase mt-2">Prepare seu SVG</h2>
-              <p className="text-zinc-400 mt-3 max-w-2xl leading-relaxed">Seu desenho será transformado em uma gravação em relevo. Arquivos simples produzem bordas mais limpas e uma impressão mais resistente.</p>
+              <h2 className="font-display text-3xl md:text-5xl uppercase mt-2">Prepare sua arte</h2>
+              <p className="text-zinc-400 mt-3 max-w-2xl leading-relaxed">Envie um SVG pronto ou converta uma imagem aqui. Prefira logos, desenhos e texturas simples: fotografias e degradês perdem detalhes ao virar uma gravura de uma cor.</p>
+              <p className="text-sm text-sand-300 mt-3">Compatíveis: SVG (até 2 MB) · PNG, JPG/JPEG e WebP (até 8 MB). PDF, GIF, HEIC e arquivos de editores não são aceitos diretamente.</p>
             </div>
             <button onClick={onFechar} className="p-2 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white" aria-label="Fechar"><X size={20}/></button>
           </div>
 
           <div className="grid md:grid-cols-[1fr_1.1fr] gap-6">
+            <div className="md:col-span-2"><ConversorImagem onUsarSvg={usarSvg}/></div>
             <section className="md:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-sm text-zinc-300">
-              <h3 className="font-semibold text-white mb-3">Só tem uma imagem PNG? Transforme em SVG</h3>
+              <h3 className="font-semibold text-white mb-3">Prefere converter fora do site? Passo a passo com Convertio</h3>
               <ol className="list-decimal pl-5 space-y-2">
                 <li>Escolha um desenho simples, com bom contraste e poucos detalhes.</li>
                 <li>Abra o <a href="https://convertio.co/pt/png-svg/" target="_blank" rel="noopener noreferrer" className="text-sand-300 underline">conversor PNG para SVG do Convertio</a> e selecione sua imagem.</li>
-                <li>Escolha SVG como saída, converta e baixe o arquivo. O serviço oferece conversões básicas gratuitas, sujeitas aos limites do site.</li>
-                <li>Volte aqui, carregue o SVG e confira o desenho no topo da peça antes de concluir.</li>
+                <li>Escolha SVG como saída, clique em converter e baixe o arquivo. Confira os limites e condições atuais do serviço; a imagem será enviada ao Convertio.</li>
+                <li>Volte aqui e use “Carregar SVG pronto” abaixo. O arquivo deve conter vetores, não uma imagem PNG embutida.</li>
+                <li>No editor, ajuste tamanho, posição, rotação e cores. Clique em Aplicar para recortar a arte na superfície da peça; confira o resultado e só então clique em Concluído.</li>
               </ol>
-              <p className="mt-3 text-zinc-400">Prefira vetores com formas e caminhos; uma foto apenas embutida em um SVG não vira uma gravura. Seu arquivo e as configurações serão guardados com o pedido para preparação da impressão.</p>
+              <p className="mt-3 text-zinc-400">O SVG aprovado e os ajustes são guardados com o pedido para preparação da impressão. Na conversão local, guardamos o vetor gerado e as configurações, não a imagem original.</p>
             </section>
             <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 md:p-6">
               <h3 className="font-semibold text-lg mb-5">O que funciona melhor</h3>
               <div className="space-y-5">
                 {[
-                  ["Espessura", "Use traços com no mínimo 1,2 mm para não desaparecerem na impressão."],
+                  ["Espessura", "Prefira traços largos; use 1,2 mm como referência no tamanho final. A conversão não garante que detalhes muito finos sejam imprimíveis."],
                   ["Cores", "Prefira uma única cor sólida. Degradês e transparências serão convertidos."],
-                  ["Profundidade", "Detalhes serão aplicados como relevo de 0,8 mm na superfície da peça."],
-                  ["Fundo", "O fundo branco e elementos externos serão removidos automaticamente."],
+                  ["Superfície e profundidade", "Aplicar recorta a arte na superfície, inclusive nas curvas. Espessura e relevo finais são preparados para impressão posteriormente."],
+                  ["Fundo", "Prefira transparência ou fundo uniforme. Confira a prévia: regiões brancas podem fazer parte da arte, e fundos complexos podem exigir edição manual."],
                 ].map(([titulo, texto], index) => (
                   <div key={titulo} className="flex gap-3">
                     <span className="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-sand-400 text-zinc-950 text-xs font-bold">{index + 1}</span>
@@ -261,7 +273,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
               <ExemploSvg />
               <label className="sm:col-span-2 min-h-36 rounded-2xl border-2 border-dashed border-zinc-700 hover:border-sand-400/60 bg-zinc-900/60 flex flex-col items-center justify-center cursor-pointer transition-colors px-5 text-center">
                 <FileUp className="text-sand-400 mb-3" size={28}/>
-                <strong className="text-sm">{processando ? "Removendo fundo e otimizando..." : "Carregar arquivo SVG"}</strong>
+                <strong className="text-sm">{processando ? "Preparando SVG..." : "Carregar SVG pronto"}</strong>
                 <span className="text-xs text-zinc-500 mt-1">Somente .svg, até 2 MB</span>
                 <input disabled={processando} type="file" accept=".svg,image/svg+xml" className="sr-only" onChange={(event) => lerArquivo(event.target.files?.[0])}/>
               </label>
@@ -272,7 +284,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
       ) : (
         <div className="h-[100dvh] min-h-0 flex flex-col">
           <header className="h-16 shrink-0 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-4 md:px-6">
-            <div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{nomeArquivo} · fundo removido · otimizado</span></div>
+            <div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{nomeArquivo} · {origemImagem ? "convertido de imagem" : "SVG preparado"}</span></div>
             <div className="flex gap-2">
               <button onClick={() => setEtapa("guia")} className="px-3 py-2 rounded-lg border border-zinc-700 text-xs text-zinc-300 hover:bg-zinc-800">Trocar SVG</button>
               <button disabled={aplicando || !escalaValida} onClick={aplicacao || !modelo3d ? concluir : aplicar} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider hover:bg-sand-300 disabled:opacity-50">{aplicando ? "Aplicando…" : aplicacao || !modelo3d ? "Concluído" : "Aplicar"} <ChevronRight size={15}/></button>
