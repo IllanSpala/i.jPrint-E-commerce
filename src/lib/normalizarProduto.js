@@ -14,11 +14,17 @@ export function normalizarProduto(data) {
   if (local.personalizador3d) {
     Object.assign(produto, {
       personalizador3d: true,
+      personalizacao3dOpcional: Boolean(local.personalizacao3dOpcional),
       exigePersonalizacao: false,
       modelo3d: local.modelo3d,
       aplicacaoSvg: local.aplicacaoSvg,
       categorias: local.categorias,
     });
+  }
+  if (local.personalizacao3dOpcional) {
+    produto.nome = local.nome;
+    produto.dimensoes = local.dimensoes;
+    produto.descricao = local.descricao;
   }
   return produto;
 }

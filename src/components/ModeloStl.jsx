@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import { criarProjecaoX } from "../lib/projecaoSuperficie.js";
+import { criarGeometriaSvg } from "../lib/geometriaSvg.js";
+import { iniciarAplicacaoSuperficie } from "../lib/aplicacaoAssincrona.js";
 
 function limparGravura(grupo) {
   while (grupo.children.length) {
@@ -15,41 +16,24 @@ function limparGravura(grupo) {
   }
 }
 
-function aplicarSvgComoGeometria(grupo, svg, cor, angulo = 0) {
+function criarPreviewSvg(grupo, geometry, cor, angulo = 0) {
   limparGravura(grupo);
-  if (!svg) return;
-  const resultado = new SVGLoader().parse(svg);
-  const conteudo = new THREE.Group();
-  resultado.paths.forEach((path) => {
-    SVGLoader.createShapes(path).forEach((shape) => {
-      const geometry = new THREE.ShapeGeometry(shape, 10);
-      geometry.userData.posicoesOriginais = geometry.attributes.position.array.slice();
-      const material = new THREE.MeshBasicMaterial({ color: cor, side: THREE.DoubleSide, depthWrite: true, polygonOffset: true, polygonOffsetFactor: -4 });
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.renderOrder = 10;
-      conteudo.add(mesh);
-    });
-  });
-  if (!conteudo.children.length) return;
-  const caixa = new THREE.Box3().setFromObject(conteudo);
-  const tamanho = new THREE.Vector3();
-  const centro = new THREE.Vector3();
-  caixa.getSize(tamanho);
-  caixa.getCenter(centro);
-  const normalizacao = 1 / Math.max(tamanho.x, tamanho.y, 1);
-  conteudo.position.set(-centro.x * normalizacao, centro.y * normalizacao, 0);
-  conteudo.scale.set(normalizacao, -normalizacao, normalizacao);
+  const copia = geometry.clone();
+  copia.userData.posicoesOriginais = copia.attributes.position.array.slice();
+  const material = new THREE.MeshBasicMaterial({ color: cor, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  const mesh = new THREE.Mesh(copia, material);
+  mesh.renderOrder = 10;
   const giro = new THREE.Group();
   giro.rotation.z = THREE.MathUtils.degToRad(-angulo);
-  giro.add(conteudo);
+  giro.add(mesh);
   grupo.add(giro);
 }
 
-export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicacaoSvg, anguloSvg = 0, zoom = 1, panCamera = { x: 0, y: 0 } }) {
+export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicarRef, onErro, aplicacaoSvg, anguloSvg = 0, zoom = 1, panCamera = { x: 0, y: 0 } }) {
   const containerRef = useRef(null);
   const cenaRef = useRef(null);
   const propsRef = useRef(null);
-  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom, panCamera };
+  propsRef.current = { corObjeto, corGravura, svg, escala, x, y, povX, povY, anguloSvg, zoom, panCamera, onErro };
 
   useEffect(() => {
     const container = containerRef.current;
@@ -132,22 +116,32 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       const width = container.clientWidth || 1, height = container.clientHeight || 1;
       camera.setViewOffset(width, height, -p.panCamera.x * width, -p.panCamera.y * height, width, height);
       atual.mesh?.material.color.set(p.corObjeto);
-      if (atual.decal) {
-        atual.decal.scale.setScalar((p.escala || 45) / (aplicacaoSvg?.tipo === "corpo" ? 48 : 24));
+      const key = `${p.escala}:${p.x}:${p.y}:${p.anguloSvg}`;
+      const svgMudou = atual.svgAnterior !== p.svg;
+      if (atual.aplicada && (svgMudou || atual.gravuraKey !== key)) {
+        atual.aplicada = false;
+        atual.decal.quaternion.copy(atual.orientacaoArte);
+        criarPreviewSvg(atual.decal, atual.svgPlana, p.corGravura, p.anguloSvg);
+      }
+      if (atual.decal && !atual.aplicada) {
+        const tamanho = Number(p.escala);
+        atual.decal.scale.setScalar((Number.isFinite(tamanho) && tamanho > 0 ? tamanho : 45) / (aplicacaoSvg?.tipo === "corpo" ? 48 : 24));
         const base = atual.baseArte || new THREE.Vector3(0, 0, atual.altura / 2);
         if (aplicacaoSvg?.tipo === "corpo") {
           atual.decal.position.set(base.x + 0.008, base.y + (p.x || 0) / 85, base.z - (p.y || 0) / 85);
         } else {
           atual.decal.position.set(base.x + (p.x || 0) / 85, base.y - (p.y || 0) / 85, base.z + 0.008);
         }
-        const svgMudou = atual.svgAnterior !== p.svg;
         if (svgMudou) {
-          aplicarSvgComoGeometria(atual.decal, p.svg, p.corGravura, p.anguloSvg);
+          atual.svgPlana?.dispose();
+          atual.svgPlana = null;
+          limparGravura(atual.decal);
           atual.svgAnterior = p.svg;
+          atual.svgPlana = criarGeometriaSvg(p.svg);
+          criarPreviewSvg(atual.decal, atual.svgPlana, p.corGravura, p.anguloSvg);
         }
         atual.decal.children[0]?.rotation.set(0, 0, THREE.MathUtils.degToRad(-p.anguloSvg));
         atual.decal.traverse(child => child.material?.color?.set(p.corGravura));
-        const key = `${p.escala}:${p.x}:${p.y}:${p.anguloSvg}`;
         if (svgMudou || atual.gravuraKey !== key) {
           if (aplicacaoSvg?.tipo === "corpo" && atual.mesh) {
             group.updateMatrixWorld(true);
@@ -173,17 +167,53 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
           atual.gravuraKey = key;
         }
       }
+      if (atual.aplicada) atual.decal.traverse(child => child.material?.color?.set(p.corGravura));
       render();
     };
     let frame = null;
     const schedule = () => {
       if (frame !== null) return;
-      frame = requestAnimationFrame(() => { frame = null; update(); });
+      frame = requestAnimationFrame(() => {
+        frame = null;
+        try { update(); } catch (error) { propsRef.current.onErro?.(error.message); }
+      });
     };
     cenaRef.current = { scene, camera, renderer, group, mesh: null, decal: null, gravuraKey: "", altura: 1.5, render, update, schedule };
+    if (aplicarRef) aplicarRef.current = async () => {
+      const atual = cenaRef.current;
+      if (!atual?.mesh || !atual.baseArte) throw new Error("Aguarde o carregamento da superfície antes de aplicar.");
+      update();
+      if (!atual.svgPlana) throw new Error("Selecione um SVG com formas vetoriais válidas.");
+      const p = propsRef.current;
+      if (atual.trabalho) throw new Error("Aguarde a aplicação atual terminar.");
+      const trabalho = iniciarAplicacaoSuperficie(atual.mesh.geometry, atual.svgPlana, {
+        tipo: aplicacaoSvg?.tipo || "topo", baseArte: atual.baseArte,
+        escala: Number(p.escala), x: p.x || 0, y: p.y || 0, anguloSvg: p.anguloSvg,
+      });
+      atual.trabalho = trabalho;
+      let resultado;
+      try { resultado = await trabalho.promise; } finally { atual.trabalho = null; }
+      const novas = propsRef.current;
+      if (cenaRef.current !== atual || ["svg", "escala", "x", "y", "anguloSvg"].some(k => novas[k] !== p[k])) {
+        resultado.geometry.dispose();
+        throw new Error("A arte mudou durante o processamento. Clique em Aplicar novamente.");
+      }
+      limparGravura(atual.decal);
+      atual.decal.position.set(0, 0, 0);
+      atual.decal.quaternion.identity();
+      atual.decal.scale.setScalar(1);
+      const material = new THREE.MeshBasicMaterial({ color: p.corGravura, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+      const mesh = new THREE.Mesh(resultado.geometry, material);
+      mesh.renderOrder = 10;
+      atual.decal.add(mesh);
+      atual.aplicada = true;
+      render();
+      return { ...resultado.metadata, modelo3d: arquivo, transformacaoModelo: atual.transformacaoModelo, normalizacaoSvg: atual.svgPlana.userData.normalizacaoSvg, estado: "aplicado", geometria: "superficie-sem-extrusao" };
+    };
     if (capturaRef) capturaRef.current = () => {
       if (!cenaRef.current?.mesh) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       update();
+      if (aplicarRef && !cenaRef.current.aplicada) throw new Error("Aplique o SVG na superfície antes de concluir.");
       const captura = new THREE.WebGLRenderer({ antialias: true, alpha: false });
       captura.setSize(512, 512);
       captura.outputColorSpace = THREE.SRGBColorSpace;
@@ -210,11 +240,14 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       if (descartado) { geometry.dispose(); return; }
       geometry.computeVertexNormals();
       if (aplicacaoSvg?.rotacaoZ) geometry.rotateZ(THREE.MathUtils.degToRad(aplicacaoSvg.rotacaoZ));
+      geometry.computeBoundingBox();
+      const centroOriginal = geometry.boundingBox.getCenter(new THREE.Vector3());
       geometry.center();
       geometry.computeBoundingBox();
       const size = new THREE.Vector3();
       geometry.boundingBox.getSize(size);
       const fator = 3.4 / Math.max(size.x, size.y, size.z);
+      cenaRef.current.transformacaoModelo = { rotacaoZ: aplicacaoSvg?.rotacaoZ || 0, centroAposRotacao: centroOriginal.toArray(), fatorNormalizacao: fator };
       geometry.scale(fator, fator, fator);
       if (aplicacaoSvg?.tipo === "corpo") cenaRef.current.projetarX = criarProjecaoX(geometry);
       geometry.computeBoundingBox();
@@ -235,6 +268,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       }
       group.add(decal);
       cenaRef.current.decal = decal;
+      cenaRef.current.orientacaoArte = decal.quaternion.clone();
       group.updateMatrixWorld(true);
       const ray = new THREE.Raycaster();
       if (aplicacaoSvg?.tipo === "corpo") {
@@ -247,8 +281,8 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       }
       const hit = ray.intersectObject(mesh)[0];
       if (hit) cenaRef.current.baseArte = group.worldToLocal(hit.point.clone());
-      update();
-    });
+      schedule();
+    }, undefined, () => propsRef.current.onErro?.("Não foi possível carregar o modelo 3D. Tente novamente."));
 
     const resize = () => {
       const width = container.clientWidth || 1;
@@ -259,7 +293,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
-      update();
+      schedule();
     };
     const observer = new ResizeObserver(resize);
     observer.observe(container);
@@ -268,7 +302,10 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       descartado = true;
       if (frame !== null) cancelAnimationFrame(frame);
       if (capturaRef) capturaRef.current = null;
+      if (aplicarRef) aplicarRef.current = null;
       observer.disconnect();
+      cenaRef.current.trabalho?.cancelar();
+      cenaRef.current.svgPlana?.dispose();
       cenaRef.current = null;
       scene.traverse((obj) => {
         obj.geometry?.dispose?.();

@@ -120,7 +120,7 @@ export const produtos = [
     "imagem": "/produtos/PORTA_LAPIS_POKEBOLA.png",
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
-    "descricao": "Organizador de mesa/Porta lápis em formato de Pokebola. Aproximadamente 450g",
+    "descricao": "Organizador de mesa/Porta lápis em formato de Pokebola.",
     "peso_gramas": 120,
     "dimensoes": "100x100x130",
     "imagens": [
@@ -148,7 +148,7 @@ export const produtos = [
     "imagem": "/produtos/PORTA_LAPIS_JAKE.png",
     "categoria": "Acessórios",
     "exigePersonalizacao": false,
-    "descricao": "Organizador de mesa/Porta lápis em formato dO Jake o cachorro do Hora de Aventura. Aproximadamente 350g",
+    "descricao": "Organizador de mesa/Porta lápis em formato dO Jake o cachorro do Hora de Aventura.",
     "peso_gramas": 100,
     "dimensoes": "90x90x105",
     "imagens": [
@@ -176,7 +176,7 @@ export const produtos = [
         "esgotado": false
       }
     ],
-    "descricao": "Ovo de dragão fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil. Aproximadamente 150g",
+    "descricao": "Ovo de dragão fidget sensorial impresso em PLA Premium, perfeito para quem precisa de estímulo tátil.",
     "peso_gramas": 60,
     "dimensoes": "75x75x100",
     "imagens": [
@@ -232,7 +232,7 @@ export const produtos = [
     "imagem": "/produtos/KIT_FALLOUT.png",
     "categoria": "Coleções",
     "exigePersonalizacao": false,
-    "descricao": "Kit Fallout contendo: \n Action Figure do Vault Boy  pintado a mão \n 4 POrta-copos \n 1 Hueforge (20x20)",
+    "descricao": "Kit Fallout contendo: \n Action Figure do Vault Boy  pintado a mão \n 4 POrta-copos \n 1 Hueforge",
     "peso_gramas": 250,
     "dimensoes": "200x200x160",
     "imagens": [
@@ -898,7 +898,7 @@ export const produtos = [
   },
   {
     "id": 52,
-    "nome": "Rolling Trays Variados",
+    "nome": "Rolling Tray personalizado",
     "preco": 37.9,
     "imagem": "/produtos/RT_MIMIC.png",
     "imagens": [
@@ -991,9 +991,14 @@ export const produtos = [
         "esgotado": false
       }
     ],
-    "descricao": "Rolling Trays variados, peça seu personalizado inbox. impressos em PLA Premium, aproximadamente 200×130×20 mm",
+    "categorias": ["Tabacaria", "Personalizados"],
+    "personalizador3d": true,
+    "personalizacao3dOpcional": true,
+    "modelo3d": "/svg/BASE_ROLLING_TRAY.stl",
+    "aplicacaoSvg": { "tipo": "fundo", "eixo": "+Z", "camera": { "x": -55, "y": -42 } },
+    "descricao": "Rolling Tray impresso em PLA Premium. Escolha uma das artes prontas ou personalize com seu próprio SVG no editor 3D.",
     "peso_gramas": 120,
-    "dimensoes": "210x150x20"
+    "dimensoes": "180x120x10"
   },
   {
     "id": 53,
@@ -1002,7 +1007,7 @@ export const produtos = [
     "imagem": "/produtos/CINZEIRO_BARAD-DUR.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
-    "descricao": "Cinzeiro Barad-dûr, do Senhor dos Anéis, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
+    "descricao": "Cinzeiro Barad-dûr, do Senhor dos Anéis, impresso em PLA Premium. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
     "peso_gramas": 130,
     "dimensoes": "110x110x120",
     "imagens": [
@@ -1016,7 +1021,7 @@ export const produtos = [
     "imagem": "/produtos/CINZEIRO_HELLO_KITTY.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
-    "descricao": "Cinzeiro Hello Kitty, impresso em PLA Premium, aproximadamente 160x110x20 mm. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
+    "descricao": "Cinzeiro Hello Kitty, impresso em PLA Premium. Recomendado não apagar cigarro diretamente nele, apenas acumular cinzas.",
     "peso_gramas": 100,
     "dimensoes": "100x95x35",
     "imagens": [
@@ -1030,7 +1035,7 @@ export const produtos = [
     "imagem": "/produtos/CUIA_DITTO.png",
     "categoria": "Tabacaria",
     "exigePersonalizacao": false,
-    "descricao": "Cuia Ditto, impressa em PLA Premium, aproximadamente",
+    "descricao": "Cuia Ditto, impressa em PLA Premium.",
     "peso_gramas": 80,
     "dimensoes": "85x85x50",
     "imagens": [
@@ -1411,7 +1416,7 @@ export const produtos = [
   },
   {
     id: 77, nome: "Porta-Copos Personalizado", preco: 9.90,
-    imagem: "/produtos/PORTA_COPOS_PERSONALIZADO.jpg", categoria: "Personalizados",
+    imagem: "/produtos/PORTA_COPOS_PERSONALIZADO.png", categoria: "Personalizados",
     personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/base_PORTA_COPOS.stl",
     aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
     descricao: "Porta-copos com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior! *FAZEMOS PREÇO MELHOR PARA ATACADO*",

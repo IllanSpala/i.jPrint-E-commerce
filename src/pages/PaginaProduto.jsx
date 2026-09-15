@@ -28,6 +28,7 @@ export default function PaginaProduto() {
   const [valorCustom, setValorCustom] = useState("");
   const [personalizadorAberto, setPersonalizadorAberto] = useState(false);
   const [personalizacoes3d, setPersonalizacoes3d] = useState([]);
+  const [modoCompra, setModoCompra] = useState("pronto");
 
   useEffect(() => {
     setParametrosMultiplos(prev => {
@@ -89,14 +90,17 @@ export default function PaginaProduto() {
   }
 
   const opcaoAtual = produto.opcoes?.find((o) => o.nome === opcaoSelecionada);
+  const usandoPersonalizacao3d = produto.personalizador3d && (!produto.personalizacao3dOpcional || modoCompra === "personalizado");
   const variacaoAtual = opcaoAtual?.variacoes?.find((v) => v.nome === variacaoSelecionada);
-  const precoBase = variacaoAtual?.preco || opcaoAtual?.preco || produto.precoPromocional || produto.preco;
+  const precoBase = (usandoPersonalizacao3d ? null : variacaoAtual?.preco || opcaoAtual?.preco) || produto.precoPromocional || produto.preco;
   const multiplier = produto.multiplaPersonalizacao ? quantidadeLocal : 1;
-  const precoFinal = precoBase * multiplier;
-  const precoOriginalExibicao = (produto.preco || 0) * multiplier;
-  const exibePromocao = !opcaoAtual?.preco && !variacaoAtual?.preco && produto.precoPromocional;
+  const unidades = usandoPersonalizacao3d ? Math.max(1, personalizacoes3d.length) : multiplier;
+  const precoFinal = precoBase * unidades;
+  const precoOriginalExibicao = (produto.preco || 0) * unidades;
+  const exibePromocao = (usandoPersonalizacao3d || (!opcaoAtual?.preco && !variacaoAtual?.preco)) && produto.precoPromocional;
 
   function adicionar() {
+    if (!podeAdicionar) return;
     let itemToAdd;
 
     if (produto.isPagamentoPersonalizado) {
@@ -109,9 +113,10 @@ export default function PaginaProduto() {
         quantidade: 1,
         cartId: `pagamento-custom-${Date.now()}`,
       };
-    } else if (produto.personalizador3d) {
+    } else if (usandoPersonalizacao3d) {
       itemToAdd = {
         ...produto,
+        modoCompra: "personalizado",
         quantidade: personalizacoes3d.length,
         personalizacoes: personalizacoes3d,
         cartId: `${produto.id}-3d-${Date.now()}`,
@@ -120,6 +125,7 @@ export default function PaginaProduto() {
       itemToAdd = {
         ...produto,
         preco: variacaoAtual?.preco || opcaoAtual?.preco || produto.preco,
+        ...(produto.personalizacao3dOpcional ? { personalizador3d: false, modoCompra: "pronto" } : {}),
         precoPromocional: (opcaoAtual?.preco || variacaoAtual?.preco) ? null : produto.precoPromocional,
         personalizacao: produto.exigePersonalizacao ? personalizacao : undefined,
         parametrosMultiplos: produto.multiplaPersonalizacao ? parametrosMultiplos : undefined,
@@ -186,7 +192,7 @@ export default function PaginaProduto() {
   const isPagCustomValido = !produto.isPagamentoPersonalizado || (valorCustomNum >= 1);
   const podeAdicionar = produto.isPagamentoPersonalizado
     ? isPagCustomValido
-    : produto.personalizador3d
+    : usandoPersonalizacao3d
       ? personalizacoes3d.length > 0
       : (isPersonalizacaoUnicaValida && isPersonalizacaoMultiplaValida && !temOpcaoPendente);
 
@@ -361,7 +367,15 @@ export default function PaginaProduto() {
               )}
 
               {/* Opções de Escolha (ex: cores) */}
-              {produto.opcoes && produto.opcoes.length > 0 && (
+              {produto.personalizacao3dOpcional && (
+                <div className="space-y-2">
+                  <p className="text-sm text-zinc-400">Escolha uma arte pronta ou personalize com seu SVG.</p>
+                  <div className="flex gap-2" role="group" aria-label="Modo de compra">
+                    {[["pronto", "Opções prontas"], ["personalizado", "Meu SVG"]].map(([modo, nome]) => <button key={modo} type="button" aria-pressed={modoCompra === modo} onClick={() => setModoCompra(modo)} className={`flex-1 rounded border px-3 py-2 text-sm ${modoCompra === modo ? "border-sand-400 text-sand-300 bg-sand-400/10" : "border-zinc-700 text-zinc-400"}`}>{nome}</button>)}
+                  </div>
+                </div>
+              )}
+              {!usandoPersonalizacao3d && produto.opcoes && produto.opcoes.length > 0 && (
                 <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
                   <span className="text-sm font-medium text-sand-400">Opções Disponíveis</span>
                   <div className="flex flex-wrap gap-3">
@@ -404,7 +418,7 @@ export default function PaginaProduto() {
               )}
 
               {/* Variações da opção escolhida */}
-              {opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && (
+              {!usandoPersonalizacao3d && opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && (
                 <div className="rounded-lg border border-zinc-700/50 bg-zinc-800/20 backdrop-blur-md p-4 space-y-3 mt-2">
                   <span className="text-sm font-medium text-sand-400">Opções de Acabamento</span>
                   <div className="flex flex-wrap gap-3">
@@ -475,7 +489,7 @@ export default function PaginaProduto() {
 
               {produto.personalizador3d && (
                 <div className="space-y-4">
-                  {personalizacoes3d.length > 0 && (
+                  {usandoPersonalizacao3d && personalizacoes3d.length > 0 && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
                         <h2 className="text-sm font-semibold text-zinc-200">Suas personalizações</h2>
@@ -498,7 +512,7 @@ export default function PaginaProduto() {
                     </div>
                   )}
 
-                  <button onClick={() => setPersonalizadorAberto(true)} disabled={personalizacoes3d.length >= 4} className="w-full flex items-center justify-center gap-2 py-3.5 rounded border border-sand-400/60 bg-sand-400/10 text-sand-300 hover:bg-sand-400 hover:text-zinc-950 font-bold text-sm uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+                  <button onClick={() => { setModoCompra("personalizado"); setPersonalizadorAberto(true); }} disabled={personalizacoes3d.length >= 4} className="w-full flex items-center justify-center gap-2 py-3.5 rounded border border-sand-400/60 bg-sand-400/10 text-sand-300 hover:bg-sand-400 hover:text-zinc-950 font-bold text-sm uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
                     <Palette size={17}/>{personalizacoes3d.length ? "Adicionar outra personalização" : "Personalizar"}
                   </button>
                 </div>
@@ -517,11 +531,11 @@ export default function PaginaProduto() {
                   </div>
                 ) : (
                   <p className="text-sand-400 font-bold text-3xl">
-                    R$ {(produto.personalizador3d ? precoBase * Math.max(1, personalizacoes3d.length) : precoFinal).toFixed(2).replace(".", ",")}
+                    R$ {precoFinal.toFixed(2).replace(".", ",")}
                   </p>
                 )}
 
-                {!produto.personalizador3d || personalizacoes3d.length > 0 ? <button
+                {!produto.personalizador3d || produto.personalizacao3dOpcional || personalizacoes3d.length > 0 ? <button
                   onClick={adicionar}
                   disabled={!podeAdicionar || adicionado}
                   className={`w-full flex items-center justify-center gap-2 py-3.5 rounded font-bold text-sm uppercase tracking-wider transition-all ${
@@ -542,7 +556,7 @@ export default function PaginaProduto() {
                   </p>
                 )}
                 
-                {temOpcaoPendente && (
+                {!usandoPersonalizacao3d && temOpcaoPendente && (
                   <p className="text-xs text-zinc-600 text-center">
                     Selecione uma opção para continuar.
                   </p>

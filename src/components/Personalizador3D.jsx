@@ -5,11 +5,17 @@ import ModeloStl from "./ModeloStl";
 const CORES = [
   { nome: "Vermelho", valor: "#ef4444" },
   { nome: "Laranja", valor: "#f97316" },
+  { nome: "Dourado", valor: "#c9a227" },
   { nome: "Amarelo", valor: "#eab308" },
   { nome: "Verde", valor: "#22c55e" },
-  { nome: "Azul", valor: "#3b82f6" },
-  { nome: "Anil", valor: "#4f46e5" },
-  { nome: "Violeta", valor: "#a855f7" },
+  { nome: "Azul Bebê", valor: "#a7d8f0" },
+  { nome: "Azul Prime", valor: "#3b82f6" },
+  { nome: "Lilás", valor: "#c8a2c8" },
+  { nome: "Rosa Bebê", valor: "#f4c2c2" },
+  { nome: "Branco", valor: "#ffffff" },
+  { nome: "Areia", valor: "#d6c5a3" },
+  { nome: "Cinza Grafite", valor: "#474a51" },
+  { nome: "Preto", valor: "#111111" },
 ];
 
 function corNome(valor) {
@@ -82,11 +88,11 @@ function ExemploSvg({ bom }) {
 function SeletorCor({ titulo, valor, onChange }) {
   return (
     <fieldset>
-      <legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">{titulo}</legend>
+      <legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">{titulo}: <span className="text-zinc-200">{corNome(valor)}</span></legend>
       <div className="flex flex-wrap gap-2">
         {CORES.map((cor) => (
           <label key={cor.valor} className="relative cursor-pointer" title={cor.nome}>
-            <input className="peer sr-only" type="radio" name={titulo} value={cor.valor} checked={valor === cor.valor} onChange={() => onChange(cor.valor)} />
+            <input className="peer sr-only" type="radio" name={titulo} aria-label={cor.nome} value={cor.valor} checked={valor === cor.valor} onChange={() => onChange(cor.valor)} />
             <span style={{ backgroundColor: cor.valor }} className="block w-8 h-8 rounded-full border-2 border-zinc-700 ring-offset-2 ring-offset-zinc-900 peer-checked:ring-2 peer-checked:ring-sand-400 peer-checked:border-white" />
           </label>
         ))}
@@ -95,11 +101,11 @@ function SeletorCor({ titulo, valor, onChange }) {
   );
 }
 
-export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3d, capturaRef, aplicacaoSvg }) {
+export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3d, capturaRef, aplicarRef, onErro, aplicacaoSvg }) {
   if (compact && personalizacao.previewImagem) return <img src={personalizacao.previewImagem} alt="Peça personalizada vista de frente, mostrando o topo e a gravura" className="w-full aspect-square object-contain bg-[#17191d]" />;
   return (
     <div className={`relative overflow-hidden bg-[#17191d] ${compact ? "h-32" : "h-full min-h-0"}`}>
-      {!compact && modelo3d ? <ModeloStl arquivo={modelo3d} capturaRef={capturaRef} {...personalizacao} /> : <><div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(#71717a 1px, transparent 1px), linear-gradient(90deg, #71717a 1px, transparent 1px)", backgroundSize: compact ? "18px 18px" : "34px 34px", transform: "perspective(500px) rotateX(62deg) scale(1.45)", transformOrigin: "center 76%" }} />
+      {!compact && modelo3d ? <ModeloStl arquivo={modelo3d} capturaRef={capturaRef} aplicarRef={aplicarRef} onErro={onErro} {...personalizacao} /> : <><div className="absolute inset-0 opacity-30" style={{ backgroundImage: "linear-gradient(#71717a 1px, transparent 1px), linear-gradient(90deg, #71717a 1px, transparent 1px)", backgroundSize: compact ? "18px 18px" : "34px 34px", transform: "perspective(500px) rotateX(62deg) scale(1.45)", transformOrigin: "center 76%" }} />
       <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2">
         <div className={`${compact ? "w-24 h-16" : "w-64 h-40 md:w-80 md:h-48"} relative rounded-[48%_48%_36%_36%/30%_30%_55%_55%] shadow-[inset_-28px_-18px_45px_rgba(0,0,0,.35),0_30px_45px_rgba(0,0,0,.45)] border border-white/10`} style={{ backgroundColor: personalizacao.corObjeto, transform: `perspective(800px) rotateX(${personalizacao.povX || -5}deg) rotateY(${personalizacao.povY || -10}deg)` }}>
           <div className="absolute inset-x-[12%] top-[-8%] h-[25%] rounded-[50%] bg-zinc-950 border-4 border-white/10" />
@@ -132,12 +138,32 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [ferramenta, setFerramenta] = useState("rotacionar");
   const drag = useRef(null);
   const capturaRef = useRef(null);
+  const aplicarRef = useRef(null);
+  const [aplicacao, setAplicacao] = useState(null);
+  const [aplicando, setAplicando] = useState(false);
+  const escalaValida = Number.isFinite(Number(escala)) && Number(escala) > 0;
+  useEffect(() => { setAplicacao(null); }, [svg, escala, anguloSvg, posicao.x, posicao.y, aberto]);
+  async function aplicar() {
+    setErro("");
+    setAplicando(true);
+    try {
+      if (!escalaValida) throw new Error("Informe um tamanho maior que zero.");
+      // Permite pintar o estado ocupado antes do recorte geométrico.
+      await new Promise(resolve => requestAnimationFrame(() => setTimeout(resolve, 0)));
+      if (!aplicarRef.current) throw new Error("Aguarde o carregamento do modelo antes de aplicar.");
+      const resultado = await aplicarRef.current();
+      setAplicacao(resultado);
+    } catch (error) {
+      setErro(error.message || "Não foi possível aplicar o SVG na superfície.");
+    } finally { setAplicando(false); }
+  }
   function concluir() {
     try {
+      if (modelo3d && !aplicacao) throw new Error("Aplique o SVG na superfície antes de concluir.");
       if (modelo3d && !capturaRef.current) throw new Error("Aguarde o carregamento do modelo antes de concluir.");
       const previewImagem = modelo3d ? capturaRef.current() : undefined;
       setErro("");
-      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, aplicacaoSvg, superficie: aplicacaoSvg?.eixo || "+Z" });
+      onConcluir({ ...configuracao, svgOriginal, previewImagem, modelo3d, aplicacaoSvg, aplicacaoSuperficie: aplicacao, superficie: aplicacaoSvg?.eixo || "+Z" });
     } catch (error) {
       setErro(error.message || "Não foi possível gerar a prévia. Tente novamente.");
     }
@@ -249,7 +275,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
             <div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{nomeArquivo} · fundo removido · otimizado</span></div>
             <div className="flex gap-2">
               <button onClick={() => setEtapa("guia")} className="px-3 py-2 rounded-lg border border-zinc-700 text-xs text-zinc-300 hover:bg-zinc-800">Trocar SVG</button>
-              <button onClick={concluir} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider hover:bg-sand-300">Concluído <ChevronRight size={15}/></button>
+              <button disabled={aplicando || !escalaValida} onClick={aplicacao || !modelo3d ? concluir : aplicar} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider hover:bg-sand-300 disabled:opacity-50">{aplicando ? "Aplicando…" : aplicacao || !modelo3d ? "Concluído" : "Aplicar"} <ChevronRight size={15}/></button>
             </div>
           </header>
           {erro && <p role="alert" className="px-5 py-2 text-sm text-red-400">{erro}</p>}
@@ -267,7 +293,9 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
               <SeletorCor titulo="Cor da gravura" valor={corGravura} onChange={setCorGravura}/>
               <div>
                 <label htmlFor="escala-svg" className="flex justify-between text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3"><span>Tamanho do SVG</span><span>{escala}%</span></label>
-                <input id="escala-svg" type="range" min="20" max="80" value={escala} onChange={(e) => setEscala(Number(e.target.value))} className="w-full accent-sand-400"/>
+                <input id="escala-svg" type="number" inputMode="decimal" step="any" value={escala} aria-invalid={!escalaValida} onChange={(e) => setEscala(e.target.value === "" ? "" : Number(e.target.value))} className="w-full rounded border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"/>
+                <p className="mt-2 text-xs text-zinc-400">Sem limite máximo de tamanho. Em Aplicar, o excesso é recortado nos limites da superfície; nas laterais, a arte acompanha a curvatura.</p>
+                <p role="status" className={`mt-2 text-xs ${aplicacao ? "text-emerald-400" : "text-sand-300"}`}>{aplicacao ? "SVG aplicado e preso à superfície. Pronto para concluir." : "Ajuste a arte e clique em Aplicar para conferir o recorte."}</p>
               </div>
               <div className="space-y-3">
                 <label htmlFor="angulo-svg" className="flex justify-between text-sm text-zinc-300"><span>Rotacionar SVG</span><output>{anguloSvg}°</output></label>
@@ -317,7 +345,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
               onPointerCancel={() => { drag.current = null; }}
               onLostPointerCapture={() => { drag.current = null; }}
               onPointerUp={(event) => { drag.current = null; event.currentTarget.releasePointerCapture?.(event.pointerId); }}>
-              <PreviewPersonalizacao personalizacao={{...configuracao, aplicacaoSvg, panCamera}} modelo3d={modelo3d} capturaRef={capturaRef}/>
+              <PreviewPersonalizacao personalizacao={{...configuracao, aplicacaoSvg, panCamera}} modelo3d={modelo3d} capturaRef={capturaRef} aplicarRef={aplicarRef} onErro={setErro}/>
               {modelo3d && <div className="absolute right-4 top-28 w-[120px] grid grid-cols-3 gap-2" onPointerDown={(event) => event.stopPropagation()}>
                 {[["X", 35, 48], ["Y", 35, 138], ["Z", -55, -42]].map(([eixo, px, py]) => <button key={eixo} aria-label={`Vista ${eixo}`} className="rounded bg-zinc-900 border border-zinc-700 py-2 text-sm text-zinc-200" onClick={() => setPov({ x: px, y: py })}>{eixo}</button>)}
               </div>}
