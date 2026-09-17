@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Search, X, MoreVertical } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import CardProduto from "../components/CardProduto";
+import PromoCarousel from "../components/PromoCarousel";
 import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
 
@@ -101,16 +102,9 @@ export default function Home() {
   return (
     <main className="pt-24 pb-16 px-4 max-w-7xl mx-auto">
 
-      {/* Hero */}
-      <section className="text-center py-6 mb-6 md:py-12 md:mb-12 relative">
-        <h1 className="font-display text-5xl md:text-7xl text-white tracking-tight leading-[1.15] uppercase">
-          Forjado em{" "}
-          <span className="text-sand-400">três dimensões</span>
-        </h1>
-        <p className="mt-4 text-zinc-400 max-w-xl mx-auto text-sm leading-relaxed">
-          Impressão 3D com precisão e acabamento premium.
-        </p>
-      </section>
+      <div className="mb-6 md:mb-8">
+        <PromoCarousel />
+      </div>
 
       {/* Filtros + Busca */}
       <div className="flex items-center gap-3 mb-8 flex-wrap justify-between md:justify-start">

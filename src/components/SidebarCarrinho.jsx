@@ -1,6 +1,6 @@
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,55 @@ export default function SidebarCarrinho() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [codigoCupom, setCodigoCupom] = useState("");
+  const [cupom, setCupom] = useState(null);
+  const [erroCupom, setErroCupom] = useState("");
+  const [validandoCupom, setValidandoCupom] = useState(false);
+  const consultaCupom = useRef(0);
+  const cupomAplicado = cupom?.itens === itens && cupom?.userId === user?.id ? cupom : null;
+  const subtotalAtual = cupomAplicado ? cupomAplicado.subtotalCentavos / 100 : totalPreco;
+  const descontoCupom = cupomAplicado ? cupomAplicado.descontoCentavos / 100 : 0;
+
+  useEffect(() => {
+    consultaCupom.current += 1;
+    setCupom(null);
+    setErroCupom("");
+    setValidandoCupom(false);
+    return () => { consultaCupom.current += 1; };
+  }, [itens, user?.id]);
+
+  async function aplicarCupom(event) {
+    event.preventDefault();
+    setErroCupom("");
+    if (!user) {
+      setErroCupom("Entre na sua conta para validar o cupom de primeira compra.");
+      return;
+    }
+    const consulta = ++consultaCupom.current;
+    setValidandoCupom(true);
+    setCupom(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const response = await fetch('/api/cupom', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ codigo: codigoCupom, itens: itens.map(({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado }) => ({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado })) }),
+      });
+      if (!response.headers.get('content-type')?.includes('application/json')) {
+        throw new Error('A validação de cupons está indisponível neste ambiente.');
+      }
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Não foi possível aplicar o cupom.');
+      if (consulta !== consultaCupom.current) return;
+      setCodigoCupom(data.codigo);
+      setCupom({ ...data, itens, userId: user.id });
+    } catch (error) {
+      if (consulta === consultaCupom.current) setErroCupom(error.message);
+    } finally {
+      if (consulta === consultaCupom.current) setValidandoCupom(false);
+    }
+  }
+
   const [calculandoFrete, setCalculandoFrete] = useState(false);
   const [opcoesFrete, setOpcoesFrete] = useState([]);
   const [freteSelecionado, setFreteSelecionado] = useState(null);
@@ -174,6 +223,7 @@ export default function SidebarCarrinho() {
             endereco: { logradouro: isApenasPagamentoCustom ? 'Pagamento Online' : 'Quadra da Guararema', numero: 'S/N', bairro: isApenasPagamentoCustom ? 'N/A' : 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
             frete_valor: 0, 
             itens,
+            cupom: cupomAplicado?.codigo || null,
             redirect_base_url: `${siteUrl}/pedido-confirmado`
           }),
         });
@@ -230,6 +280,7 @@ export default function SidebarCarrinho() {
           endereco: enderecoSelecionado,
           frete_valor: freteSelecionado ? freteSelecionado.preco : 0,
           itens,
+          cupom: cupomAplicado?.codigo || null,
           redirect_base_url: `${siteUrl}/pedido-confirmado`
         }),
       });
@@ -411,17 +462,51 @@ export default function SidebarCarrinho() {
               ))}
             </ul>
           )}
+          {itens.length > 0 && (
+            <form onSubmit={aplicarCupom} className="border-t border-zinc-800 p-4 space-y-2">
+              <label htmlFor="cupom-carrinho" className="block text-sm text-zinc-300">Cupom de desconto</label>
+              <div className="flex gap-2">
+                <input
+                  id="cupom-carrinho"
+                  value={codigoCupom}
+                  onChange={(event) => { setCodigoCupom(event.target.value); setCupom(null); setErroCupom(""); }}
+                  placeholder="Digite seu cupom"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  maxLength={40}
+                  disabled={loading || validandoCupom}
+                  aria-describedby="cupom-mensagem"
+                  className="min-w-0 flex-1 rounded border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm uppercase text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand-400"
+                />
+                {cupomAplicado ? (
+                  <button type="button" onClick={() => { setCupom(null); setCodigoCupom(""); }} disabled={loading} className="rounded px-3 text-xs text-zinc-300 hover:text-sand-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand-400">Remover</button>
+                ) : (
+                  <button type="submit" disabled={!codigoCupom.trim() || loading || validandoCupom} className="rounded bg-zinc-800 px-3 text-xs font-semibold text-sand-400 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sand-400">{validandoCupom ? 'Validando...' : 'Aplicar'}</button>
+                )}
+              </div>
+              <p id="cupom-mensagem" role="status" className={`text-xs ${erroCupom ? 'text-red-400' : 'text-zinc-400'}`}>
+                {erroCupom || (cupomAplicado ? `${cupomAplicado.codigo} aplicado: ${cupomAplicado.percentual}% de desconto nos itens. Frete não incluído.` : 'COMPRE.IJ: 10% na primeira compra. Após alterar os itens, aplique novamente.')}
+              </p>
+            </form>
+          )}
         </div>
 
         {/* Rodapé */}
         {itens.length > 0 && (
-          <div className="border-t border-zinc-800 p-5 space-y-4">
+          <div className="max-h-[65dvh] shrink-0 overflow-y-auto border-t border-zinc-800 p-5 space-y-4">
             <div className="flex justify-between items-center py-2">
               <span className="text-zinc-400 text-sm">Subtotal</span>
               <span className="text-sand-400 font-bold text-lg">
-                R$ {totalPreco.toFixed(2).replace(".", ",")}
+                R$ {subtotalAtual.toFixed(2).replace(".", ",")}
               </span>
             </div>
+
+            {cupomAplicado && (
+              <div className="flex justify-between gap-2 text-sm text-sand-400">
+                <span>Cupom {cupomAplicado.codigo} ({cupomAplicado.percentual}%)</span>
+                <span>− R$ {descontoCupom.toFixed(2).replace('.', ',')}</span>
+              </div>
+            )}
 
             {/* Seção de Entrega */}
             {user ? (
@@ -537,7 +622,7 @@ export default function SidebarCarrinho() {
             <div className="flex justify-between items-center py-2 border-t border-zinc-800">
               <span className="text-zinc-400 text-sm">Total a Pagar</span>
               <span className="text-sand-400 font-bold text-xl">
-                R$ {(totalPreco + (freteSelecionado && modoEntrega === 'envio' && !itens.every(i => i.isPagamentoPersonalizado) ? freteSelecionado.preco : 0)).toFixed(2).replace(".", ",")}
+                R$ {(subtotalAtual - descontoCupom + (freteSelecionado && modoEntrega === 'envio' && !itens.every(i => i.isPagamentoPersonalizado) ? freteSelecionado.preco : 0)).toFixed(2).replace(".", ",")}
               </span>
             </div>
 
@@ -549,7 +634,7 @@ export default function SidebarCarrinho() {
 
             <button
               onClick={finalizar}
-              disabled={loading}
+              disabled={loading || validandoCupom}
               className="w-full flex items-center justify-center gap-2 py-3 bg-sand-400 hover:bg-sand-300 text-zinc-950 font-bold text-sm rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <CreditCard size={16} />

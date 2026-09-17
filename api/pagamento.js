@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { obterCupom, verificarPrimeiraCompra, precificarItens, calcularDesconto, reservarCupom } from './_lib/cupons.js';
 import { anexosPersonalizacao } from './_lib/anexosPersonalizacao.js';
 import { validarPersonalizacao } from './_lib/validarPersonalizacao.js';
 import {
@@ -8,17 +9,17 @@ import {
   emailAdminVendaFeita,
 } from './_lib/mailer.js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-);
-
-export default async function handler(req, res) {
+export function criarHandlerPagamento(supabase, {
+  fetchPagamento = fetch,
+  enviarCliente = enviarEmailCliente,
+  enviarAdmin = enviarEmailAdmin,
+} = {}) {
+  return async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { endereco, frete_valor, itens, redirect_base_url } = req.body;
+  const { endereco, frete_valor, itens, redirect_base_url, cupom: codigoCupom } = req.body;
   if (!Array.isArray(itens) || !itens.length) return res.status(400).json({ error: 'Carrinho vazio ou inválido.' });
   if (Buffer.byteLength(JSON.stringify(req.body), 'utf8') > 3500000) return res.status(413).json({ error: 'Os arquivos do pedido estão muito grandes. Reduza o tamanho dos SVGs ou divida a compra em pedidos menores.' });
   for (const item of itens) {
@@ -52,6 +53,10 @@ export default async function handler(req, res) {
   const siteUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
   const webhookUrl = `${siteUrl}/api/webhook`;
 
+  if (!handle && codigoCupom) {
+    return res.status(503).json({ error: 'Pagamento com cupom indisponível no momento.' });
+  }
+
   if (!handle) {
     console.log("Handle da InfinitePay não configurado. Retornando link simulado.");
     return res.status(200).json({
@@ -60,7 +65,17 @@ export default async function handler(req, res) {
     });
   }
 
+  const pedido_id = crypto.randomUUID();
+  let cupom = null;
+  let desconto = null;
+  let cupomReservado = false;
+  let linkPodeExistir = false;
+
   try {
+    if (codigoCupom) {
+      cupom = obterCupom(codigoCupom);
+      await verificarPrimeiraCompra(supabase, user.id);
+    }
     // 1. REVALIDAÇÃO DE SEGURANÇA: Buscar o preço real dos produtos no banco de dados
     const productIds = itens.map(i => i.id);
     const { data: produtosDb, error: dbError } = await supabase
@@ -73,7 +88,7 @@ export default async function handler(req, res) {
     }
 
     // 2. Montar o payload da InfinitePay usando os preços reais do banco
-    const items_payload = itens.map(item => {
+    let items_payload = itens.map(item => {
       const produtoReal = produtosDb.find(p => p.id === item.id);
       if (!produtoReal) {
          throw new Error(`Produto ${item.id} não encontrado no banco.`);
@@ -102,6 +117,12 @@ export default async function handler(req, res) {
       };
     });
 
+    if (cupom) {
+      const itensSeguros = await precificarItens(supabase, itens);
+      desconto = calcularDesconto(itensSeguros, cupom);
+      items_payload = desconto.itemsComDesconto;
+    }
+
     // Se houver frete, adicionamos como um item extra no checkout
     if (frete_valor > 0) {
       items_payload.push({
@@ -111,7 +132,6 @@ export default async function handler(req, res) {
       });
     }
 
-    const pedido_id = crypto.randomUUID();
     const siteUrl_infinite = 'https://www.ijprint26.com';
     const webhookUrl_infinite = `${siteUrl_infinite}/api/webhook`;
 
@@ -127,7 +147,13 @@ export default async function handler(req, res) {
       items: items_payload
     };
 
-    const response = await fetch('https://api.checkout.infinitepay.io/links', {
+    if (cupom) {
+      await reservarCupom(supabase, user.id, pedido_id, cupom.codigo);
+      cupomReservado = true;
+    }
+    // Uma falha de rede pode ocorrer após a criação do link: preserve a reserva.
+    linkPodeExistir = true;
+    const response = await fetchPagamento('https://api.checkout.infinitepay.io/links', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -136,6 +162,7 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
+      if (response.status >= 400 && response.status < 500 && response.status !== 408) linkPodeExistir = false;
       const errText = await response.text();
       let errMsg = errText;
       try {
@@ -166,7 +193,7 @@ export default async function handler(req, res) {
     const link_pagamento = data.url || `https://pay.infinitepay.io/${handle}`;
 
     // 4. Inserir o pedido no banco de dados SOMENTE após sucesso da InfinitePay
-    let valorTotalSeguro = items_payload.reduce((acc, curr) => acc + ((curr.price / 100) * curr.quantity), 0);
+    const valorTotalSeguro = items_payload.reduce((acc, curr) => acc + curr.price * curr.quantity, 0) / 100;
     
     const novoPedido = {
       id: pedido_id,
@@ -174,7 +201,8 @@ export default async function handler(req, res) {
       endereco: { ...endereco, cliente_nome: clienteNome, cliente_email: clienteEmail },
       itens,
       total: valorTotalSeguro,
-      status: 'Aguardando Pagamento'
+      status: 'Aguardando Pagamento',
+      ...(cupom ? { cupom_codigo: cupom.codigo, desconto: desconto.descontoCentavos / 100 } : {})
     };
 
     const { error: insertError } = await supabase.from('pedidos').insert(novoPedido);
@@ -189,7 +217,7 @@ export default async function handler(req, res) {
     // ==========================================
     try {
       await Promise.all([
-        enviarEmailCliente({
+        enviarCliente({
           to: clienteEmail,
           ...emailClienteCompraFeita({
             clienteNome,
@@ -198,7 +226,7 @@ export default async function handler(req, res) {
             linkPagamento: link_pagamento,
           }),
         }),
-        enviarEmailAdmin({
+        enviarAdmin({
           ...emailAdminVendaFeita({
             clienteNome,
             clienteEmail,
@@ -218,7 +246,20 @@ export default async function handler(req, res) {
       status: "pending"
     });
   } catch (error) {
+    if (cupomReservado && !linkPodeExistir) {
+      const { error: releaseError } = await supabase.from('cupons_reservados').delete().eq('pedido_id', pedido_id);
+      if (releaseError) console.error('[Cupom] Falha ao liberar reserva:', releaseError);
+    }
     console.error(error);
-    res.status(500).json({ error: error.message || 'Erro ao gerar cobrança' });
+    res.status(error.status || 500).json({ error: error.message || 'Erro ao gerar cobrança' });
   }
+}
+}
+
+export default async function handler(req, res) {
+  const supabase = createClient(
+    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
+  );
+  return criarHandlerPagamento(supabase)(req, res);
 }
