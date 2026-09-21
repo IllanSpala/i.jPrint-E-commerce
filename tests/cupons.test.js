@@ -98,7 +98,7 @@ async function pagamento(db, fetchPagamento, codigo = 'COMPRE.IJ') {
 }
 test('checkout cobra 10% a menos nos itens e frete integral; grava desconto e total', async () => {
   const db = banco(); let enviado;
-  const res = await pagamento(db, async (_url, opts) => { enviado = JSON.parse(opts.body); return { ok: true, json: async () => ({ url: 'https://pay.infinitepay.io/pagar' }) }; });
+  const res = await pagamento(db, async (_url, opts) => { enviado = JSON.parse(opts.body); return { ok: true, json: async () => ({ url: 'https://checkout.infinitepay.com.br/pagar' }) }; });
   assert.equal(res.statusCode, 200);
   assert.equal(enviado.items.reduce((s, i) => s + i.price * i.quantity, 0), 14052);
   assert.equal(enviado.items.at(-1).price, 2550);
@@ -108,7 +108,7 @@ test('checkout cobra 10% a menos nos itens e frete integral; grava desconto e to
 });
 test('checkout sem cupom mantém total original', async () => {
   const db = banco();
-  const res = await pagamento(db, async () => ({ ok: true, json: async () => ({ url: 'https://pay.infinitepay.io/pagar' }) }), null);
+  const res = await pagamento(db, async () => ({ ok: true, json: async () => ({ url: 'https://checkout.infinitepay.com.br/pagar' }) }), null);
   assert.equal(res.statusCode, 200);
   assert.equal(db.registros[0].total, 153.3);
   assert.equal(db.registros[0].cupom_codigo, undefined);

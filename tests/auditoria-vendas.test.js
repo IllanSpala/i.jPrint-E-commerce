@@ -113,7 +113,7 @@ test('checkout sem cupom também rejeita quantidade ou flag de preço forjada', 
 test('checkout repetido reaproveita o link já criado', async () => {
   process.env.INFINITEPAY_HANDLE = 'loja-teste';
   const db = banco(); let cobrancas = 0;
-  const handler = criarHandlerPagamento(db, { fetchPagamento: async () => { cobrancas++; return { ok: true, json: async () => ({ url: 'https://pay.infinitepay.io/checkout-teste' }) }; } });
+  const handler = criarHandlerPagamento(db, { fetchPagamento: async () => { cobrancas++; return { ok: true, json: async () => ({ url: 'https://checkout.infinitepay.com.br/checkout-teste' }) }; } });
   const req = { method: 'POST', headers: { authorization: 'Bearer teste' }, body: { itens: [{ id: 10001, quantidade: 1 }], modo_entrega: 'retirada', endereco: {} } };
   const primeiro = resposta(), segundo = resposta();
   await handler(req, primeiro); await handler(req, segundo);
