@@ -1,0 +1,108 @@
+{
+  "commit": "cf007fe",
+  "data_local": "2026-09-20",
+  "producao_leituras": [
+    {
+      "path": "/rest/v1/produtos?select=id,nome,preco,preco_promocional,opcoes,peso_gramas,dimensoes&order=id&limit=100",
+      "method": "GET",
+      "status": 200,
+      "content_range": "0-75/*"
+    },
+    {
+      "path": "/rest/v1/pedidos?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/perfis?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/enderecos?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/loja_admins?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/clientes_com_compra?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/cupons_reservados?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/notificacoes_pedidos?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/limites_loja?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    },
+    {
+      "path": "/rest/v1/carrinhos_salvos?select=*&limit=0",
+      "method": "HEAD",
+      "status": 401,
+      "content_range": null
+    }
+  ],
+  "diagnostico_local": {
+    "etiqueta": {
+      "quantidade": 2,
+      "service": 1,
+      "volumes_por_requisicao": 2,
+      "documento_remetente": false,
+      "complemento_destinatario_incluido": false,
+      "estado_http_apos_rejeicao_simulada": 502
+    },
+    "retomada_pagamento": [
+      {
+        "host": "checkout.infinitepay.io",
+        "botao_visivel": false
+      },
+      {
+        "host": "checkout.infinitepay.com.br",
+        "botao_visivel": false
+      },
+      {
+        "host": "pay.infinitepay.io",
+        "botao_visivel": true
+      }
+    ],
+    "webhook_timeout": {
+      "status": 503,
+      "mutacoes_persistidas": 0
+    },
+    "produto_publico_exemplo": {
+      "id": 77,
+      "peso_gramas": 10,
+      "peso_cotacao_kg": 0.1,
+      "peso_etiqueta_kg": 0.01
+    }
+  },
+  "npm_audit": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  }
+}

@@ -84,5 +84,39 @@ await verificar('primeira compra não permite novo cupom após pagamento', () =>
   const r = await db.query(`select reservar_cupom_primeira_compra('${a}','${admin}','COMPRE.IJ') as resultado`);
   assert.equal(r.rows[0].resultado, 'cliente_existente');
 }));
+const exclusao = await readFile(new URL('../supabase/excluir_pedido_sem_cobranca.sql', import.meta.url), 'utf8');
+await db.exec(exclusao);
+await db.exec(exclusao);
+await verificar('exclusão de checkout restrita ao servidor', async () => {
+  for (const role of ['anon', 'authenticated']) await como(role, admin, async () => {
+    await assert.rejects(db.query(`select excluir_pedido_sem_cobranca('${b}')`));
+  });
+});
+await verificar('pedidos pagos, ambíguos e com cobrança nunca são excluídos', () => como('service_role', '', async () => {
+  assert.equal((await db.query(`select excluir_pedido_sem_cobranca('${a}') as ok`)).rows[0].ok, false);
+  assert.equal((await db.query(`select excluir_pedido_sem_cobranca('${b}') as ok`)).rows[0].ok, false);
+  for (const [coluna, valor] of [
+    ['link_pagamento', 'https://checkout.infinitepay.io/teste'],
+    ['pagamento_transacao', 'transacao'], ['pagamento_slug', 'slug'],
+    ['pagamento_confirmado_em', '2026-09-21T10:00:00Z'],
+    ['melhor_envio_cart_id', 'etiqueta'], ['tracking_url', 'https://example.invalid'],
+    ['etiqueta_estado', 'processando'],
+  ]) {
+    await db.exec('begin');
+    try {
+      await db.query(`insert into pedidos(id,user_id,status,total,checkout_estado,${coluna}) values($1,$2,'Aguardando Pagamento',10,'falhou',$3)`, [admin, b, valor]);
+      assert.equal((await db.query(`select excluir_pedido_sem_cobranca('${admin}') as ok`)).rows[0].ok, false);
+      assert.equal((await db.query(`select id from pedidos where id='${admin}'`)).rows.length, 1);
+    } finally { await db.exec('rollback'); }
+  }
+}));
+await verificar('falha comprovada é excluída junto com reserva de cupom', () => como('service_role', '', async () => {
+  await db.query(`insert into pedidos(id,user_id,status,total,checkout_estado) values('${admin}','${b}','Aguardando Pagamento',10,'falhou')`);
+  await db.query(`insert into cupons_reservados(user_id,pedido_id,codigo) values('${b}','${admin}','COMPRE.IJ')`);
+  assert.equal((await db.query(`select excluir_pedido_sem_cobranca('${admin}') as ok`)).rows[0].ok, true);
+  assert.equal((await db.query(`select id from pedidos where id='${admin}'`)).rows.length, 0);
+  assert.equal((await db.query(`select pedido_id from cupons_reservados where pedido_id='${admin}'`)).rows.length, 0);
+  assert.equal((await db.query(`select excluir_pedido_sem_cobranca('${admin}') as ok`)).rows[0].ok, false);
+}));
 console.log(`${verificacoes} cenários SQL aprovados em PostgreSQL isolado.`);
 await db.close();

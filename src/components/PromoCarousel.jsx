@@ -20,7 +20,7 @@ const slides = [
   },
   {
     id: 2,
-    image: "/banners/banner_envio.png",
+    image: "/banners/banner_envio.png ",
     mobileImage: null,
     alt: "Envios para todo Brasil - Parcelamento em ate 12x",
     href: null,
@@ -81,7 +81,7 @@ export default function PromoCarousel() {
               width="1920"
               height="384"
               loading={index === 0 ? "eager" : "lazy"}
-              fetchpriority={index === 0 ? "high" : "auto"}
+              fetchPriority={index === 0 ? "high" : "auto"}
               className="h-full w-full object-cover object-center"
             />
           </picture>

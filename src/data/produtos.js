@@ -1428,5 +1428,12 @@ export const produtos = [
     personalizador3d: false, exigePersonalizacao: false,
     descricao: "Miniatura do Jax da série The Amazing Digital Circus, impressas em PLA premium. Aproximadamente 27cm de altura",
     dimensoes: "50x170x20", peso_gramas: 70
+  },
+  {
+    id: 79, nome: "Chaveiro Demogorgon", preco: 12.90,
+    imagem: "/produtos/CHAVEIRO_DEMOGORGON.png", categoria: "Hot Toys",
+    personalizador3d: false, exigePersonalizacao: false,
+    descricao: "Chaveiro demogorgon - Stranger things, impresso em PLA",
+    dimensoes: "70x40x10", peso_gramas: 15
   }
 ];

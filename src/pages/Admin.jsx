@@ -1,4 +1,5 @@
 import { gerarReciboSeguro } from '../lib/reciboSeguro.js';
+import { pedidoPendenteExpirado } from '../lib/expiracaoPedido.js';
 import { apiAutenticada } from '../lib/apiAutenticada';
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
@@ -321,6 +322,13 @@ export default function Admin() {
   const [pedidos, setPedidos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
+  const [agora, setAgora] = useState(Date.now);
+  const [mostrarExpirados, setMostrarExpirados] = useState(false);
+
+  const expirados = pedidos.filter(pedido => pedidoPendenteExpirado(pedido, agora));
+  const pedidosVisiveis = mostrarExpirados
+    ? expirados
+    : pedidos.filter(pedido => !pedidoPendenteExpirado(pedido, agora));
 
   const [isAdmin, setIsAdmin] = useState(null);
   useEffect(() => {
@@ -331,21 +339,13 @@ export default function Admin() {
   }, [user?.id]);
 
   async function cancelarPedido(pedidoId) {
-    const motivo = window.prompt(
-      `⚠️ CANCELAR PEDIDO #${String(pedidoId).slice(0, 8).toUpperCase()}\n\nO cancelamento exige conciliação com a operadora. O pedido será preservado.\n\nDigite o MOTIVO do cancelamento (ou deixe em branco para cancelar sem motivo específico):`
-    );
-    
-    // Se clicou em cancelar no prompt, o retorno é null
-    if (motivo === null) return;
-
-    // Coloca o botão em estado de "carregando/deletando" se precisarmos (não temos flag no momento, então apenas um alerta visual pode bastar ou um bloqueio simples)
-    // Para simplificar a UI existente sem quebrar, não adicionarei flag de loading global, o fetch cuidará.
+    if (!window.confirm('Excluir definitivamente este pedido com falha de checkout? Esta ação não envia e-mail nem cancela cobranças na operadora.')) return;
 
     try {
       const res = await apiAutenticada('/api/cancelar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pedido_id: pedidoId, motivo: motivo.trim() })
+        body: JSON.stringify({ pedido_id: pedidoId })
       });
       
       const responseData = await res.json();
@@ -354,7 +354,7 @@ export default function Admin() {
         throw new Error(responseData.error || 'Erro interno ao cancelar');
       }
 
-      alert('Pedido deletado e cliente notificado via e-mail!');
+      alert('Pedido sem cobrança excluído.');
       
       // Remove da lista local imediatamente sem precisar recarregar
       setPedidos(prev => prev.filter(p => p.id !== pedidoId));
@@ -362,7 +362,7 @@ export default function Admin() {
       
     } catch (error) {
       console.error('Erro ao cancelar:', error);
-      alert('Falha ao cancelar: ' + error.message);
+      alert('Falha ao excluir: ' + error.message);
     }
   }
 
@@ -383,6 +383,10 @@ export default function Admin() {
       setLoading(false);
     }
     fetchPedidos();
+
+    const relogio = setInterval(() => setAgora(Date.now()), 1000);
+    // Também recupera confirmações quando o Realtime estiver indisponível.
+    const atualizacao = setInterval(fetchPedidos, 60_000);
 
     // Realtime: mantém o painel sincronizado com o banco. Sem isso, se o
     // webhook marcar um pedido como "Pago" enquanto o admin está com a
@@ -413,6 +417,8 @@ export default function Admin() {
       .subscribe();
 
     return () => {
+      clearInterval(relogio);
+      clearInterval(atualizacao);
       supabase.removeChannel(canal);
     };
   }, [isAdmin]);
@@ -432,19 +438,33 @@ export default function Admin() {
         <h1 className="font-display text-3xl text-white tracking-tight uppercase">Painel de Pedidos</h1>
       </div>
 
+      <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
+        <button
+          type="button"
+          onClick={() => { setMostrarExpirados(valor => !valor); setExpandedId(null); }}
+          aria-pressed={mostrarExpirados}
+          className="rounded-lg border border-zinc-700 px-3 py-2 text-zinc-300 hover:text-sand-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sand-400"
+        >
+          {mostrarExpirados ? 'Voltar aos pedidos ativos' : `Pendentes há mais de 20 min (${expirados.length})`}
+        </button>
+        {mostrarExpirados && (
+          <p className="text-zinc-500">Preservados para confirmação de pagamento. O link da operadora pode continuar válido.</p>
+        )}
+      </div>
+
       {loading ? (
         <div className="text-center py-20 text-zinc-500">
           <div className="w-8 h-8 border-2 border-sand-400/20 border-t-sand-400 rounded-full animate-spin mx-auto mb-4"></div>
           Carregando pedidos...
         </div>
-      ) : pedidos.length === 0 ? (
+      ) : pedidosVisiveis.length === 0 ? (
         <div className="text-center py-20 text-zinc-500 bg-zinc-900/50 rounded-lg border border-zinc-800">
           <Package size={32} className="mx-auto mb-3 opacity-20" />
-          Nenhum pedido recebido ainda.
+          {mostrarExpirados ? 'Nenhum pedido pendente há mais de 20 minutos.' : 'Nenhum pedido ativo no momento.'}
         </div>
       ) : (
         <div className="space-y-4">
-          {pedidos.map(pedido => (
+          {pedidosVisiveis.map(pedido => (
             <div key={pedido.id} className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden transition-all duration-300">
 
               {/* Cabeçalho Clicável */}
@@ -562,14 +582,18 @@ export default function Admin() {
                       }}
                     />
 
-                    {/* Botão Cancelar / Deletar Pedido */}
+                    {/* Só oferece exclusão quando o servidor comprovou falha antes da cobrança. */}
+                    {pedido.status === 'Aguardando Pagamento' && pedido.checkout_estado === 'falhou' && !pedido.link_pagamento && !pedido.pagamento_transacao && !pedido.pagamento_confirmado_em ? (
                     <button
                       onClick={() => cancelarPedido(pedido.id)}
                       className="w-full flex items-center justify-center gap-2 py-2.5 mt-1 bg-red-500/8 hover:bg-red-500/20 border border-red-500/20 text-red-400 hover:text-red-300 font-bold text-xs uppercase tracking-wider rounded transition-colors"
                     >
                       <Trash2 size={14} />
-                      Cancelar e Deletar Pedido
+                      Excluir pedido sem cobrança
                     </button>
+                    ) : (
+                      <p className="text-xs text-zinc-500 mt-2">Pedido preservado para conciliação. A exclusão só está disponível para checkout com falha comprovada, sem cobrança.</p>
+                    )}
                   </div>
                 </div>
               )}
