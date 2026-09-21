@@ -1,3 +1,4 @@
+import MeusPedidos from '../components/MeusPedidos';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -435,6 +436,7 @@ export default function Perfil() {
             sair da conta
           </button>
         </div>
+        <MeusPedidos userId={user.id} />
       </div>
     </main>
   );

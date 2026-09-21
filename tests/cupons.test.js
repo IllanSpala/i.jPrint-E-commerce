@@ -1,22 +1,24 @@
+import { criarCotacao, hashCarrinho } from '../api/_lib/freteSeguro.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { obterCupom, calcularDesconto, precificarItens } from '../api/_lib/cupons.js';
 import { criarHandlerCupom } from '../api/cupom.js';
 import { criarHandlerPagamento } from '../api/pagamento.js';
 
-const produto = { id: 1, nome: 'Peça', preco: 99.9, preco_promocional: 63.9, opcoes: [{ nome: 'Grande', precoAcrescimo: 10 }] };
-const item = { id: 1, nome: 'Peça', quantidade: 2, preco: 0.01 };
+const produto = { id: 1, nome: 'Peça', preco: 99.9, preco_promocional: 63.9, opcoes: [{ nome: 'Padrão' }, { nome: 'Grande', precoAcrescimo: 10 }] };
+const item = { opcaoEscolhida: 'Padrão', id: 1, nome: 'Peça', quantidade: 2, preco: 0.01 };
 function banco({ comprado = false, reservado = false, indisponivel = false, autenticado = true, reservaResult = 'reservado', insertError = null } = {}) {
   const registros = [];
   const liberados = [];
   return {
     registros, liberados,
     auth: { getUser: async () => ({ data: { user: autenticado ? { id: 'cliente-1', email: 'teste@example.com' } : null }, error: null }) },
-    rpc: async () => ({ data: reservaResult, error: null }),
+    rpc: async (nome) => ({ data: nome === 'limitar_requisicoes_loja' ? true : reservaResult, error: null }),
     from(tabela) {
       let action = 'select';
       const q = {
         select() { return q; }, eq() { return q; }, in() { return q; },
+        update() { return q; },
         insert(v) { action = 'insert'; registros.push(v); return q; },
         delete() { action = 'delete'; liberados.push(tabela); return q; },
         single() { return q; }, maybeSingle() { return q; },
@@ -24,7 +26,7 @@ function banco({ comprado = false, reservado = false, indisponivel = false, aute
           let data = null;
           let error = null;
           if (tabela === 'produtos') data = [produto];
-          if (tabela === 'perfis') data = { nome: 'Teste' };
+          if (tabela === 'perfis') data = { nome: 'Teste', cpf: '52998224725', telefone: '11999999999' };
           if (tabela === 'clientes_com_compra') { data = comprado ? { user_id: 'cliente-1' } : null; error = indisponivel ? new Error('offline') : null; }
           if (tabela === 'cupons_reservados' && action === 'select') data = reservado ? { user_id: 'cliente-1' } : null;
           if (tabela === 'pedidos' && action === 'insert') error = insertError;
@@ -55,8 +57,7 @@ test('usa preços do banco, promoção e acréscimo, ignorando preço forjado', 
   assert.deepEqual(await precificarItens(banco(), [{ ...item, opcaoEscolhida: 'Grande' }]), [{ quantity: 2, price: 7390, description: 'Peça' }]);
 });
 test('não aceita flag de pagamento livre forjada para produto normal', async () => {
-  const [linha] = await precificarItens(banco(), [{ ...item, isPagamentoPersonalizado: true }]);
-  assert.equal(linha.price, 6390);
+  await assert.rejects(precificarItens(banco(), [{ ...item, isPagamentoPersonalizado: true }]));
 });
 test('rejeita quantidade negativa, fracionária e produto inexistente', async () => {
   for (const qtd of [-1, 0, 1.5, '2', 1000]) await assert.rejects(precificarItens(banco(), [{ ...item, quantidade: qtd }]));
@@ -87,15 +88,17 @@ test('exige login', async () => {
 
 async function pagamento(db, fetchPagamento, codigo = 'COMPRE.IJ') {
   process.env.INFINITEPAY_HANDLE = 'loja-teste';
+  process.env.SUPABASE_SERVICE_ROLE_KEY = 'chave-local-apenas-teste';
+  const cotacao = criarCotacao({ userId: 'cliente-1', cep: '01001000', carrinho: hashCarrinho([item], [{ price: 6390 }]), centavos: 2550, servico: 1 });
   const res = resposta();
   await criarHandlerPagamento(db, { fetchPagamento, enviarCliente: async () => {}, enviarAdmin: async () => {} })(request({
-    itens: [item], cupom: codigo, frete_valor: 25.5, endereco: {}, redirect_base_url: 'https://example.com/pedido-confirmado',
+    itens: [item], cupom: codigo, frete_valor: 0.01, modo_entrega: 'envio', cotacao, endereco: { logradouro: 'Rua Teste', numero: '1', bairro: 'Centro', cidade: 'São Paulo', uf: 'SP', cep: '01001000' }, redirect_base_url: 'https://example.com/pedido-confirmado',
   }), res);
   return res;
 }
 test('checkout cobra 10% a menos nos itens e frete integral; grava desconto e total', async () => {
   const db = banco(); let enviado;
-  const res = await pagamento(db, async (_url, opts) => { enviado = JSON.parse(opts.body); return { ok: true, json: async () => ({ url: 'https://example.com/pagar' }) }; });
+  const res = await pagamento(db, async (_url, opts) => { enviado = JSON.parse(opts.body); return { ok: true, json: async () => ({ url: 'https://pay.infinitepay.io/pagar' }) }; });
   assert.equal(res.statusCode, 200);
   assert.equal(enviado.items.reduce((s, i) => s + i.price * i.quantity, 0), 14052);
   assert.equal(enviado.items.at(-1).price, 2550);
@@ -105,7 +108,7 @@ test('checkout cobra 10% a menos nos itens e frete integral; grava desconto e to
 });
 test('checkout sem cupom mantém total original', async () => {
   const db = banco();
-  const res = await pagamento(db, async () => ({ ok: true, json: async () => ({ url: 'https://example.com/pagar' }) }), null);
+  const res = await pagamento(db, async () => ({ ok: true, json: async () => ({ url: 'https://pay.infinitepay.io/pagar' }) }), null);
   assert.equal(res.statusCode, 200);
   assert.equal(db.registros[0].total, 153.3);
   assert.equal(db.registros[0].cupom_codigo, undefined);
@@ -130,8 +133,9 @@ test('preserva reserva quando a rede falha após envio ao provedor', async () =>
   const res = await pagamento(db, async () => { throw new Error('Timeout'); });
   assert.equal(res.statusCode, 500); assert.equal(db.liberados.length, 0);
 });
-test('preserva reserva se o link foi criado, mas salvar o pedido falhou', async () => {
+test('não chama a operadora quando não consegue salvar o pedido', async () => {
   const db = banco({ insertError: new Error('offline') });
-  const res = await pagamento(db, async () => ({ ok: true, json: async () => ({ url: 'https://example.com/pagar' }) }));
-  assert.equal(res.statusCode, 500); assert.equal(db.liberados.length, 0);
+  let chamadas = 0;
+  const res = await pagamento(db, async () => { chamadas++; });
+  assert.equal(res.statusCode, 500); assert.equal(chamadas, 0); assert.equal(db.liberados.length, 0);
 });

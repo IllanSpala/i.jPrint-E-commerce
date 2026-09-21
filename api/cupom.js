@@ -1,3 +1,4 @@
+import { limitarRequisicoes } from './_lib/seguranca.js';
 import { createClient } from '@supabase/supabase-js';
 import { obterCupom, verificarPrimeiraCompra, precificarItens, calcularDesconto } from './_lib/cupons.js';
 
@@ -10,6 +11,7 @@ export function criarHandlerCupom(supabase) {
     try {
       const { data: { user }, error } = await supabase.auth.getUser(token);
       if (error || !user) return res.status(401).json({ error: 'Entre novamente na sua conta para aplicar o cupom.' });
+    await limitarRequisicoes(supabase, 'cupom:' + user.id, 30);
       const cupom = obterCupom(req.body?.codigo);
       await verificarPrimeiraCompra(supabase, user.id);
       const items = await precificarItens(supabase, req.body?.itens);

@@ -1,3 +1,4 @@
+import { escaparHtml } from '../../src/lib/reciboSeguro.js';
 // Módulo compartilhado de e-mails (Resend). Centraliza os templates e o envio
 // para evitar duplicar HTML entre api/pagamento.js, api/webhook.js,
 // api/status.js, api/cancelar.js e api/etiqueta.js.
@@ -8,15 +9,6 @@
 export const ADMIN_EMAIL = 'i.j.print26@gmail.com';
 const FROM_CLIENTE = 'I.J Print <vendas@ijprint26.com>';
 const FROM_SISTEMA = 'Sistema I.J Print <sistema@ijprint26.com>';
-
-let resendClientPromise = null;
-async function getResend() {
-  if (!process.env.RESEND_API_KEY) return null;
-  if (!resendClientPromise) {
-    resendClientPromise = import('resend').then(({ Resend }) => new Resend(process.env.RESEND_API_KEY));
-  }
-  return resendClientPromise;
-}
 
 export function formatarValor(total) {
   return Number(total || 0).toFixed(2).replace('.', ',');
@@ -61,26 +53,19 @@ function wrapAdminHtml({ titulo, corpoHtml }) {
   `;
 }
 
-async function enviarEmail({ from, to, subject, html, attachments }) {
-  const resend = await getResend();
-  if (!resend || !to) return { skipped: true };
+async function enviarEmail({ from, to, subject, html, attachments, idempotencyKey }) {
+  if (!process.env.RESEND_API_KEY || !to) return { sent: false };
   try {
-    const resultado = await resend.emails.send({ from, to, subject, html, attachments });
-    if (resultado.error) throw new Error(resultado.error.message);
-    return { sent: true };
-  } catch (error) {
-    console.error(`[Mailer] Falha ao enviar "${subject}" para ${to}:`, error);
-    return { sent: false, error };
-  }
+    const resposta = await fetch('https://api.resend.com/emails', {
+      method: 'POST', signal: AbortSignal.timeout(8000),
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, 'Content-Type': 'application/json', ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
+      body: JSON.stringify({ from, to, subject, html, attachments }),
+    });
+    return { sent: resposta.ok };
+  } catch { return { sent: false }; }
 }
-
-export function enviarEmailCliente({ to, subject, html }) {
-  return enviarEmail({ from: FROM_CLIENTE, to, subject, html });
-}
-
-export function enviarEmailAdmin({ subject, html, attachments }) {
-  return enviarEmail({ from: FROM_SISTEMA, to: ADMIN_EMAIL, subject, html, attachments });
-}
+export function enviarEmailCliente(dados) { return enviarEmail({ ...dados, from: FROM_CLIENTE }); }
+export function enviarEmailAdmin(dados) { return enviarEmail({ ...dados, from: FROM_SISTEMA, to: ADMIN_EMAIL }); }
 
 // ==================== TEMPLATES: CLIENTE ====================
 
@@ -91,12 +76,12 @@ export function emailClienteCompraFeita({ clienteNome, pedidoId, valor, linkPaga
       corFundo: '#c8a46e',
       titulo: 'Pedido Recebido!',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Recebemos seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> no valor de <strong>R$ ${formatarValor(valor)}</strong>.</p>
         <p>Para colocarmos suas peças na fila de produção, é só concluir o pagamento pelo link abaixo:</p>
         ${linkPagamento ? `
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${linkPagamento}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Pagar agora</a>
+          <a href="${escaparHtml(linkPagamento)}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Pagar agora</a>
         </div>` : ''}
         <p>Assim que o pagamento for aprovado, você recebe uma confirmação por aqui.</p>
         <br/>
@@ -113,7 +98,7 @@ export function emailClientePagamentoConfirmado({ clienteNome, pedidoId, valor }
       corFundo: '#c8a46e',
       titulo: 'Pagamento Confirmado!',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Boas notícias! Seu pagamento de <strong>R$ ${formatarValor(valor)}</strong> referente ao pedido <strong>#${formatarPedidoId(pedidoId)}</strong> foi aprovado.</p>
         <p>Já estamos preparando suas peças 3D com muito carinho. Você será avisado quando o pedido for enviado!</p>
         <br/>
@@ -130,7 +115,7 @@ export function emailClienteAcompanhamento({ clienteNome, pedidoId }) {
       corFundo: '#3b82f6',
       titulo: 'Pedido em Produção',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> entrou na fila de produção e já estamos imprimindo suas peças.</p>
         <p>Assim que ele for despachado, você recebe o código de rastreio por aqui.</p>
         <br/>
@@ -147,11 +132,11 @@ export function emailClientePedidoEnviado({ clienteNome, pedidoId, trackingUrl }
       corFundo: '#c8a46e',
       titulo: 'Pedido Enviado!',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> já foi embalado e a etiqueta de envio foi gerada.</p>
         <p>Para acompanhar a entrega, clique no botão abaixo:</p>
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${trackingUrl}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Acompanhar Entrega</a>
+          <a href="${escaparHtml(trackingUrl)}" style="background-color: #111; color: #c8a46e; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold;">Acompanhar Entrega</a>
         </div>
         <p>Muito obrigado pela sua compra!</p>
       `
@@ -166,7 +151,7 @@ export function emailClientePedidoConcluido({ clienteNome, pedidoId }) {
       corFundo: '#10b981', // green
       titulo: 'Pedido Entregue!',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Vimos que seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> foi entregue e concluído com sucesso!</p>
         <p>Gostaríamos de agradecer imensamente pela sua compra e pela confiança na I.J Print.</p>
         <p>Esperamos que tenha gostado das suas peças! Fique à vontade para visitar nosso site e conferir as novidades e novos produtos que estão sempre chegando.</p>
@@ -187,7 +172,7 @@ export function emailClientePedidoCancelado({ clienteNome, pedidoId, motivo }) {
       corFundo: '#ef4444',
       titulo: 'Pedido Cancelado',
       corpoHtml: `
-        <p>Olá <strong>${clienteNome}</strong>,</p>
+        <p>Olá <strong>${escaparHtml(clienteNome)}</strong>,</p>
         <p>Informamos que o seu pedido <strong>#${formatarPedidoId(pedidoId)}</strong> foi cancelado pelo nosso sistema.</p>
         <h3 style="color: #ef4444; margin-top: 24px;">Motivo do cancelamento:</h3>
         <div style="background-color: #fef2f2; border-left: 4px solid #ef4444; padding: 16px; margin: 8px 0; color: #7f1d1d; font-style: italic; border-radius: 0 4px 4px 0;">
@@ -209,7 +194,7 @@ export function emailAdminVendaFeita({ clienteNome, clienteEmail, pedidoId, valo
     html: wrapAdminHtml({
       titulo: 'Novo pedido criado',
       corpoHtml: `
-        <p>O cliente <strong>${clienteNome}</strong> (${clienteEmail}) acabou de gerar um link de pagamento.</p>
+        <p>O cliente <strong>${escaparHtml(clienteNome)}</strong> (${escaparHtml(clienteEmail)}) acabou de gerar um link de pagamento.</p>
         <p><strong>Valor:</strong> R$ ${formatarValor(valor)}</p>
         <p><strong>ID do Pedido:</strong> ${formatarPedidoId(pedidoId)}</p>
         <p>Ainda aguardando confirmação de pagamento.</p>
@@ -224,7 +209,7 @@ export function emailAdminPagamentoRecebido({ clienteNome, clienteEmail, pedidoI
     html: wrapAdminHtml({
       titulo: 'Nova venda confirmada! 🎉',
       corpoHtml: `
-        <p>O cliente <strong>${clienteNome}</strong> (${clienteEmail}) acabou de ter o pagamento aprovado.</p>
+        <p>O cliente <strong>${escaparHtml(clienteNome)}</strong> (${escaparHtml(clienteEmail)}) acabou de ter o pagamento aprovado.</p>
         <p><strong>Valor:</strong> R$ ${formatarValor(valor)}</p>
         <p><strong>ID do Pedido:</strong> ${formatarPedidoId(pedidoId)}</p>
         <p>Acesse o painel administrativo para verificar os detalhes da impressão e embalar o produto.</p>
@@ -239,7 +224,7 @@ export function emailAdminCompraCancelada({ clienteNome, clienteEmail, pedidoId,
     html: wrapAdminHtml({
       titulo: 'Pedido cancelado',
       corpoHtml: `
-        <p>O pedido <strong>#${formatarPedidoId(pedidoId)}</strong> do cliente <strong>${clienteNome}</strong> (${clienteEmail || 'email não encontrado'}) foi cancelado.</p>
+        <p>O pedido <strong>#${formatarPedidoId(pedidoId)}</strong> do cliente <strong>${escaparHtml(clienteNome)}</strong> (${escaparHtml(clienteEmail || 'email não encontrado')}) foi cancelado.</p>
         <p><strong>Motivo:</strong> ${motivo || 'Não especificado'}</p>
       `
     })

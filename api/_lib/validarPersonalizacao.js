@@ -1,6 +1,9 @@
+import { svgSeguro } from '../../src/lib/svgSeguro.js';
 import { produtos } from '../../src/data/produtos.js';
 
 export function validarPersonalizacao(item) {
+  if (!item || typeof item !== 'object') return 'Item inválido.';
+  if (item.personalizacoes && (!Array.isArray(item.personalizacoes) || item.personalizacoes.some(p => !p || !svgSeguro(p.svg) || (p.svgOriginal && !svgSeguro(p.svgOriginal))))) return 'SVG inválido. Envie somente vetores estáticos, sem CSS, scripts ou links externos.';
   const produto = produtos.find(p => String(p.id) === String(item.id));
   if (produto?.personalizacao3dOpcional && item.modoCompra === 'pronto') {
     const opcao = produto.opcoes?.find(o => o.nome === item.opcaoEscolhida);

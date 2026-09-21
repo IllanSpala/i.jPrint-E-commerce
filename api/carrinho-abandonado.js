@@ -1,3 +1,8 @@
+import { processarNotificacoes } from './_lib/notificacoes.js';
+import { limitarRequisicoes } from './_lib/seguranca.js';
+import { escaparHtml } from '../src/lib/reciboSeguro.js';
+import { bancoServidor } from './_lib/seguranca.js';
+import { precificarItens } from './_lib/cupons.js';
 // api/carrinho-abandonado.js
 // Vercel Serverless Function
 //
@@ -11,23 +16,20 @@ import {
   formatarValor,
 } from './_lib/mailer.js';
 
-function getSupabaseAdmin() {
-  return createClient(
-    process.env.VITE_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
-}
+const getSupabaseAdmin = bancoServidor;
 
 // ─── POST: salvar carrinho do usuário logado ───────────────────────────────
 async function salvarCarrinho(req, res) {
-  const { user_id, itens } = await req.json?.() || {};
-
-  if (!user_id || !Array.isArray(itens)) {
-    return res.status(400).json({ error: 'user_id e itens são obrigatórios.' });
-  }
-
+  const { itens } = req.body || {};
+  if (!Array.isArray(itens) || itens.length > 100) return res.status(400).json({ error: 'Carrinho inválido.' });
   const supabase = getSupabaseAdmin();
-
+  const token = /^Bearer (\S+)$/.exec(req.headers?.authorization || '')?.[1];
+  if (!token) return res.status(401).json({ error: 'Autenticação necessária.' });
+  const { data, error: authError } = await supabase.auth.getUser(token);
+  if (authError || !data?.user) return res.status(401).json({ error: 'Sessão inválida.' });
+  const user_id = data.user.id;
+    await limitarRequisicoes(supabase, 'carrinho:' + user_id, 30);
+  const precos = itens.length ? await precificarItens(supabase, itens) : [];
   // Se carrinho vazio, limpa o registro (checkout concluído)
   if (itens.length === 0) {
     await supabase.from('carrinhos_salvos').delete().eq('user_id', user_id);
@@ -39,7 +41,7 @@ async function salvarCarrinho(req, res) {
     .upsert(
       {
         user_id,
-        itens,
+        itens: itens.map((i, n) => ({ nome: precos[n].description, preco: precos[n].price / 100, quantidade: precos[n].quantity, opcaoEscolhida: String(i.opcaoEscolhida || '').slice(0, 200) })),
         atualizado_em: new Date().toISOString(),
         email_enviado: false, // reset: novo item adicionado, reinicia a contagem
         email_enviado_em: null,
@@ -59,11 +61,13 @@ async function salvarCarrinho(req, res) {
 async function dispararEmails(req, res) {
   // Segurança: só aceita requisições com o token correto (cron job da Vercel)
   const authHeader = req.headers?.['authorization'] || '';
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
   const supabase = getSupabaseAdmin();
+
+  await processarNotificacoes(supabase);
 
   // Busca carrinhos abandonados há mais de 1 hora, sem email enviado ainda
   const limiteAbandono = new Date(Date.now() - 60 * 60 * 1000).toISOString(); // 1 hora atrás
@@ -135,13 +139,15 @@ async function dispararEmails(req, res) {
 
 // ─── Router ──────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method === 'POST') return salvarCarrinho(req, res);
-  if (req.method === 'GET') return dispararEmails(req, res);
+  try {
+    if (req.method === 'POST') return await salvarCarrinho(req, res);
+    if (req.method === 'GET') return await dispararEmails(req, res);
+  } catch (error) { return res.status(error.status || 503).json({ error: 'Não foi possível processar o carrinho.' }); }
 
   return res.status(405).json({ error: 'Método não permitido.' });
 }
@@ -157,7 +163,7 @@ function emailCarrinhoAbandonado({ clienteNome, itens, total, linkLoja }) {
       return `
         <tr>
           <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; color: #333;">
-            ${item.quantidade}x <strong>${nomeFinal}</strong>
+            ${item.quantidade}x <strong>${escaparHtml(nomeFinal)}</strong>
           </td>
           <td style="padding: 10px 0; border-bottom: 1px solid #f0f0f0; text-align: right; color: #333; white-space: nowrap;">
             R$ ${formatarValor(preco * item.quantidade)}
@@ -177,7 +183,7 @@ function emailCarrinhoAbandonado({ clienteNome, itens, total, linkLoja }) {
 
       <!-- Body -->
       <div style="padding: 32px 24px;">
-        <h2 style="color: #111; margin: 0 0 8px;">Ei, ${clienteNome}! Você esqueceu algo 🛒</h2>
+        <h2 style="color: #111; margin: 0 0 8px;">Ei, ${escaparHtml(clienteNome)}! Você esqueceu algo 🛒</h2>
         <p style="color: #555; font-size: 15px; line-height: 1.6; margin: 0 0 24px;">
           Você deixou alguns itens no seu carrinho na I.J Print. As peças ainda estão esperando por você — é só voltar e finalizar o pedido!
         </p>
@@ -226,7 +232,7 @@ function emailCarrinhoAbandonado({ clienteNome, itens, total, linkLoja }) {
   `;
 
   return {
-    subject: `${clienteNome}, você esqueceu algo no carrinho! 🛒`,
+    subject: `${escaparHtml(clienteNome)}, você esqueceu algo no carrinho! 🛒`,
     html,
   };
 }

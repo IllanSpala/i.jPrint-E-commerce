@@ -6,7 +6,7 @@ import { CheckCircle, Clock, XCircle, ShoppingBag } from 'lucide-react';
 
 export default function PaginaSucesso() {
   const [searchParams] = useSearchParams();
-  const { dispatch } = useCarrinho();
+  const { dispatch, itens } = useCarrinho();
   const navigate = useNavigate();
 
   const [status, setStatus] = useState('verificando'); // verificando | pago | pendente | erro
@@ -33,8 +33,10 @@ export default function PaginaSucesso() {
 
       if (pedido?.status === 'Pago' || pedido?.status === 'Em Produção' || pedido?.status === 'Enviado' || pedido?.status === 'Concluído') {
         // Pagamento confirmado! Agora sim, limpa o carrinho
-        dispatch({ type: 'LIMPAR' });
+        if (localStorage.getItem('pedido_pendente_id') === pedidoId && localStorage.getItem('ijprint_checkout_itens') === JSON.stringify(itens)) dispatch({ type: 'LIMPAR' });
+        localStorage.removeItem('ijprint_checkout_itens');
         localStorage.removeItem('pedido_pendente_id');
+        localStorage.removeItem('@ijprint:checkout_expires_at');
         setStatus('pago');
         return;
       }

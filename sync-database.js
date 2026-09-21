@@ -34,11 +34,11 @@ if (fs.existsSync('.env.prod')) {
 }
 
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
   console.log('⚠️ [sync-database] Variáveis do Supabase não encontradas. Pulando sincronização automática.');
-  process.exit(0);
+  process.exit(1);
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -77,11 +77,12 @@ async function sync() {
     }
   }
 
+  if (errors) process.exitCode = 1;
   console.log(`✅ [sync-database] Concluído: ${count} produtos atualizados/inseridos com sucesso no Supabase.\n`);
 }
 
 sync().catch(err => {
   console.error('❌ Erro na sincronização:', err);
   // Do not fail build if sync fails locally, just continue build
-  process.exit(0);
+  process.exit(1);
 });

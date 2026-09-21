@@ -1,3 +1,5 @@
+import { gerarReciboSeguro } from '../lib/reciboSeguro.js';
+import { apiAutenticada } from '../lib/apiAutenticada';
 import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -6,7 +8,6 @@ import {
   Package, Truck, CreditCard, ChevronDown, ChevronUp,
   ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2, FileText
 } from "lucide-react";
-import ContagemRegressiva from "../components/ContagemRegressiva";
 import { arquivosPersonalizacao, baixarArquivoPersonalizacao } from "../lib/arquivosPersonalizacao";
 
 // --------------- Componente de Detalhes de Pagamento ---------------
@@ -16,68 +17,7 @@ function PainelPagamento({ pedido }) {
 
   // Gera e baixa uma "nota fiscal" / comprovante em formato de texto HTML imprimível
   function baixarComprovante() {
-    const itensHtml = (pedido.itens || []).map(item =>
-      `<tr>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;">${item.nome}${item.opcaoEscolhida ? ` (${item.opcaoEscolhida})` : ''}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:center;">${item.quantidade}</td>
-        <td style="padding:6px 8px;border-bottom:1px solid #eee;text-align:right;">R$ ${Number(item.preco).toFixed(2).replace('.', ',')}</td>
-      </tr>`
-    ).join('');
-
-    const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Comprovante - Pedido #${pedido.id}</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 680px; margin: 40px auto; color: #111; }
-    .header { border-bottom: 2px solid #c8a46e; padding-bottom: 16px; margin-bottom: 24px; }
-    h1 { font-size: 22px; color: #c8a46e; margin: 0 0 4px; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;
-             background: ${pago ? '#d1fae5' : '#fef3c7'}; color: ${pago ? '#065f46' : '#92400e'}; }
-    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
-    th { text-align: left; padding: 8px; background: #f5f5f5; font-size: 13px; }
-    .total-row td { font-weight: bold; font-size: 15px; padding: 12px 8px 0; border-top: 2px solid #c8a46e; }
-    .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 16px; }
-    @media print { body { margin: 20px; } }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>I.J Print — Comprovante de Pedido</h1>
-    <p style="margin:0;font-size:13px;color:#555;">
-      Pedido <strong>#${String(pedido.id).slice(0, 8).toUpperCase()}</strong> &nbsp;|&nbsp;
-      ${new Date(pedido.created_at).toLocaleString('pt-BR')}
-    </p>
-  </div>
-
-  <p><strong>Status:</strong> <span class="badge">${pedido.status}</span></p>
-  <p><strong>Cliente:</strong> ${pedido.perfis?.nome || 'Não informado'}</p>
-  ${pedido.endereco ? `
-  <p><strong>Endereço de Entrega:</strong><br>
-    ${pedido.endereco.logradouro || pedido.endereco.rua || ''}, ${pedido.endereco.numero}${pedido.endereco.complemento ? ', ' + pedido.endereco.complemento : ''}<br>
-    ${pedido.endereco.bairro} — ${pedido.endereco.cidade} / ${pedido.endereco.uf}<br>
-    CEP: ${pedido.endereco.cep}
-  </p>` : ''}
-
-  <table>
-    <thead><tr>
-      <th>Produto</th><th style="text-align:center;">Qtd</th><th style="text-align:right;">Preço</th>
-    </tr></thead>
-    <tbody>${itensHtml}</tbody>
-    <tfoot>
-      <tr class="total-row">
-        <td colspan="2">Total</td>
-        <td style="text-align:right;">R$ ${Number(pedido.total).toFixed(2).replace('.', ',')}</td>
-      </tr>
-    </tfoot>
-  </table>
-
-  <div class="footer">
-    Documento gerado em ${new Date().toLocaleString('pt-BR')} · I.J Print Impressão 3D Personalizada
-  </div>
-</body>
-</html>`;
+    const html = gerarReciboSeguro(pedido);
 
     const blob = new Blob([html], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
@@ -126,7 +66,7 @@ function PainelPagamento({ pedido }) {
         </div>
 
         {/* Link de comprovante da InfinitePay, se salvo */}
-        {pedido.comprovante_url && (
+        {/^https:\/\/(?:[a-z0-9-]+\.)?infinitepay\.io\//.test(pedido.comprovante_url || '') && (
           <div className="pt-2 border-t border-zinc-800/50">
             <a
               href={pedido.comprovante_url}
@@ -161,7 +101,7 @@ function BotaoEmProducao({ pedido, onAtualizado }) {
   async function marcarEmProducao() {
     setStatus('loading');
     try {
-      const res = await fetch('/api/status', {
+      const res = await apiAutenticada('/api/status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pedido_id: pedido.id }),
@@ -201,7 +141,7 @@ function BotaoConcluido({ pedido, onAtualizado }) {
   async function marcarConcluido() {
     setStatus('loading');
     try {
-      const res = await fetch('/api/concluido', {
+      const res = await apiAutenticada('/api/concluido', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pedido_id: pedido.id }),
@@ -240,13 +180,25 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
   const [htmlRecibo, setHtmlRecibo] = useState(null);
 
   const logradouro = (pedido.endereco?.logradouro || pedido.endereco?.rua || '').toLowerCase();
-  const isRetirada = logradouro.includes('guararema') || logradouro.includes('retirada') || pedido.endereco?.cep === '-';
+  const isRetirada = pedido.modo_entrega === 'retirada' || pedido.modo_entrega === 'digital';
   const jaProcessado = pedido.status === 'Enviado' || pedido.status === 'Conclu\u00eddo';
+
+  async function confirmarEnvio() {
+    if (!window.confirm('Confirma que o pedido foi realmente postado ou está pronto para retirada?')) return;
+    const codigo = isRetirada ? '' : window.prompt('Informe o código de rastreio da postagem:');
+    if (!isRetirada && !codigo) return;
+    try {
+      const response = await apiAutenticada('/api/status', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ pedido_id: pedido.id, acao: 'enviado', codigo_rastreio: codigo }) });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      onAtualizado?.(data.pedido);
+    } catch (error) { alert(error.message); }
+  }
 
   async function gerarEtiqueta() {
     setStatus('loading');
     try {
-      const res = await fetch('/api/etiqueta', {
+      const res = await apiAutenticada('/api/etiqueta', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pedido_id: pedido.id, pedido })
@@ -261,15 +213,8 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
       if (data.html_recibo) setHtmlRecibo(data.html_recibo);
       setStatus('success');
 
-      await supabase.from('pedidos').update({
-        status: 'Enviado',
-        tracking_url: newTrackingUrl,
-        melhor_envio_cart_id: newCartId,
-      }).eq('id', pedido.id);
+      if (onAtualizado) onAtualizado({ id: pedido.id, melhor_envio_cart_id: newCartId });
 
-      if (onAtualizado) {
-        onAtualizado({ id: pedido.id, status: 'Enviado', tracking_url: newTrackingUrl, melhor_envio_cart_id: newCartId });
-      }
     } catch (e) {
       console.error(e);
       setStatus('error');
@@ -278,9 +223,16 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
 
   function abrirReciboInterno() {
     if (!htmlRecibo) { alert('Gere a etiqueta primeiro.'); return; }
-    const w = window.open('', '_blank');
-    if (w) { w.document.write(htmlRecibo); w.document.close(); setTimeout(() => w.print(), 500); }
-    else alert('Permita pop-ups para imprimir.');
+    const iframe = document.createElement('iframe');
+    iframe.setAttribute('sandbox', 'allow-modals');
+    iframe.title = 'Recibo do pedido';
+    iframe.style.cssText = 'position:fixed;inset:5%;width:90%;height:90%;z-index:9999;background:white';
+    iframe.srcdoc = htmlRecibo;
+    const fechar = document.createElement('button');
+    fechar.textContent = 'Fechar recibo';
+    fechar.style.cssText = 'position:fixed;top:1%;right:5%;z-index:10000;background:#fff;color:#111;padding:8px';
+    fechar.onclick = () => { iframe.remove(); fechar.remove(); };
+    document.body.append(iframe, fechar);
   }
 
   const mostrarBotoesPos = jaProcessado || status === 'success';
@@ -291,7 +243,7 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
     const isUrlAntiga = trackingUrl && /melhorenvio\.com\.br\/envios\/[a-z0-9-]+/i.test(trackingUrl);
 
     // URL pública de rastreio — só válida se não for o padrão antigo quebrado
-    const publicTrackingUrl = (!isUrlAntiga && trackingUrl) ? trackingUrl : null;
+    const publicTrackingUrl = (!isUrlAntiga && /^https:\/\/rastreamento\.correios\.com\.br\//.test(trackingUrl || '')) ? trackingUrl : null;
 
     // URL do admin no Melhor Envio — usa cartId se disponível, senão abre a lista
     const melhorEnvioAdminUrl = cartId
@@ -300,8 +252,9 @@ function BotaoEtiqueta({ pedido, onAtualizado }) {
 
     return (
       <div className="space-y-2 mt-2">
+        {pedido.status === 'Em Produção' && <button type="button" onClick={confirmarEnvio} className="text-sm text-sand-400 underline">Confirmar postagem / retirada pronta</button>}
         <div className="flex items-center gap-2 text-green-400 text-sm font-bold mb-1">
-          <CheckCircle size={16} /> {isRetirada ? 'Recibo e e-mail de retirada enviados!' : 'Etiqueta adicionada ao Melhor Envio!'}
+          <CheckCircle size={16} /> {isRetirada ? 'Recibo disponível. Confirme quando estiver pronto para retirada.' : 'Envio preparado. Confirme a postagem após despachar.'}
         </div>
         <div className="grid grid-cols-1 gap-2">
           {!isRetirada && (
@@ -369,11 +322,17 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
 
-  const isAdmin = user && user.email === 'i.j.print26@gmail.com';
+  const [isAdmin, setIsAdmin] = useState(null);
+  useEffect(() => {
+    let ativo = true;
+    setIsAdmin(null);
+    supabase.rpc('sou_admin').then(({ data, error }) => { if (ativo) setIsAdmin(!error && data === true); });
+    return () => { ativo = false; };
+  }, [user?.id]);
 
   async function cancelarPedido(pedidoId) {
     const motivo = window.prompt(
-      `⚠️ CANCELAR PEDIDO #${String(pedidoId).slice(0, 8).toUpperCase()}\n\nIsso irá apagar o pedido e ENVIAR UM E-MAIL de cancelamento ao cliente.\n\nDigite o MOTIVO do cancelamento (ou deixe em branco para cancelar sem motivo específico):`
+      `⚠️ CANCELAR PEDIDO #${String(pedidoId).slice(0, 8).toUpperCase()}\n\nO cancelamento exige conciliação com a operadora. O pedido será preservado.\n\nDigite o MOTIVO do cancelamento (ou deixe em branco para cancelar sem motivo específico):`
     );
     
     // Se clicou em cancelar no prompt, o retorno é null
@@ -383,7 +342,7 @@ export default function Admin() {
     // Para simplificar a UI existente sem quebrar, não adicionarei flag de loading global, o fetch cuidará.
 
     try {
-      const res = await fetch('/api/cancelar', {
+      const res = await apiAutenticada('/api/cancelar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pedido_id: pedidoId, motivo: motivo.trim() })
@@ -408,7 +367,7 @@ export default function Admin() {
   }
 
   useEffect(() => {
-    if (user && !isAdmin) navigate("/");
+    if (user && isAdmin === false) navigate("/");
   }, [user, isAdmin, navigate]);
 
   useEffect(() => {
@@ -515,49 +474,7 @@ export default function Admin() {
                     }`}>
                       {pedido.status}
                     </span>
-                    {pedido.status === 'Aguardando Pagamento' && (
-                      <span className="text-yellow-500/80 text-[10px] font-bold uppercase">
-                        <ContagemRegressiva 
-                          dataCriacao={pedido.created_at} 
-                          onExpirar={async () => {
-                            // Antes de deletar, confirma no banco se o pedido AINDA está
-                            // "Aguardando Pagamento". O filtro .eq('status', ...) garante
-                            // que, se o webhook já tiver marcado como "Pago" nesse meio
-                            // tempo, o delete simplesmente não afeta nenhuma linha —
-                            // evitando apagar uma venda que já foi paga.
-                            const { data: deletados, error } = await supabase
-                              .from('pedidos')
-                              .delete()
-                              .eq('id', pedido.id)
-                              .eq('status', 'Aguardando Pagamento')
-                              .select('id');
 
-                            if (error) {
-                              console.error('Erro ao expirar pedido:', error);
-                              return;
-                            }
-
-                            if (deletados && deletados.length > 0) {
-                              // Realmente estava pendente e foi removido.
-                              setPedidos(prev => prev.filter(p => p.id !== pedido.id));
-                            } else {
-                              // Não deletou nada: o status mudou antes do cronômetro
-                              // zerar. Busca o pedido atualizado pra refletir na tela.
-                              const { data: atualizado } = await supabase
-                                .from('pedidos')
-                                .select(`*, perfis ( nome, telefone )`)
-                                .eq('id', pedido.id)
-                                .single();
-                              if (atualizado) {
-                                setPedidos(prev =>
-                                  prev.map(p => (p.id === pedido.id ? atualizado : p))
-                                );
-                              }
-                            }
-                          }} 
-                        />
-                      </span>
-                    )}
                   </div>
                   {expandedId === pedido.id ? <ChevronUp size={20} className="text-zinc-500" /> : <ChevronDown size={20} className="text-zinc-500" />}
                 </div>

@@ -33,7 +33,7 @@ export async function precificarItens(supabase, itens) {
     throw erroCupom('Carrinho vazio ou inválido.');
   }
   const { data: produtos, error } = await supabase.from('produtos')
-    .select('id, nome, preco, preco_promocional, opcoes')
+    .select('*')
     .in('id', itens.map((item) => item.id));
   if (error || !produtos) throw erroCupom('Não foi possível conferir os preços dos produtos.', 503);
 
@@ -43,14 +43,27 @@ export async function precificarItens(supabase, itens) {
     if (!Number.isSafeInteger(item.quantidade) || item.quantidade < 1 || item.quantidade > 999) {
       throw erroCupom('Quantidade inválida no carrinho.');
     }
+    if (produto.esgotado) throw erroCupom('Produto esgotado.');
     let preco = Number(produto.preco_promocional || produto.preco);
-    // O navegador não pode transformar um produto normal em pagamento livre.
-    const pagamentoPersonalizado = catalogoLocal.some((p) => p.id === produto.id && p.isPagamentoPersonalizado);
+    const local = catalogoLocal.find(p => p.id === produto.id);
+    const pagamentoPersonalizado = local?.isPagamentoPersonalizado === true;
+    if (item.isPagamentoPersonalizado && !pagamentoPersonalizado) throw erroCupom('Produto não permite pagamento livre.');
     if (pagamentoPersonalizado) preco = Number(item.preco);
-    else if (item.opcaoEscolhida && produto.opcoes) {
-      const opcao = produto.opcoes.find((o) => o.nome === item.opcaoEscolhida);
-      if (!opcao) throw erroCupom('Opção de produto inválida.');
-      preco += Number(opcao.precoAcrescimo || 0);
+    else {
+      const personalizado = local?.personalizador3d && (!local.personalizacao3dOpcional || item.modoCompra === 'personalizado');
+      if (personalizado && item.opcaoEscolhida) throw erroCupom('A personalização não pode indicar uma opção pronta.');
+      if (produto.opcoes?.length && !personalizado) {
+        let escolha = null;
+        for (const opcao of produto.opcoes) {
+          if (opcao.variacoes?.length) {
+            for (const variacao of opcao.variacoes) {
+              if (`${opcao.nome} - ${variacao.nome}` === item.opcaoEscolhida) escolha = { opcao, variacao };
+            }
+          } else if (opcao.nome === item.opcaoEscolhida) escolha = { opcao };
+        }
+        if (!escolha || escolha.opcao.esgotado || escolha.variacao?.esgotado) throw erroCupom('Selecione uma opção disponível.');
+        preco = Number(escolha.variacao?.preco || escolha.opcao.preco || (preco + Number(escolha.opcao.precoAcrescimo || 0)));
+      } else if (item.opcaoEscolhida && !personalizado) throw erroCupom('Opção de produto inválida.');
     }
     const price = Math.round(preco * 100);
     if (!Number.isSafeInteger(price) || price <= 0) throw erroCupom('Preço inválido no carrinho.');

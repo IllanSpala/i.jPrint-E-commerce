@@ -1,38 +1,37 @@
-import { createClient } from '@supabase/supabase-js';
-import {
-  enviarEmailCliente,
-  buscarEmailCliente,
-  emailClienteAcompanhamento,
-} from './_lib/mailer.js';
+import { protegerAdmin } from './_lib/seguranca.js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-);
+
 
 // Marca um pedido "Pago" como "Em Produção" e dispara o e-mail de
 // acompanhamento pro cliente. Usado pelo botão "Marcar como Em Produção"
 // no painel Admin.
-export default async function handler(req, res) {
+async function handler(req, res, supabase) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
-  const { pedido_id } = req.body;
+  const { pedido_id, acao, codigo_rastreio } = req.body || {};
+  const envio = acao === 'enviado';
+  if (envio && codigo_rastreio && !/^[A-Za-z0-9-]{5,50}$/.test(codigo_rastreio)) return res.status(400).json({ error: 'Rastreio inválido.' });
 
   if (!pedido_id) {
     return res.status(400).json({ error: 'ID do pedido é obrigatório' });
   }
 
   try {
-    // O filtro .eq('status', 'Pago') garante que só avançamos pedidos que
+    if (envio) {
+      const atual = await supabase.from('pedidos').select('modo_entrega').eq('id', pedido_id).maybeSingle();
+      if (atual.error || !atual.data) return res.status(409).json({ error: 'Pedido indisponível.' });
+      if (atual.data.modo_entrega !== 'retirada' && atual.data.modo_entrega !== 'digital' && !codigo_rastreio) return res.status(400).json({ error: 'Informe o código de rastreio da postagem.' });
+    }
+    // O filtro .eq('status', envio ? 'Em Produção' : 'Pago') garante que só avançamos pedidos que
     // já foram efetivamente pagos, evitando marcar "Em Produção" um pedido
     // ainda "Aguardando Pagamento" por engano/corrida de clique duplo.
     const { data: pedido, error } = await supabase
       .from('pedidos')
-      .update({ status: 'Em Produção' })
+      .update({ status: envio ? 'Enviado' : 'Em Produção', ...(envio && codigo_rastreio ? { tracking_url: `https://rastreamento.correios.com.br/app/index.php?objetos=${encodeURIComponent(codigo_rastreio)}` } : {}) })
       .eq('id', pedido_id)
-      .eq('status', 'Pago')
+      .eq('status', envio ? 'Em Produção' : 'Pago')
       .select('*, perfis(nome, telefone)')
       .single();
 
@@ -42,25 +41,11 @@ export default async function handler(req, res) {
       });
     }
 
-    try {
-      const clienteEmail = pedido.user_id
-        ? await buscarEmailCliente(supabase, pedido.user_id)
-        : null;
-
-      if (clienteEmail) {
-        const clienteNome = pedido.perfis?.nome || 'Cliente';
-        await enviarEmailCliente({
-          to: clienteEmail,
-          ...emailClienteAcompanhamento({ clienteNome, pedidoId: pedido_id }),
-        });
-      }
-    } catch (emailError) {
-      console.error('[Status] Erro ao enviar e-mail de acompanhamento:', emailError);
-    }
-
     return res.status(200).json({ success: true, pedido });
   } catch (error) {
     console.error('[Status] Erro:', error);
-    return res.status(500).json({ error: error.message || 'Erro ao atualizar status do pedido' });
+    return res.status(500).json({ error: 'Erro ao atualizar status do pedido' });
   }
 }
+
+export default protegerAdmin(handler);

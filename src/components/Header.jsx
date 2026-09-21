@@ -5,9 +5,8 @@ import { Link } from "react-router-dom";
 
 export default function Header() {
   const { totalItens, setSidebarAberta } = useCarrinho();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   
-  const isAdmin = user && user.email === 'i.j.print26@gmail.com';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">

@@ -111,7 +111,7 @@ export function PreviewPersonalizacao({ personalizacao, compact = false, modelo3
         <div className={`${compact ? "w-24 h-16" : "w-64 h-40 md:w-80 md:h-48"} relative rounded-[48%_48%_36%_36%/30%_30%_55%_55%] shadow-[inset_-28px_-18px_45px_rgba(0,0,0,.35),0_30px_45px_rgba(0,0,0,.45)] border border-white/10`} style={{ backgroundColor: personalizacao.corObjeto, transform: `perspective(800px) rotateX(${personalizacao.povX || -5}deg) rotateY(${personalizacao.povY || -10}deg)` }}>
           <div className="absolute inset-x-[12%] top-[-8%] h-[25%] rounded-[50%] bg-zinc-950 border-4 border-white/10" />
           <div className="absolute inset-x-[16%] top-[22%] bottom-[12%] flex items-center justify-center overflow-hidden" style={{ color: personalizacao.corGravura }}>
-            <div style={{ width: `${personalizacao.escala || 45}%`, transform: `translate(${personalizacao.x || 0}px, ${personalizacao.y || 0}px)` }} dangerouslySetInnerHTML={{ __html: personalizacao.svg }} />
+            <img alt="Prévia da personalização" style={{ width: `${personalizacao.escala || 45}%`, transform: `translate(${personalizacao.x || 0}px, ${personalizacao.y || 0}px)` }} src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(personalizacao.svg)}`} />
           </div>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { apiAutenticada } from '../lib/apiAutenticada';
 import { createContext, useContext, useReducer, useEffect, useState, useCallback } from "react";
 import { useAuth } from "./AuthContext";
 
@@ -72,11 +73,11 @@ export function CarrinhoProvider({ children }) {
   useEffect(() => {
     if (!user) return;
     const timer = setTimeout(() => {
-      fetch('/api/carrinho-abandonado', {
+      apiAutenticada('/api/carrinho-abandonado', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id: user.id, itens }),
-      }).catch((err) => console.warn('[CarrinhoSync] Falha ao salvar no backend:', err));
+      }).then(res => { if (!res.ok) throw new Error('Falha ao sincronizar carrinho'); }).catch((err) => console.warn('[CarrinhoSync] Falha ao salvar no backend:', err));
     }, 2000); // 2s de debounce
     return () => clearTimeout(timer);
   }, [itens, user]);

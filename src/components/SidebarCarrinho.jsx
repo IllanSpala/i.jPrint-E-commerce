@@ -1,10 +1,10 @@
+import { apiAutenticada } from '../lib/apiAutenticada';
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
-import ContagemRegressiva from "./ContagemRegressiva";
 import ModalAviso from "./ModalAviso";
 
 export default function SidebarCarrinho() {
@@ -52,7 +52,7 @@ export default function SidebarCarrinho() {
       const response = await fetch('/api/cupom', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ codigo: codigoCupom, itens: itens.map(({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado }) => ({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado })) }),
+        body: JSON.stringify({ codigo: codigoCupom, itens: itens.map(({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado, modoCompra }) => ({ id, quantidade, opcaoEscolhida, preco, isPagamentoPersonalizado, modoCompra })) }),
       });
       if (!response.headers.get('content-type')?.includes('application/json')) {
         throw new Error('A validação de cupons está indisponível neste ambiente.');
@@ -69,6 +69,7 @@ export default function SidebarCarrinho() {
     }
   }
 
+  const [erroFrete, setErroFrete] = useState('');
   const [calculandoFrete, setCalculandoFrete] = useState(false);
   const [opcoesFrete, setOpcoesFrete] = useState([]);
   const [freteSelecionado, setFreteSelecionado] = useState(null);
@@ -76,23 +77,6 @@ export default function SidebarCarrinho() {
   const [enderecoSelecionado, setEnderecoSelecionado] = useState(null);
   const [modoEntrega, setModoEntrega] = useState('envio'); // 'envio' | 'retirada'
   const [modalAvisoAberto, setModalAvisoAberto] = useState(false);
-  
-  const [expiraEm, setExpiraEm] = useState(null);
-  const estaNoCheckout = window.location.href.includes('infinitepay') || 
-                         window.location.href.includes('checkout') ||
-                         window.location.href.includes('pagamento');
-
-  useEffect(() => {
-    const savedExp = localStorage.getItem('@ijprint:checkout_expires_at');
-    if (savedExp) {
-      if (Date.now() > Number(savedExp) && !estaNoCheckout) {
-        localStorage.removeItem('@ijprint:checkout_expires_at');
-        dispatch({ type: "LIMPAR" });
-      } else {
-        setExpiraEm(Number(savedExp) - 15 * 60 * 1000);
-      }
-    }
-  }, [itens]);
 
   // Busca os endereços assim que o carrinho abre
   useEffect(() => {
@@ -117,9 +101,14 @@ export default function SidebarCarrinho() {
     }
   }
 
+  const freteVersao = useRef(0);
+
   // Calcula frete quando o endereço ou os itens mudam
   useEffect(() => {
-    if (sidebarAberta && enderecoSelecionado && itens.length > 0 && modoEntrega === 'envio') {
+    freteVersao.current += 1;
+    setFreteSelecionado(null);
+    setOpcoesFrete([]);
+    if (sidebarAberta && enderecoSelecionado && itens.length > 0 && modoEntrega === 'envio' && !itens.every(i => i.id === 0)) {
       const delayId = setTimeout(() => {
         calcularFrete(enderecoSelecionado);
       }, 500);
@@ -128,24 +117,20 @@ export default function SidebarCarrinho() {
   }, [sidebarAberta, enderecoSelecionado, itens, modoEntrega]);
 
   async function calcularFrete(endereco) {
+    const versao = ++freteVersao.current;
     setCalculandoFrete(true);
+    setErroFrete('');
+    setFreteSelecionado(null);
+    setOpcoesFrete([]);
     try {
-      let opcoes;
-      if (import.meta.env.DEV) {
-        await new Promise(r => setTimeout(r, 600));
-        opcoes = [
-          { id: 1, nome: 'PAC', preco: 25.50, prazo: 7 },
-          { id: 2, nome: 'SEDEX', preco: 45.90, prazo: 3 },
-        ];
-      } else {
-        const res = await fetch('/api/frete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cep_destino: endereco.cep, itens }),
-        });
-        const data = await res.json();
-        opcoes = data.opcoes;
-      }
+      const res = await apiAutenticada('/api/frete', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cep_destino: endereco.cep, itens }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Frete indisponível');
+      const opcoes = data.opcoes;
+      if (versao !== freteVersao.current) return;
       if (opcoes) {
         setOpcoesFrete(opcoes);
         setFreteSelecionado(prev => {
@@ -154,9 +139,9 @@ export default function SidebarCarrinho() {
         });
       }
     } catch (e) {
-      console.error("Erro ao calcular frete", e);
+      if (versao === freteVersao.current) setErroFrete('Não foi possível calcular o frete. Verifique o endereço e tente novamente.');
     }
-    setCalculandoFrete(false);
+    if (versao === freteVersao.current) setCalculandoFrete(false);
   }
 
   async function finalizar() {
@@ -192,6 +177,11 @@ export default function SidebarCarrinho() {
   }
 
   async function prosseguirAposAviso() {
+    if (loading) return;
+    if (modoEntrega === 'envio' && !itens.every(i => i.isPagamentoPersonalizado) && (calculandoFrete || !freteSelecionado?.cotacao)) {
+      alert('Aguarde uma cotação válida de frete.');
+      return;
+    }
     setModalAvisoAberto(false);
     if (new Blob([JSON.stringify(itens)]).size > 3400000) {
       alert('Os arquivos do pedido estão muito grandes. Reduza os SVGs ou divida a compra em pedidos menores.');
@@ -203,41 +193,34 @@ export default function SidebarCarrinho() {
 
     // ── MODO RETIRADA OU PAGAMENTO CUSTOMIZADO ────────────────────────
     if (modoEntrega === 'retirada' || isApenasPagamentoCustom) {
-      if (import.meta.env.DEV) {
-        setSidebarAberta(false);
-        setLoading(false);
-        alert(`PEDIDO DE RETIRADA em modo Dev!\n\n(Modo Dev: Chamada de pagamento simulada e pedido seria criado no painel)`);
-        return;
-      }
+
 
       try {
         const { data: { session } } = await supabase.auth.getSession();
         const siteUrl = window.location.origin;
         const payRes = await fetch('/api/pagamento', {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${session?.access_token}`
           },
           body: JSON.stringify({
             endereco: { logradouro: isApenasPagamentoCustom ? 'Pagamento Online' : 'Quadra da Guararema', numero: 'S/N', bairro: isApenasPagamentoCustom ? 'N/A' : 'Guararema', cidade: 'Alegre', uf: 'ES', cep: '-' },
-            frete_valor: 0, 
+            modo_entrega: isApenasPagamentoCustom ? 'digital' : 'retirada',
             itens,
             cupom: cupomAplicado?.codigo || null,
             redirect_base_url: `${siteUrl}/pedido-confirmado`
           }),
         });
         const payData = await payRes.json();
-        if (payData.link_pagamento) { 
-          // Salva o contador de 15 minutos
-          const expTime = Date.now() + 15 * 60 * 1000;
-          localStorage.setItem('@ijprint:checkout_expires_at', expTime.toString());
-          setExpiraEm(Date.now()); // Data de criação local
+        if (payData.link_pagamento) {
+          localStorage.setItem('pedido_pendente_id', payData.pedido_id || '');
+          localStorage.setItem('ijprint_checkout_itens', JSON.stringify(itens));
 
-          setSidebarAberta(false); 
-          setLoading(false); 
-          window.location.href = payData.link_pagamento; 
-          return; 
+          setSidebarAberta(false);
+          setLoading(false);
+          window.location.href = payData.link_pagamento;
+          return;
         } else {
           throw new Error(payData.error || "Erro desconhecido ao gerar pagamento.");
         }
@@ -259,26 +242,21 @@ export default function SidebarCarrinho() {
       return;
     }
 
-    if (import.meta.env.DEV) {
-      await new Promise(r => setTimeout(r, 800));
-      setSidebarAberta(false);
-      setLoading(false);
-      alert(`PEDIDO de envio em modo Dev!\n\n(Modo Dev: Chamada de pagamento simulada e pedido seria criado no painel).`);
-      return;
-    }
+
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const siteUrl = window.location.origin;
       const payRes = await fetch('/api/pagamento', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session?.access_token}`
         },
         body: JSON.stringify({
           endereco: enderecoSelecionado,
-          frete_valor: freteSelecionado ? freteSelecionado.preco : 0,
+          modo_entrega: 'envio',
+          cotacao: freteSelecionado?.cotacao,
           itens,
           cupom: cupomAplicado?.codigo || null,
           redirect_base_url: `${siteUrl}/pedido-confirmado`
@@ -286,11 +264,9 @@ export default function SidebarCarrinho() {
       });
       const payData = await payRes.json();
       if (payData.link_pagamento) {
-        // Salva o contador de 15 minutos
-        const expTime = Date.now() + 15 * 60 * 1000;
-        localStorage.setItem('@ijprint:checkout_expires_at', expTime.toString());
-        setExpiraEm(Date.now()); // Data de criação local
-        
+          localStorage.setItem('pedido_pendente_id', payData.pedido_id || '');
+          localStorage.setItem('ijprint_checkout_itens', JSON.stringify(itens));
+
         setSidebarAberta(false);
         setLoading(false);
         window.location.href = payData.link_pagamento;
@@ -355,22 +331,7 @@ export default function SidebarCarrinho() {
 
         {/* Corpo com scroll */}
         <div className="flex-1 overflow-y-auto">
-          {expiraEm && itens.length > 0 && (
-             <div className="bg-yellow-500/10 border-b border-yellow-500/20 p-3 text-center">
-               <p className="text-yellow-500 text-xs font-bold uppercase tracking-wider mb-1">Pagamento Pendente</p>
-               <p className="text-yellow-400/80 text-[11px]">
-                 Seu carrinho será esvaziado automaticamente.<br/>
-                 <ContagemRegressiva 
-                    dataCriacao={expiraEm} 
-                    onExpirar={() => {
-                      localStorage.removeItem('@ijprint:checkout_expires_at');
-                      setExpiraEm(null);
-                      dispatch({ type: "LIMPAR" });
-                    }} 
-                 />
-               </p>
-             </div>
-          )}
+
 
           {itens.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-500 px-6 text-center">
@@ -443,7 +404,7 @@ export default function SidebarCarrinho() {
                           </button>
                         </>
                       )}
-                      
+
                       {(item.multiplaPersonalizacao || item.personalizador3d) && (
                         <span className="text-zinc-400 text-xs font-medium px-2 py-1 bg-zinc-800/50 rounded border border-zinc-700/50">
                           Qtd: {item.quantidade}
@@ -576,6 +537,7 @@ export default function SidebarCarrinho() {
                           </div>
                         )}
 
+                        {erroFrete && <p role="alert" className="text-xs text-red-400 mb-2">{erroFrete} <button type="button" className="underline" onClick={() => calcularFrete(enderecoSelecionado)}>Recalcular</button></p>}
                         {calculandoFrete ? (
                           <p className="text-xs text-zinc-500 animate-pulse">Calculando opções...</p>
                         ) : !enderecoSelecionado ? (

@@ -6,6 +6,7 @@ const AuthContext = createContext({});
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,8 +29,7 @@ export const AuthProvider = ({ children }) => {
         supabase.from('perfis').upsert(
           {
             id: u.id,
-            nome: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Cliente',
-            email: u.email
+            nome: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Cliente'
           },
           { onConflict: 'id', ignoreDuplicates: true }
         ).then(({ error }) => {
@@ -43,8 +43,15 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    let ativo = true;
+    setIsAdmin(false);
+    if (user) supabase.rpc('sou_admin').then(({ data, error }) => { if (ativo) setIsAdmin(!error && data === true); });
+    return () => { ativo = false; };
+  }, [user?.id]);
+
   return (
-    <AuthContext.Provider value={{ user, session, loading }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin }}>
       {!loading && children}
     </AuthContext.Provider>
   );

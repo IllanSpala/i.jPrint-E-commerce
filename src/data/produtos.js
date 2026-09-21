@@ -1421,5 +1421,12 @@ export const produtos = [
     aplicacaoSvg: { tipo: "fundo", eixo: "+Z", camera: { x: -55, y: -42 } },
     descricao: "Porta-copos com arte personalizada no fundo interno. Escolha as cores e aplique seu SVG pela vista superior! *FAZEMOS PREÇO MELHOR PARA ATACADO*",
     dimensoes: "90x90x5", peso_gramas: 10
+  },
+  {
+    id: 78, nome: "Miniatura Jax - Amazing digital Circus", preco: 27.90,
+    imagem: "/produtos/MINIATURA_JAX_CIRCUS.png", categoria: "Hot Toys",
+    personalizador3d: false, exigePersonalizacao: false,
+    descricao: "Miniatura do Jax da série The Amazing Digital Circus, impressas em PLA premium. Aproximadamente 27cm de altura",
+    dimensoes: "50x170x20", peso_gramas: 70
   }
 ];

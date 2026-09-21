@@ -26,6 +26,7 @@ function criarConsultaLocal() {
 function criarSupabaseLocal() {
   return {
     from: () => criarConsultaLocal(),
+    rpc: async () => ({ data: null, error: new Error('Serviço indisponível.') }),
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
       onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),

@@ -81,7 +81,7 @@ export default function PromoCarousel() {
               width="1920"
               height="384"
               loading={index === 0 ? "eager" : "lazy"}
-              fetchPriority={index === 0 ? "high" : "auto"}
+              fetchpriority={index === 0 ? "high" : "auto"}
               className="h-full w-full object-cover object-center"
             />
           </picture>

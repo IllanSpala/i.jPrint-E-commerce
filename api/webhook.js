@@ -1,111 +1,48 @@
-import { createClient } from '@supabase/supabase-js';
-import { anexosPersonalizacao } from './_lib/anexosPersonalizacao.js';
-import {
-  enviarEmailCliente,
-  enviarEmailAdmin,
-  buscarEmailCliente,
-  emailClientePagamentoConfirmado,
-  emailAdminPagamentoRecebido,
-} from './_lib/mailer.js';
+import { bancoServidor, limitarRequisicoes } from './_lib/seguranca.js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-);
+export function criarHandlerWebhook(db, consultar = fetch) {
+  return async (req, res) => {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido.' });
+    const evento = req.body?.charge || req.body || {};
+    const { order_nsu: pedidoId, transaction_nsu: transacao } = evento;
+    const slug = evento.invoice_slug || evento.slug;
+    if (![pedidoId, transacao, slug].every(v => typeof v === 'string' && v.length > 0 && v.length <= 200)) {
+      return res.status(400).json({ error: 'Identificadores de pagamento obrigatórios.' });
+    }
+    try {
+      await limitarRequisicoes(db, 'webhook:global', 600);
+      const { data: pedido, error } = await db.from('pedidos').select('id,status,total,pagamento_handle').eq('id', pedidoId).maybeSingle();
+      if (error) throw new Error('Consulta indisponível');
+      if (!pedido) return res.status(404).json({ error: 'Pedido não encontrado.' });
+      const handle = pedido.pagamento_handle;
+      if (!handle) return res.status(503).json({ error: 'Pedido anterior à validação segura: conciliação manual necessária.' });
+      const resposta = await consultar('https://api.checkout.infinitepay.io/payment_check', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ handle, order_nsu: pedidoId, transaction_nsu: transacao, slug }),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (!resposta.ok) return res.status(503).json({ error: 'Não foi possível consultar a operadora.' });
+      const confirmado = await resposta.json();
+      const esperado = Math.round(Number(pedido.total) * 100);
+      if (confirmado.success !== true || confirmado.paid !== true || !Number.isSafeInteger(esperado) || esperado <= 0 || confirmado.amount !== esperado) {
+        return res.status(400).json({ error: 'Pagamento não confirmado ou valor divergente.' });
+      }
+      // Compare-and-set: um callback repetido nunca regride produção/envio.
+      if (pedido.status === 'Aguardando Pagamento') {
+        const atualizacao = await db.from('pedidos').update({
+          status: 'Pago', pagamento_transacao: transacao, pagamento_slug: slug,
+          pagamento_confirmado_em: new Date().toISOString(),
+        }).eq('id', pedidoId).eq('status', 'Aguardando Pagamento');
+        if (atualizacao.error) throw new Error('Falha ao registrar confirmação');
+      }
+      return res.status(200).json({ received: true });
+    } catch {
+      return res.status(503).json({ error: 'Confirmação temporariamente indisponível. Tente novamente.' });
+    }
+  };
+}
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
-  }
-
-  try {
-    const evento = req.body;
-    console.log('[Webhook InfinitePay] Evento recebido:', JSON.stringify(evento));
-
-    // A InfinitePay envia o order_nsu (nosso pedido_id) e transaction_nsu quando aprova.
-    // Para links de pagamento, ela NÃO envia um campo "status", apenas dispara o webhook
-    // quando a transação é aprovada e capturada com sucesso.
-    const pedidoId = evento?.charge?.order_nsu || evento?.order_nsu;
-    const transactionId = evento?.transaction_nsu || evento?.charge?.transaction_nsu;
-    
-    // Fallback: se houver status, avalia, senão, se houver transaction_nsu, assume sucesso.
-    const status = evento?.charge?.status || evento?.status;
-    const isApproved = status === 'approved' || status === 'paid' || status === 'captured' || (!status && transactionId);
-
-    if (!pedidoId) {
-      console.log('[Webhook] order_nsu não encontrado no payload');
-      return res.status(200).json({ received: true });
-    }
-
-    if (isApproved) {
-      // Remover "email" do select de perfis, pois a tabela perfis só tem "nome" e "telefone"
-      const { data: pedidoAtual, error: errBusca } = await supabase
-        .from('pedidos')
-        .select('status, user_id, total, perfis(nome)')
-        .eq('id', pedidoId)
-        .single();
-
-      if (errBusca || !pedidoAtual) {
-        console.error('[Webhook] Erro ao buscar pedido:', errBusca);
-        return res.status(500).json({ error: 'Erro ao buscar pedido' });
-      }
-
-      // Se o pedido já avançou de "Aguardando Pagamento", ignoramos o webhook para evitar regressão
-      if (pedidoAtual.status !== 'Aguardando Pagamento') {
-        console.log(`[Webhook] Pedido ${pedidoId} já possui status '${pedidoAtual.status}'. Ignorando atualização para 'Pago' para evitar regressão de status.`);
-        return res.status(200).json({ received: true });
-      }
-
-      const { data: pedidoAtualizado, error } = await supabase
-        .from('pedidos')
-        .update({ status: 'Pago' })
-        .eq('id', pedidoId)
-        .select('*, perfis(nome)')
-        .single();
-
-      if (error) {
-        console.error('[Webhook] Erro ao atualizar pedido:', error);
-        return res.status(500).json({ error: 'Erro ao atualizar pedido no banco' });
-      }
-
-      console.log(`[Webhook] Pedido ${pedidoId} marcado como PAGO`);
-
-      // ==========================================
-      // DISPARO DE E-MAILS: "Pagamento confirmado" (cliente) e
-      // "Pagamento recebido" (admin)
-      // ==========================================
-      if (pedidoAtualizado?.user_id) {
-        try {
-          const clienteEmail = await buscarEmailCliente(supabase, pedidoAtualizado.user_id);
-
-          if (clienteEmail) {
-            const clienteNome = pedidoAtualizado.perfis?.nome || 'Cliente';
-            const valor = pedidoAtualizado.total;
-
-            await Promise.all([
-              enviarEmailCliente({
-                to: clienteEmail,
-                ...emailClientePagamentoConfirmado({ clienteNome, pedidoId, valor }),
-              }),
-              enviarEmailAdmin({
-                ...emailAdminPagamentoRecebido({ clienteNome, clienteEmail, pedidoId, valor }),
-                attachments: anexosPersonalizacao(pedidoAtualizado.itens),
-              }),
-            ]);
-            console.log('[Webhook] E-mails de confirmação enviados com sucesso!');
-          }
-        } catch (emailError) {
-          console.error('[Webhook] Erro ao enviar e-mails:', emailError);
-        }
-      }
-    } else {
-      console.log(`[Webhook] Payload não classificado como aprovado. Status: ${status}, Transação: ${transactionId}. Sem ação necessária.`);
-    }
-
-    // Sempre responde 200 para a InfinitePay não ficar reenviando
-    res.status(200).json({ received: true });
-  } catch (error) {
-    console.error('[Webhook] Erro geral:', error);
-    res.status(500).json({ error: 'Erro interno' });
-  }
+  try { return await criarHandlerWebhook(bancoServidor())(req, res); }
+  catch { return res.status(503).json({ error: 'Serviço indisponível.' }); }
 }
