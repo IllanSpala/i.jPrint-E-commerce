@@ -1,5 +1,7 @@
+// ativo: false oculta o produto e bloqueia novas compras após o deploy.
 export const produtos = [
   {
+    ativo: true,
     "id": 0,
     "nome": "Pagamento Personalizado",
     "preco": 0,
@@ -15,6 +17,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 1,
     "nome": "Pophead Personalizado",
     "preco": 139.9,
@@ -29,6 +32,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 2,
     "nome": "Pophead Casal",
     "preco": 209.9,
@@ -43,6 +47,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 3,
     "nome": "Pophead Família",
     "preco": 299.9,
@@ -57,6 +62,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 4,
     "nome": "Pophead Operadores RainbowSixSiege",
     "preco": 139.9,
@@ -71,6 +77,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 5,
     "nome": "Miniatura Personalizada Temática",
     "preco": 169.9,
@@ -85,12 +92,13 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 6,
     "nome": "Tony Montana - Scarface",
     "preco": 99.9,
     "precoPromocional": 63.9,
     "imagem": "/produtos/HOTTOY_TONY.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Hot Toy Tony Montana Filme Scarface, impresso em PLA Premium",
     "peso_gramas": 190,
@@ -100,11 +108,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 7,
     "nome": "Siegmeyer of Catarina - CEBOLÃO DarkSouls",
     "preco": 159.9,
     "imagem": "/produtos/CEBOLAO.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Miniatura Siegmeyer of Catarina, versão Cebolão, do jogo DarkSouls, sentadinho na sua estante (refs) impresso em PLA Premium",
     "peso_gramas": 250,
@@ -114,6 +123,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 8,
     "nome": "Porta Lápis Pokebola",
     "preco": 44.9,
@@ -128,6 +138,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 9,
     "nome": "Torre de Dados Malboro",
     "preco": 27.9,
@@ -142,6 +153,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 10,
     "nome": "Porta Lápis Jake Hora de Aventura",
     "preco": 44.9,
@@ -156,11 +168,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 11,
     "nome": "Ovo de Dragão - Fidget Sensorial",
     "preco": 33.9,
     "imagem": "/produtos/FIDGET_OVO_SENSORIAL.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -184,11 +197,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 12,
     "nome": "Estrela 10 pontas - Fidget Sensorial",
     "preco": 39.9,
     "imagem": "/produtos/FIDGET_ESTRELA_SENSORIAL.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -212,6 +226,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 13,
     "nome": "Estatua Gandalf - Senhor dos anéis",
     "preco": 319.9,
@@ -226,11 +241,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 14,
     "nome": "Coleção Fallout - Funcionário Vault-tec",
     "preco": 139.9,
     "imagem": "/produtos/KIT_FALLOUT.png",
-    "categoria": "Coleções",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Kit Fallout contendo: \n Action Figure do Vault Boy  pintado a mão \n 4 POrta-copos \n 1 Hueforge",
     "peso_gramas": 250,
@@ -240,11 +256,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 15,
     "nome": "Estatueta Worms-TD Granada Santa",
     "preco": 139.9,
     "imagem": "/produtos/WORMS_GRANADA_SANTA.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Estatueta de Minhoca com Granada Santa, do jogo Worms. Impresso em PLA Premium",
     "peso_gramas": 380,
@@ -254,6 +271,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 16,
     "nome": "Porta Escova de Dentes Gatinho",
     "preco": 34.9,
@@ -278,11 +296,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 17,
     "nome": "Mario-Elvis",
     "preco": 83.9,
     "imagem": "/produtos/MARIO_ELVIS.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Hot-Toys Mario-Elvis, impresso em PLA Premium",
     "peso_gramas": 150,
@@ -292,12 +311,13 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 18,
     "nome": "Edward Mãos de Tesoura",
     "preco": 99.9,
     "precoPromocional": 63.9,
     "imagem": "/produtos/EDWARD.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Edward Mãos de Tesoura (Hot-Toys), impresso em PLA Premium",
     "peso_gramas": 180,
@@ -307,6 +327,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 20,
     "nome": "Porta-Lapís Hogwarts",
     "preco": 34.9,
@@ -321,11 +342,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 21,
     "nome": "Action Figure Monkey D. Luffy",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_LUFFY.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Luffy, One Piece, impresso em PLA Premium Cinza e pintado a mão após",
     "peso_gramas": 150,
@@ -335,11 +357,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 22,
     "nome": "Action Figure Vault-Boy",
     "preco": 83.9,
     "imagem": "/produtos/FIGURE_VAULT_BOY.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Action FIgure Vault Boy, de Fallout, impresso em PLA Cinza e pintado a mão após",
     "peso_gramas": 130,
@@ -349,11 +372,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 23,
     "nome": "Action Figure Smeagol (Gollum)",
     "preco": 114.9,
     "imagem": "/produtos/FIGURE_SMEAGOL.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Smeagol, do Senhor dos Anéis, impresso em PLA Premium",
     "peso_gramas": 150,
@@ -363,6 +387,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 24,
     "nome": "Pokemon Chibi",
     "preco": 139.9,
@@ -376,7 +401,7 @@ export const produtos = [
       "/produtos/CHIBI_JOLTEON.png",
       "/produtos/CHIBI_UMBREON.png"
     ],
-    "categoria": "Coleções",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -415,11 +440,12 @@ export const produtos = [
     "dimensoes": "110x110x160"
   },
   {
+    ativo: true,
     "id": 25,
     "nome": "Pomni - Amazing Digital Circus",
     "preco": 119.9,
     "imagem": "/produtos/POMNI.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Pomni do desenho The Amazing Digital Circus, impresso em PLA Premium e acompanha base",
     "peso_gramas": 110,
@@ -429,6 +455,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 26,
     "nome": "Busto Malenia - Elden Ring",
     "preco": 339.9,
@@ -443,6 +470,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 27,
     "nome": "Presilhas de Cabelo",
     "preco": 34.9,
@@ -507,11 +535,12 @@ export const produtos = [
     "dimensoes": "70x35x25"
   },
   {
+    ativo: false,
     "id": 28,
     "nome": "Chapeleiro Maluco - Figure",
     "preco": 119.9,
     "imagem": "/produtos/FIGURE_CHAPELEIRO.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Chapeleiro Maluco, da franquia Alice no Pais das Maravilhas, impresso em PLA Premium",
     "peso_gramas": 145,
@@ -521,11 +550,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 29,
     "nome": "Talismã Pote Companheiro - Elden ring",
     "preco": 14.9,
     "imagem": "/produtos/TALISMÃ_ELDEN.png",
-    "categoria": "Acessórios",
+    "categoria": "Chaveiros",
     "exigePersonalizacao": false,
     "descricao": "Talismã Pote Companheiro, do jogo Elden Ring, impresso em PLA Premium, ideal para usar como chaveiro, colar ou pingente",
     "peso_gramas": 15,
@@ -535,11 +565,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 30,
     "nome": "Smough, O executor - Dark Souls",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_SMOUGH.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Smough, O executor, do jogo Dark Souls, impresso em PLA Premium",
     "peso_gramas": 280,
@@ -549,11 +580,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 31,
     "nome": "Figure Makima - Chainsaw Man",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_MAKIMA.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Makima, do mangá Chainsaw Man, impresso em PLA Premium",
     "peso_gramas": 120,
@@ -563,6 +595,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 32,
     "nome": "The Division Bell - Pink Floyd",
     "preco": 73.9,
@@ -589,11 +622,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 33,
     "nome": "Android 18 - Dragon Ball",
     "preco": 133.9,
     "imagem": "/produtos/FIGURE_ANDROID18.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Action Figure Android 18, de DragonBall, impressa em PLA premium",
     "peso_gramas": 130,
@@ -603,11 +637,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 34,
     "nome": "Kuromi - Hello Kitty",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_KUROMI.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Kuromi, do universo Hello Kitty, impresso em PLA Premium",
     "peso_gramas": 140,
@@ -617,6 +652,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 35,
     "nome": "Coleção Hello Kitty",
     "preco": 139.9,
@@ -632,7 +668,7 @@ export const produtos = [
       "/produtos/KITTY_STITCH.png",
       "/produtos/KITTY_KNIGHT.png"
     ],
-    "categoria": "Coleções",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -673,11 +709,12 @@ export const produtos = [
     "dimensoes": "90x90x150"
   },
   {
+    ativo: true,
     "id": 36,
     "nome": "Figure Lemmy Kilmister - Motorhead",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_LEMMY.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Lemmy Kilmister, vocalista e baixista do Motorhead, impresso em PLA Premium",
     "peso_gramas": 150,
@@ -687,11 +724,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 37,
     "nome": "Figure Joey Jordison - Slipknot",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_JOEY.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Joey Jordison, baterista do Slipknot, impresso em PLA Premium",
     "peso_gramas": 140,
@@ -701,11 +739,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 38,
     "nome": "Figure Alice Cooper",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_COOPER.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Alice Cooper, impresso em PLA Premium",
     "peso_gramas": 135,
@@ -715,11 +754,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 39,
     "nome": "Figure A freira (The Nun)",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_FREIRA.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure A freira (The Nun), impresso em PLA Premium",
     "peso_gramas": 130,
@@ -729,11 +769,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 40,
     "nome": "Figure A outra mãe (Coraline)",
     "preco": 139.9,
     "imagem": "/produtos/FIGURE_CORAMAE.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure A outra mãe (Coraline), impresso em PLA Premium",
     "peso_gramas": 120,
@@ -743,11 +784,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 41,
     "nome": "Tux",
     "preco": 43.9,
     "imagem": "/produtos/TUX.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Tux, o mascote do Linux, impresso em PLA Premium",
     "peso_gramas": 160,
@@ -757,6 +799,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 42,
     "nome": "Busto Marmorizado - Karl Marx",
     "preco": 57.9,
@@ -771,6 +814,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 43,
     "nome": "Busto Marmorizado - Lenin",
     "preco": 57.9,
@@ -785,6 +829,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 44,
     "nome": "Busto Marmorizado - Stalin",
     "preco": 57.9,
@@ -799,6 +844,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 45,
     "nome": "Busto Marmorizado - Ozzy Osbourne",
     "imagem": "/produtos/BUSTO_OZZY.png",
@@ -813,6 +859,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: false,
     "id": 46,
     "nome": "Busto Marmorizado - Dimebag Darrel",
     "preco": 57.9,
@@ -827,11 +874,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 47,
     "nome": "Chibi Chococat - Sanrio",
     "preco": 109.9,
     "imagem": "/produtos/CHIBI_CHOCOCAT.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Chibi Chococat - Sanrio, impresso em PLA Premium",
     "peso_gramas": 140,
@@ -841,11 +889,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 48,
     "nome": "Figure Patolino - Looney Tunes",
     "preco": 119.9,
     "imagem": "/produtos/FIGURE_PATOLINO.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Patolino - Looney Tunes, impresso em PLA Premium",
     "peso_gramas": 130,
@@ -855,11 +904,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 49,
     "nome": "Figure Skye - Patrulha Canina",
     "preco": 144.9,
     "imagem": "/produtos/FIGURE_SKYE.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Skye - Patrulha Canina, impresso em PLA Premium",
     "peso_gramas": 145,
@@ -869,11 +919,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 50,
     "nome": "Figure Angel - Lilo & Stitch",
     "preco": 144.9,
     "imagem": "/produtos/FIGURE_ANGEL.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Angel - Lilo & Stitch, impresso em PLA Premium",
     "peso_gramas": 150,
@@ -883,11 +934,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 51,
     "nome": "Figure Shaun - O carneiro",
     "preco": 104.9,
     "imagem": "/produtos/FIGURE_SHAUN.png",
-    "categoria": "Hot Toys",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figure Shaun - O carneiro, impresso em PLA Premium",
     "peso_gramas": 135,
@@ -897,6 +949,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 52,
     "nome": "Rolling Tray personalizado",
     "preco": 37.9,
@@ -1001,6 +1054,7 @@ export const produtos = [
     "dimensoes": "180x120x10"
   },
   {
+    ativo: true,
     "id": 53,
     "nome": "Cinzeiro Barad-dûr - Senhor dos Anéis",
     "preco": 44.9,
@@ -1015,6 +1069,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 54,
     "nome": "Cinzeiro Hello Kitty",
     "preco": 33.49,
@@ -1029,6 +1084,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 55,
     "nome": "Cuia Pokemon - Ditto",
     "preco": 27.9,
@@ -1043,6 +1099,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 56,
     "nome": "Busto Eddie - Powerslave / Iron Maiden",
     "preco": 339.9,
@@ -1057,6 +1114,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 57,
     "nome": "Busto Têmis - Deusa da Justiça",
     "preco": 279.9,
@@ -1071,6 +1129,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 58,
     "nome": "Busto Vic Rattlehead - Megadeth",
     "preco": 339.9,
@@ -1085,6 +1144,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 59,
     "nome": "Totem Metallica - One",
     "preco": 179.9,
@@ -1099,6 +1159,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 60,
     "nome": "Totem DeadByDaylight",
     "preco": 459.9,
@@ -1113,6 +1174,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 61,
     "nome": "Busto Agamemnon",
     "preco": 279.9,
@@ -1127,6 +1189,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 62,
     "nome": "Figures Cult of the Lamb",
     "preco": 119.9,
@@ -1156,13 +1219,14 @@ export const produtos = [
         "esgotado": false
       }
     ],
-    "categoria": "Coleções",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figures do jogo Cult of the Lamb, impresso em PLA Premium",
     "peso_gramas": 140,
     "dimensoes": "90x90x170"
   },
   {
+    ativo: true,
     "id": 63,
     "nome": "Figures Dead By Daylight",
     "preco": 209.9,
@@ -1207,13 +1271,14 @@ export const produtos = [
         "esgotado": false
       }
     ],
-    "categoria": "Coleções",
+    "categoria": "Miniaturas",
     "exigePersonalizacao": false,
     "descricao": "Figures do jogo Dead By Daylight, impresso em PLA Premium Pintado em Acrílica posteriormente (fotos ilustrativas, tintas podem sofrer alteração de cor)",
     "peso_gramas": 140,
     "dimensoes": "90x90x170"
   },
   {
+    ativo: true,
     "id": 64,
     "nome": "Ponteira para Lápis personalizada",
     "imagem": "/produtos/PONTEIRA_LAPIS.png",
@@ -1243,6 +1308,7 @@ export const produtos = [
     "exigePersonalizacao": false
   },
   {
+    ativo: true,
     "id": 65,
     "nome": "Regador Psyduck",
     "preco": 41.9,
@@ -1257,11 +1323,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 66,
     "nome": "Teia Aranha - Fidget Sensorial",
     "preco": 39.9,
     "imagem": "/produtos/FIDGET_TEIA_ARANHA.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -1281,11 +1348,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 67,
     "nome": "Hello Kitty - Fidget Sensorial",
     "preco": 33.9,
     "imagem": "/produtos/FIDGET_HELLO_KITTY.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -1301,11 +1369,12 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 68,
     "nome": "Hello Kitty Bailarina - Fidget",
     "preco": 17.9,
     "imagem": "/produtos/FIDGET_HELLO_KITTY_2.png",
-    "categoria": "Sensoriais",
+    "categoria": "Acessórios",
     "exigePersonalizacao": false,
     "opcoes": [
       {
@@ -1321,6 +1390,7 @@ export const produtos = [
     ]
   },
   {
+    ativo: true,
     "id": 70,
     "nome": "Dichavador Personalizado",
     "preco": 23.9,
@@ -1336,6 +1406,7 @@ export const produtos = [
     "imagens": ["/logo.png"]
   },
   {
+    ativo: true,
     "id": 71,
     "nome": "Cinzeiro Cruz - ChromeHearts",
     "preco": 23.9,
@@ -1369,6 +1440,7 @@ export const produtos = [
     "dimensoes": "65x65x30"
   },
   {
+    ativo: true,
     "id": 72,
     "nome": "Porta bic - Banana",
     "preco": 24.9,
@@ -1380,6 +1452,7 @@ export const produtos = [
     "dimensoes": "80x25x12"
   },
   {
+    ativo: true,
     "id": 73,
     "nome": "Porta bic - munição Slug",
     "preco": 17.9,
@@ -1391,6 +1464,7 @@ export const produtos = [
     "dimensoes": "80x25x12"
   },
   {
+    ativo: true,
     id: 74, nome: "Cinzeiro Personalizado Piramidal", preco: 23.9,
     imagem: "/produtos/CINZEIRO_PIRAMIDAL.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
     personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE01.stl",
@@ -1399,6 +1473,7 @@ export const produtos = [
     dimensoes: "115x115x30.5", peso_gramas: 70
   },
   {
+    ativo: true,
     id: 75, nome: "Cinzeiro Personalizado Oval", preco: 23.9,
     imagem: "/produtos/CINZEIRO_OVAL.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
     personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CINZEIRO_BASE02.stl",
@@ -1407,6 +1482,7 @@ export const produtos = [
     dimensoes: "115x115x26.5", peso_gramas: 70
   },
   {
+    ativo: true,
     id: 76, nome: "Porta-isqueiro c/ espaço para cigarro Personalizado", preco: 19.9,
     imagem: "/produtos/PORTA_BIC_CIGARRO.png", categoria: "Tabacaria", categorias: ["Tabacaria", "Personalizados"],
     personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/CAPA_BIC_BASE01.stl",
@@ -1415,6 +1491,7 @@ export const produtos = [
     dimensoes: "68.4x19.2x95.5", peso_gramas: 50
   },
   {
+    ativo: true,
     id: 77, nome: "Porta-Copos Personalizado", preco: 9.90,
     imagem: "/produtos/PORTA_COPOS_PERSONALIZADO.png", categoria: "Personalizados",
     personalizador3d: true, exigePersonalizacao: false, modelo3d: "/svg/base_PORTA_COPOS.stl",
@@ -1423,15 +1500,17 @@ export const produtos = [
     dimensoes: "90x90x5", peso_gramas: 10
   },
   {
+    ativo: true,
     id: 78, nome: "Miniatura Jax - Amazing digital Circus", preco: 27.90,
-    imagem: "/produtos/MINIATURA_JAX_CIRCUS.png", categoria: "Hot Toys",
+    imagem: "/produtos/MINIATURA_JAX_CIRCUS.png", categoria: "Miniaturas",
     personalizador3d: false, exigePersonalizacao: false,
     descricao: "Miniatura do Jax da série The Amazing Digital Circus, impressas em PLA premium. Aproximadamente 27cm de altura",
     dimensoes: "50x170x20", peso_gramas: 70
   },
   {
+    ativo: true,
     id: 79, nome: "Chaveiro Demogorgon", preco: 12.90,
-    imagem: "/produtos/CHAVEIRO_DEMOGORGON.png", categoria: "Hot Toys",
+    imagem: "/produtos/CHAVEIRO_DEMOGORGON.png", categoria: "Chaveiros",
     personalizador3d: false, exigePersonalizacao: false,
     descricao: "Chaveiro demogorgon - Stranger things, impresso em PLA",
     dimensoes: "70x40x10", peso_gramas: 15

@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
+import { produtoAtivo } from '../lib/produtoAtivo.js';
 import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
 
 export default function PaginaProduto() {
@@ -43,15 +44,21 @@ export default function PaginaProduto() {
   }, [quantidadeLocal]);
 
   useEffect(() => {
+    let ativo = true;
+    setProduto(null);
+    setIsLoading(true);
     async function fetchProduto() {
-      const { data } = await supabase.from('produtos').select('*').eq('id', id).single();
+      const { data, error } = await supabase.from('produtos').select('*').eq('id', id).maybeSingle();
+      if (!ativo) return;
       if (data) {
         const camelData = normalizarProduto(data);
-        setProduto(camelData);
-        setImagemAtual(camelData.imagem);
-      } else {
+        if (produtoAtivo(camelData)) {
+          setProduto(camelData);
+          setImagemAtual(camelData.imagem);
+        }
+      } else if (!error) {
         const localProd = produtosLocais.find(p => String(p.id) === String(id));
-        if (localProd) {
+        if (produtoAtivo(localProd)) {
           setProduto(localProd);
           setImagemAtual(localProd.imagem);
         }
@@ -67,6 +74,7 @@ export default function PaginaProduto() {
     setOpcaoSelecionada("");
     setVariacaoSelecionada("");
     setPersonalizacoes3d([]);
+    return () => { ativo = false; };
   }, [id]);
 
 

@@ -1,4 +1,6 @@
 import { produtos } from "../data/produtos.js";
+import { produtoAtivo } from './produtoAtivo.js';
+import { normalizarCategoria } from './categorias.js';
 
 // Preços e conteúdo comercial vêm do banco; o comportamento do editor pertence
 // ao catálogo versionado com a aplicação, inclusive quando o banco retorna false/null.
@@ -7,6 +9,9 @@ export function normalizarProduto(data) {
   const produto = {
     ...local,
     ...data,
+    ativo: produtoAtivo(data),
+    categoria: normalizarCategoria(local.categoria || data.categoria),
+    categorias: (local.categoria ? (local.categorias || [local.categoria]) : (data.categorias || [data.categoria])).map(normalizarCategoria),
     precoPromocional: data.preco_promocional ?? data.precoPromocional ?? local.precoPromocional,
     exigePersonalizacao: data.exige_personalizacao ?? data.exigePersonalizacao ?? local.exigePersonalizacao,
     multiplaPersonalizacao: data.multipla_personalizacao ?? local.multiplaPersonalizacao,
@@ -18,7 +23,6 @@ export function normalizarProduto(data) {
       exigePersonalizacao: false,
       modelo3d: local.modelo3d,
       aplicacaoSvg: local.aplicacaoSvg,
-      categorias: local.categorias,
     });
   }
   if (local.personalizacao3dOpcional) {

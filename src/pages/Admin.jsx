@@ -1,4 +1,5 @@
 import { gerarReciboSeguro } from '../lib/reciboSeguro.js';
+import AdminProdutos from '../components/AdminProdutos';
 import { pedidoPendenteExpirado } from '../lib/expiracaoPedido.js';
 import { apiAutenticada } from '../lib/apiAutenticada';
 import { useEffect, useState } from "react";
@@ -438,6 +439,7 @@ export default function Admin() {
         <h1 className="font-display text-3xl text-white tracking-tight uppercase">Painel de Pedidos</h1>
       </div>
 
+      <AdminProdutos />
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <button
           type="button"

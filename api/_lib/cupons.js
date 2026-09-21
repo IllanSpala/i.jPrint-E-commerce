@@ -1,4 +1,5 @@
 import { produtos as catalogoLocal } from '../../src/data/produtos.js';
+import { produtoAtivo } from '../../src/lib/produtoAtivo.js';
 
 export const CUPONS = Object.freeze({
   'COMPRE.IJ': { percentual: 10, primeiraCompra: true },
@@ -40,6 +41,7 @@ export async function precificarItens(supabase, itens) {
   return itens.map((item) => {
     const produto = produtos.find((p) => p.id === item.id);
     if (!produto) throw erroCupom(`Produto ${item.id} não encontrado.`);
+    if (!produtoAtivo(produto)) throw erroCupom(`Produto ${item.id} temporariamente indisponível. Remova-o do carrinho.`, 409);
     if (!Number.isSafeInteger(item.quantidade) || item.quantidade < 1 || item.quantidade > 999) {
       throw erroCupom('Quantidade inválida no carrinho.');
     }

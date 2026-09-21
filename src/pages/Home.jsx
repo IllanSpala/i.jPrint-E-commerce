@@ -3,12 +3,14 @@ import { Search, X, MoreVertical } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import CardProduto from "../components/CardProduto";
 import PromoCarousel from "../components/PromoCarousel";
+import { produtoAtivo } from '../lib/produtoAtivo.js';
+import { CATEGORIAS } from '../lib/categorias.js';
 import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
 
 export default function Home() {
   const [produtos, setProdutos] = useState([]);
-  const [categorias, setCategorias] = useState(["Todos"]);
+  const categorias = ['Todos', ...CATEGORIAS];
   const [isLoading, setIsLoading] = useState(true);
 
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
@@ -20,21 +22,17 @@ export default function Home() {
 
   useEffect(() => {
     async function carregarProdutos() {
-      const { data } = await supabase.from('produtos').select('*').order('id');
+      const { data, error } = await supabase.from('produtos').select('*').order('id');
+      // Uma falha de leitura não pode reativar produtos desativados no banco.
+      if (error) { setProdutos([]); setIsLoading(false); return; }
       const dbProducts = data ? data.map(normalizarProduto) : [];
 
       const dbIds = new Set(dbProducts.map(p => p.id));
       const novosLocais = produtosLocais.filter(p => !dbIds.has(p.id));
-      const todosProdutos = [...dbProducts, ...novosLocais].sort((a, b) => a.id - b.id);
+      const todosProdutos = [...dbProducts, ...novosLocais].filter(produtoAtivo).sort((a, b) => a.id - b.id);
 
       setProdutos(todosProdutos);
 
-      const catSet = new Set(todosProdutos.flatMap(p => p.categorias || [p.categoria]).filter(c => c && c !== "Pagamento"));
-      const temPromo = todosProdutos.some(p => p.precoPromocional);
-      const catArray = ["Todos", ...Array.from(catSet).sort()];
-      if (temPromo) catArray.splice(1, 0, "Promoção");
-
-      setCategorias(catArray);
       setIsLoading(false);
     }
     carregarProdutos();
@@ -58,11 +56,9 @@ export default function Home() {
   }
 
   const filtrados = produtos.filter((p) => {
-    // O Pagamento Personalizado aparece em todas as categorias
-    if (p.isPagamentoPersonalizado) return true;
     const passaCategoria = categoriaAtiva === "Todos" 
       ? true 
-      : (categoriaAtiva === "Promoção" ? p.precoPromocional : (p.categorias || [p.categoria]).includes(categoriaAtiva));
+      : (p.categorias || [p.categoria]).includes(categoriaAtiva);
     const passaBusca =
       termoBusca.trim() === "" ||
       p.nome.toLowerCase().includes(termoBusca.toLowerCase()) ||
