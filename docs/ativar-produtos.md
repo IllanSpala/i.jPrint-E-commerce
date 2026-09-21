@@ -5,7 +5,10 @@ Troque por `ativo: false` e publique para ocultar e impedir novas compras.
 Volte para `true` e publique para reativar, desde que o banco também não o tenha desativado.
 
 Para usar o botão do admin, aplique `supabase/produtos_ativos.sql` uma vez.
-O campo do banco é independente: `false` em qualquer das fontes bloqueia o produto.
+Uma escolha explícita no painel (`ativo_admin`) prevalece sobre o código, tanto para ativar
+quanto para desativar. Sem escolha no painel (`ativo_admin = NULL`), `false` no código
+ou no campo `ativo` do banco bloqueia o produto. Para voltar ao controle pelo arquivo,
+defina `ativo_admin = NULL` no banco e mantenha `ativo = true`.
 A sincronização automática insere apenas IDs novos e não altera esse controle do banco.
 O bloqueio pelo código funciona mesmo antes da migração SQL.
 

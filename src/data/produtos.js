@@ -1514,5 +1514,13 @@ export const produtos = [
     personalizador3d: false, exigePersonalizacao: false,
     descricao: "Chaveiro demogorgon - Stranger things, impresso em PLA",
     dimensoes: "70x40x10", peso_gramas: 15
+  },
+  {
+    ativo: true,
+    id: 80, nome: "Xenonita", preco: 189.90,
+    imagem: '/produtos/XENONITA.png', categoria: "Bustos",
+    personalizacao3d: false, exigePersonalizacao: false,
+    descricao: "Xenonita, pedra do filme Project Hail Mary. Impressa em PLA totalmente articulada e cerca de 30cm de altura, fotos da peça JÁ pintada e finalizada",
+    dimensoes: "220x150x300", peso_gramas: 200
   }
 ];
