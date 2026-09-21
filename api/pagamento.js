@@ -99,7 +99,6 @@ export function criarHandlerPagamento(
       });
     }
 
-    // Dados confiáveis do cliente vêm do perfil salvo no banco.
     const {
       data: perfilDb
     } = await supabase
@@ -148,18 +147,7 @@ export function criarHandlerPagamento(
     let cupom = null;
     let desconto = null;
     let cupomReservado = false;
-
-    /*
-     * false:
-     * sabemos que nenhuma cobrança pode existir.
-     *
-     * true:
-     * já enviamos algo para a operadora e a situação
-     * pode ser ambígua. Nesse caso não liberamos
-     * automaticamente outro checkout.
-     */
     let linkPodeExistir = false;
-
     let pedidoCriado = false;
 
     try {
@@ -261,7 +249,6 @@ export function criarHandlerPagamento(
           desconto.itemsComDesconto;
       }
 
-      // Frete é cobrado integralmente e separado dos produtos.
       if (frete_valor > 0) {
         items_payload.push({
           quantity: 1,
@@ -325,10 +312,6 @@ export function criarHandlerPagamento(
           items_payload
       };
 
-      /*
-       * O preço sempre é calculado no servidor
-       * a partir do catálogo confiável.
-       */
       const totalCentavos =
         items_payload.reduce(
           (total, item) =>
@@ -578,10 +561,6 @@ export function criarHandlerPagamento(
           : {})
       };
 
-      /*
-       * Evita gerar múltiplos links para o mesmo
-       * carrinho enquanto já há um pedido pendente.
-       */
       const existente =
         await supabase
           .from('pedidos')
@@ -643,10 +622,6 @@ export function criarHandlerPagamento(
         );
       }
 
-      /*
-       * O pedido é persistido ANTES de chamar
-       * qualquer API financeira externa.
-       */
       const {
         error: insertError
       } = await supabase
@@ -728,11 +703,8 @@ export function criarHandlerPagamento(
       }
 
       /*
-       * Depois deste ponto a requisição já pode ter
-       * alcançado a InfinitePay.
-       *
-       * Timeout ou resposta inesperada é tratado como
-       * situação potencialmente ambígua.
+       * A partir daqui uma cobrança pode ter sido criada
+       * mesmo se houver falha ou timeout na comunicação.
        */
       linkPodeExistir =
         true;
@@ -767,11 +739,6 @@ export function criarHandlerPagamento(
             'content-type'
           ) || null;
 
-      /*
-       * Log seguro:
-       * não mostra token, CPF, e-mail,
-       * payload do cliente nem URL completa do checkout.
-       */
       console.log(
         '[Pagamento] InfinitePay HTTP:',
         {
@@ -786,13 +753,6 @@ export function criarHandlerPagamento(
       );
 
       if (!response.ok) {
-        /*
-         * 4xx definitivos significam que o payload
-         * foi recusado e um checkout não deve ter
-         * sido criado.
-         *
-         * 408 continua sendo ambíguo.
-         */
         if (
           response.status >=
           400 &&
@@ -834,7 +794,7 @@ export function criarHandlerPagamento(
               );
           }
         } catch {
-          // O corpo de erro pode não ser JSON.
+          // Resposta pode não ser JSON.
         }
 
         console.error(
@@ -853,14 +813,6 @@ export function criarHandlerPagamento(
         );
       }
 
-      /*
-       * A documentação da InfinitePay define uma
-       * resposta JSON como:
-       *
-       * {
-       *   "url": "https://checkout.infinitepay.com.br/..."
-       * }
-       */
       let data;
 
       try {
@@ -906,11 +858,6 @@ export function criarHandlerPagamento(
         }
       );
 
-      /*
-       * Não tentamos adivinhar outros campos aqui.
-       * Segundo a documentação oficial, o campo
-       * esperado chama-se "url".
-       */
       const linkBruto =
         typeof data?.url ===
           'string'
@@ -948,11 +895,6 @@ export function criarHandlerPagamento(
         );
       }
 
-      /*
-       * Nunca gravamos o checkout completo no log.
-       * Apenas protocolo e hostname são suficientes
-       * para diagnosticar a integração.
-       */
       console.log(
         '[Pagamento] InfinitePay URL:',
         {
@@ -965,13 +907,26 @@ export function criarHandlerPagamento(
       );
 
       /*
-       * Host atualmente documentado pela InfinitePay.
+       * A produção real da InfinitePay retornou
+       * checkout.infinitepay.io.
+       *
+       * A documentação também apresenta
+       * checkout.infinitepay.com.br.
+       *
+       * Mantemos uma allowlist exata, sem wildcard.
        */
+      const hostsCheckoutInfinitePay =
+        new Set([
+          'checkout.infinitepay.io',
+          'checkout.infinitepay.com.br'
+        ]);
+
       if (
         urlPagamento.protocol !==
         'https:' ||
-        urlPagamento.hostname !==
-        'checkout.infinitepay.com.br'
+        !hostsCheckoutInfinitePay.has(
+          urlPagamento.hostname
+        )
       ) {
         console.error(
           '[Pagamento] Host de checkout inesperado:',
@@ -992,10 +947,6 @@ export function criarHandlerPagamento(
       const link_pagamento =
         urlPagamento.toString();
 
-      /*
-       * Só depois de validar a resposta externa
-       * o link passa a ser considerado pronto.
-       */
       const salvo =
         await supabase
           .from('pedidos')
@@ -1028,8 +979,9 @@ export function criarHandlerPagamento(
         });
     } catch (error) {
       /*
-       * Só libera outro checkout quando sabemos
-       * que nenhuma cobrança pode existir.
+       * Nunca apaga o pedido.
+       * Só libera outra tentativa quando sabemos
+       * que nenhum link pagável pode existir.
        */
       if (
         pedidoCriado &&
@@ -1065,10 +1017,6 @@ export function criarHandlerPagamento(
         }
       }
 
-      /*
-       * Reserva de cupom só é liberada quando
-       * sabemos que nenhum link pagável existe.
-       */
       if (
         cupomReservado &&
         !linkPodeExistir
