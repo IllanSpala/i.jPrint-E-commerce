@@ -19,7 +19,9 @@ export function criarHandlerPagamento(
 ) {
   return async function handler(req, res) {
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Método não permitido' });
+      return res.status(405).json({
+        error: 'Método não permitido'
+      });
     }
 
     const {
@@ -48,7 +50,10 @@ export function criarHandlerPagamento(
       });
     }
 
-    if (Buffer.byteLength(JSON.stringify(req.body), 'utf8') > 3500000) {
+    if (
+      Buffer.byteLength(JSON.stringify(req.body), 'utf8') >
+      3500000
+    ) {
       return res.status(413).json({
         error:
           'Os arquivos do pedido estão muito grandes. Reduza o tamanho dos SVGs ou divida a compra em pedidos menores.'
@@ -56,7 +61,8 @@ export function criarHandlerPagamento(
     }
 
     for (const item of itens) {
-      const erroPersonalizacao = validarPersonalizacao(item);
+      const erroPersonalizacao =
+        validarPersonalizacao(item);
 
       if (erroPersonalizacao) {
         return res.status(400).json({
@@ -65,15 +71,21 @@ export function criarHandlerPagamento(
       }
     }
 
-    const authHeader = req.headers.authorization;
+    const authHeader =
+      req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (
+      !authHeader ||
+      !authHeader.startsWith('Bearer ')
+    ) {
       return res.status(401).json({
-        error: 'Acesso negado: Token de autenticação ausente'
+        error:
+          'Acesso negado: Token de autenticação ausente'
       });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token =
+      authHeader.split(' ')[1];
 
     const {
       data: { user },
@@ -82,12 +94,15 @@ export function criarHandlerPagamento(
 
     if (authError || !user) {
       return res.status(401).json({
-        error: 'Acesso negado: Token inválido ou expirado'
+        error:
+          'Acesso negado: Token inválido ou expirado'
       });
     }
 
-    // Busca os dados do usuário cadastrados na tabela "perfis".
-    const { data: perfilDb } = await supabase
+    // Dados confiáveis do cliente vêm do perfil salvo no banco.
+    const {
+      data: perfilDb
+    } = await supabase
       .from('perfis')
       .select('nome,cpf,telefone')
       .eq('id', user.id)
@@ -96,12 +111,15 @@ export function criarHandlerPagamento(
     if (
       !perfilDb?.cpf ||
       !/^\d{10,11}$/.test(
-        String(perfilDb.telefone || '').replace(/\D/g, '')
+        String(
+          perfilDb.telefone || ''
+        ).replace(/\D/g, '')
       ) ||
       !cpfValido(perfilDb.cpf)
     ) {
       return res.status(400).json({
-        error: 'Complete CPF e telefone no perfil.'
+        error:
+          'Complete CPF e telefone no perfil.'
       });
     }
 
@@ -111,98 +129,150 @@ export function criarHandlerPagamento(
       user.user_metadata?.name ||
       user.email.split('@')[0];
 
-    const clienteEmail = user.email;
+    const clienteEmail =
+      user.email;
 
-    const handle = process.env.INFINITEPAY_HANDLE;
+    const handle =
+      process.env.INFINITEPAY_HANDLE;
 
     if (!handle) {
       return res.status(503).json({
-        error: 'Pagamento indisponível: configuração pendente.'
+        error:
+          'Pagamento indisponível: configuração pendente.'
       });
     }
 
-    const pedido_id = randomUUID();
+    const pedido_id =
+      randomUUID();
 
     let cupom = null;
     let desconto = null;
     let cupomReservado = false;
+
+    /*
+     * false:
+     * sabemos que nenhuma cobrança pode existir.
+     *
+     * true:
+     * já enviamos algo para a operadora e a situação
+     * pode ser ambígua. Nesse caso não liberamos
+     * automaticamente outro checkout.
+     */
     let linkPodeExistir = false;
+
     let pedidoCriado = false;
 
     try {
       await limitarRequisicoes(
         supabase,
-        'pagamento:' + user.id,
+        `pagamento:${user.id}`,
         10
       );
 
       if (codigoCupom) {
-        cupom = obterCupom(codigoCupom);
+        cupom =
+          obterCupom(codigoCupom);
       }
 
-      const itensSeguros = await precificarItens(
-        supabase,
-        itens
-      );
+      const itensSeguros =
+        await precificarItens(
+          supabase,
+          itens
+        );
 
       if (modo_entrega === 'envio') {
-        const frete = verificarCotacao(cotacao, {
-          userId: user.id,
-          cep: String(endereco.cep || '').replace(/\D/g, ''),
-          carrinho: hashCarrinho(itens, itensSeguros)
-        });
+        const frete =
+          verificarCotacao(cotacao, {
+            userId: user.id,
 
-        frete_valor = frete.centavos / 100;
-        freteServico = frete.servico;
+            cep: String(
+              endereco.cep || ''
+            ).replace(/\D/g, ''),
 
-        if (
-          ![
-            endereco.logradouro || endereco.rua,
-            endereco.numero,
-            endereco.bairro,
-            endereco.cidade,
-            endereco.uf
-          ].every(
-            (v) =>
-              typeof v === 'string' &&
-              v.trim().length > 0 &&
-              v.length <= 200
-          )
-        ) {
+            carrinho:
+              hashCarrinho(
+                itens,
+                itensSeguros
+              )
+          });
+
+        frete_valor =
+          frete.centavos / 100;
+
+        freteServico =
+          frete.servico;
+
+        const camposEndereco = [
+          endereco.logradouro ||
+          endereco.rua,
+          endereco.numero,
+          endereco.bairro,
+          endereco.cidade,
+          endereco.uf
+        ];
+
+        const enderecoValido =
+          camposEndereco.every(
+            (valor) =>
+              typeof valor === 'string' &&
+              valor.trim().length > 0 &&
+              valor.length <= 200
+          );
+
+        if (!enderecoValido) {
           throw Object.assign(
-            new Error('Endereço incompleto.'),
-            { status: 400 }
+            new Error(
+              'Endereço incompleto.'
+            ),
+            {
+              status: 400
+            }
           );
         }
       }
 
       if (
         modo_entrega === 'digital' &&
-        !itens.every((i) => i.id === 0)
+        !itens.every(
+          (item) => item.id === 0
+        )
       ) {
         throw Object.assign(
-          new Error('Entrega inválida.'),
-          { status: 400 }
+          new Error(
+            'Entrega inválida.'
+          ),
+          {
+            status: 400
+          }
         );
       }
 
-      let items_payload = [...itensSeguros];
+      let items_payload =
+        [...itensSeguros];
 
       if (cupom) {
-        desconto = calcularDesconto(
-          itensSeguros,
-          cupom
-        );
+        desconto =
+          calcularDesconto(
+            itensSeguros,
+            cupom
+          );
 
-        items_payload = desconto.itemsComDesconto;
+        items_payload =
+          desconto.itemsComDesconto;
       }
 
-      // Se houver frete, adiciona como item separado no checkout.
+      // Frete é cobrado integralmente e separado dos produtos.
       if (frete_valor > 0) {
         items_payload.push({
           quantity: 1,
-          price: Math.round(frete_valor * 100),
-          description: 'Frete / Entrega'
+
+          price:
+            Math.round(
+              frete_valor * 100
+            ),
+
+          description:
+            'Frete / Entrega'
         });
       }
 
@@ -210,8 +280,21 @@ export function criarHandlerPagamento(
         process.env.SITE_URL ||
         'https://www.ijprint26.com';
 
+      let siteUrl;
+
+      try {
+        siteUrl =
+          new URL(
+            siteUrl_infinite
+          );
+      } catch {
+        throw new Error(
+          'Configure SITE_URL com uma URL válida.'
+        );
+      }
+
       if (
-        new URL(siteUrl_infinite).protocol !== 'https:'
+        siteUrl.protocol !== 'https:'
       ) {
         throw new Error(
           'Configure SITE_URL com HTTPS.'
@@ -223,31 +306,51 @@ export function criarHandlerPagamento(
 
       const body = {
         handle,
-        order_nsu: pedido_id.toString(),
+
+        order_nsu:
+          pedido_id.toString(),
+
         redirect_url:
           `${siteUrl_infinite}/pedido-confirmado?pedido_id=${pedido_id}`,
-        webhook_url: webhookUrl_infinite,
+
+        webhook_url:
+          webhookUrl_infinite,
+
         customer: {
           name: clienteNome,
           email: clienteEmail
         },
-        items: items_payload
+
+        items:
+          items_payload
       };
 
-      // O pedido deve existir antes de qualquer cobrança externa.
-      const totalCentavos = items_payload.reduce(
-        (acc, curr) =>
-          acc + curr.price * curr.quantity,
-        0
-      );
+      /*
+       * O preço sempre é calculado no servidor
+       * a partir do catálogo confiável.
+       */
+      const totalCentavos =
+        items_payload.reduce(
+          (total, item) =>
+            total +
+            item.price *
+            item.quantity,
+          0
+        );
 
       if (
-        !Number.isSafeInteger(totalCentavos) ||
+        !Number.isSafeInteger(
+          totalCentavos
+        ) ||
         totalCentavos < 1
       ) {
         throw Object.assign(
-          new Error('Total inválido.'),
-          { status: 400 }
+          new Error(
+            'Total inválido.'
+          ),
+          {
+            status: 400
+          }
         );
       }
 
@@ -262,57 +365,100 @@ export function criarHandlerPagamento(
         .select('*')
         .in(
           'id',
-          itens.map((i) => i.id)
+          itens.map(
+            (item) => item.id
+          )
         );
 
-      if (erroCatalogo || !catalogo) {
+      if (
+        erroCatalogo ||
+        !catalogo
+      ) {
         throw new Error(
           'Catálogo indisponível.'
         );
       }
 
-      const itensCanonicos = itens.map(
-        (item, index) => {
-          const produto = catalogo.find(
-            (p) => p.id === item.id
-          );
+      const itensCanonicos =
+        itens.map(
+          (item, index) => {
+            const produto =
+              catalogo.find(
+                (produtoCatalogo) =>
+                  produtoCatalogo.id ===
+                  item.id
+              );
 
-          return {
-            id: item.id,
-            nome: itensSeguros[index].description,
-            preco:
-              itensSeguros[index].price / 100,
-            quantidade: item.quantidade,
+            if (!produto) {
+              throw Object.assign(
+                new Error(
+                  'Produto não encontrado no catálogo.'
+                ),
+                {
+                  status: 400
+                }
+              );
+            }
 
-            opcaoEscolhida:
-              item.opcaoEscolhida || null,
+            return {
+              id:
+                item.id,
 
-            modoCompra:
-              item.modoCompra || null,
+              nome:
+                itensSeguros[index]
+                  .description,
 
-            personalizacao:
-              typeof item.personalizacao === 'string'
-                ? item.personalizacao.slice(0, 5000)
-                : null,
+              preco:
+                itensSeguros[index]
+                  .price / 100,
 
-            parametrosMultiplos:
-              Array.isArray(
-                item.parametrosMultiplos
-              )
-                ? item.parametrosMultiplos.map(
-                  (v) =>
-                    String(v).slice(0, 500)
+              quantidade:
+                item.quantidade,
+
+              opcaoEscolhida:
+                item.opcaoEscolhida ||
+                null,
+
+              modoCompra:
+                item.modoCompra ||
+                null,
+
+              personalizacao:
+                typeof item.personalizacao ===
+                  'string'
+                  ? item.personalizacao.slice(
+                    0,
+                    5000
+                  )
+                  : null,
+
+              parametrosMultiplos:
+                Array.isArray(
+                  item.parametrosMultiplos
                 )
-                : null,
+                  ? item.parametrosMultiplos.map(
+                    (valor) =>
+                      String(
+                        valor
+                      ).slice(
+                        0,
+                        500
+                      )
+                  )
+                  : null,
 
-            personalizacoes:
-              item.personalizacoes || null,
+              personalizacoes:
+                item.personalizacoes ||
+                null,
 
-            dimensoes: produto.dimensoes,
-            peso_gramas: produto.peso_gramas
-          };
-        }
-      );
+              dimensoes:
+                produto.dimensoes,
+
+              peso_gramas:
+                produto.peso_gramas
+            };
+          }
+        );
 
       const enderecoCanonico =
         modo_entrega === 'envio'
@@ -326,78 +472,135 @@ export function criarHandlerPagamento(
               'uf',
               'cep',
               'complemento'
-            ].map((k) => [
-              k,
-              String(
-                endereco[k] || ''
-              ).slice(0, 200)
-            ])
+            ].map(
+              (campo) => [
+                campo,
+                String(
+                  endereco[campo] ||
+                  ''
+                ).slice(
+                  0,
+                  200
+                )
+              ]
+            )
           )
           : {
             logradouro:
-              modo_entrega === 'retirada'
+              modo_entrega ===
+                'retirada'
                 ? 'Quadra da Guararema'
                 : 'Pagamento Online',
-            cidade: 'Alegre',
-            uf: 'ES',
-            cep: '-'
+
+            cidade:
+              'Alegre',
+
+            uf:
+              'ES',
+
+            cep:
+              '-'
           };
 
+      const checkout_hash =
+        createHash('sha256')
+          .update(
+            JSON.stringify({
+              user:
+                user.id,
+
+              itens:
+                itensCanonicos,
+
+              endereco:
+                enderecoCanonico,
+
+              frete_valor,
+
+              freteServico,
+
+              modo_entrega,
+
+              cupom:
+                cupom?.codigo
+            })
+          )
+          .digest('hex');
+
       const novoPedido = {
-        id: pedido_id,
-        user_id: user.id,
+        id:
+          pedido_id,
+
+        user_id:
+          user.id,
 
         endereco: {
           ...enderecoCanonico,
-          cliente_nome: clienteNome,
-          cliente_email: clienteEmail
+
+          cliente_nome:
+            clienteNome,
+
+          cliente_email:
+            clienteEmail
         },
 
-        itens: itensCanonicos,
+        itens:
+          itensCanonicos,
+
         frete_valor,
-        frete_servico: freteServico,
+
+        frete_servico:
+          freteServico,
+
         modo_entrega,
-        pagamento_handle: handle,
 
-        checkout_hash: createHash('sha256')
-          .update(
-            JSON.stringify({
-              user: user.id,
-              itens: itensCanonicos,
-              endereco: enderecoCanonico,
-              frete_valor,
-              freteServico,
-              modo_entrega,
-              cupom: cupom?.codigo
-            })
-          )
-          .digest('hex'),
+        pagamento_handle:
+          handle,
 
-        total: valorTotalSeguro,
-        status: 'Aguardando Pagamento',
+        checkout_hash,
+
+        total:
+          valorTotalSeguro,
+
+        status:
+          'Aguardando Pagamento',
 
         ...(cupom
           ? {
-            cupom_codigo: cupom.codigo,
+            cupom_codigo:
+              cupom.codigo,
+
             desconto:
-              desconto.descontoCentavos / 100
+              desconto
+                .descontoCentavos /
+              100
           }
           : {})
       };
 
-      const existente = await supabase
-        .from('pedidos')
-        .select('id,link_pagamento')
-        .eq('user_id', user.id)
-        .eq(
-          'checkout_hash',
-          novoPedido.checkout_hash
-        )
-        .eq(
-          'status',
-          'Aguardando Pagamento'
-        )
-        .maybeSingle();
+      /*
+       * Evita gerar múltiplos links para o mesmo
+       * carrinho enquanto já há um pedido pendente.
+       */
+      const existente =
+        await supabase
+          .from('pedidos')
+          .select(
+            'id,link_pagamento'
+          )
+          .eq(
+            'user_id',
+            user.id
+          )
+          .eq(
+            'checkout_hash',
+            checkout_hash
+          )
+          .eq(
+            'status',
+            'Aguardando Pagamento'
+          )
+          .maybeSingle();
 
       if (existente.error) {
         throw new Error(
@@ -407,20 +610,30 @@ export function criarHandlerPagamento(
 
       if (existente.data) {
         if (
-          existente.data.link_pagamento
+          existente.data
+            .link_pagamento
         ) {
-          return res.status(200).json({
-            pedido_id: existente.data.id,
-            link_pagamento:
-              existente.data.link_pagamento,
-            status: 'pending'
-          });
+          return res
+            .status(200)
+            .json({
+              pedido_id:
+                existente.data.id,
+
+              link_pagamento:
+                existente.data
+                  .link_pagamento,
+
+              status:
+                'pending'
+            });
         }
 
-        return res.status(409).json({
-          error:
-            'Pedido em processamento. Aguarde a conciliação antes de pagar novamente.'
-        });
+        return res
+          .status(409)
+          .json({
+            error:
+              'Pedido em processamento. Aguarde a conciliação antes de pagar novamente.'
+          });
       }
 
       if (cupom) {
@@ -430,25 +643,37 @@ export function criarHandlerPagamento(
         );
       }
 
+      /*
+       * O pedido é persistido ANTES de chamar
+       * qualquer API financeira externa.
+       */
       const {
         error: insertError
       } = await supabase
         .from('pedidos')
-        .insert(novoPedido);
+        .insert(
+          novoPedido
+        );
 
       if (insertError) {
         if (
-          insertError.code === '23505'
+          insertError.code ===
+          '23505'
         ) {
           const {
             data: anterior
           } = await supabase
             .from('pedidos')
-            .select('link_pagamento')
-            .eq('user_id', user.id)
+            .select(
+              'id,link_pagamento'
+            )
+            .eq(
+              'user_id',
+              user.id
+            )
             .eq(
               'checkout_hash',
-              novoPedido.checkout_hash
+              checkout_hash
             )
             .eq(
               'status',
@@ -457,19 +682,30 @@ export function criarHandlerPagamento(
             .maybeSingle();
 
           if (
-            anterior?.link_pagamento
+            anterior
+              ?.link_pagamento
           ) {
-            return res.status(200).json({
-              link_pagamento:
-                anterior.link_pagamento,
-              status: 'pending'
-            });
+            return res
+              .status(200)
+              .json({
+                pedido_id:
+                  anterior.id,
+
+                link_pagamento:
+                  anterior
+                    .link_pagamento,
+
+                status:
+                  'pending'
+              });
           }
 
-          return res.status(409).json({
-            error:
-              'Pagamento já está em processamento. Aguarde a conciliação antes de tentar novamente.'
-          });
+          return res
+            .status(409)
+            .json({
+              error:
+                'Pagamento já está em processamento. Aguarde a conciliação antes de tentar novamente.'
+            });
         }
 
         throw new Error(
@@ -487,69 +723,209 @@ export function criarHandlerPagamento(
           cupom.codigo
         );
 
-        cupomReservado = true;
+        cupomReservado =
+          true;
       }
 
       /*
-       * A partir deste ponto a InfinitePay pode ter criado
-       * um link mesmo se houver timeout/falha de rede.
-       * Portanto a operação passa a ser considerada ambígua.
+       * Depois deste ponto a requisição já pode ter
+       * alcançado a InfinitePay.
+       *
+       * Timeout ou resposta inesperada é tratado como
+       * situação potencialmente ambígua.
        */
-      linkPodeExistir = true;
+      linkPodeExistir =
+        true;
 
-      const response = await fetchPagamento(
-        'https://api.checkout.infinitepay.io/links',
+      const response =
+        await fetchPagamento(
+          'https://api.checkout.infinitepay.io/links',
+          {
+            method:
+              'POST',
+
+            headers: {
+              'Content-Type':
+                'application/json'
+            },
+
+            body:
+              JSON.stringify(
+                body
+              ),
+
+            signal:
+              AbortSignal.timeout(
+                10000
+              )
+          }
+        );
+
+      const contentType =
+        response.headers
+          ?.get?.(
+            'content-type'
+          ) || null;
+
+      /*
+       * Log seguro:
+       * não mostra token, CPF, e-mail,
+       * payload do cliente nem URL completa do checkout.
+       */
+      console.log(
+        '[Pagamento] InfinitePay HTTP:',
         {
-          method: 'POST',
+          status:
+            response.status,
 
-          headers: {
-            'Content-Type':
-              'application/json'
-          },
+          ok:
+            response.ok,
 
-          body: JSON.stringify(body),
-
-          signal:
-            AbortSignal.timeout(10000)
+          contentType
         }
       );
 
       if (!response.ok) {
         /*
-         * Erros 4xx definitivos, exceto timeout 408,
-         * significam que a operadora recusou o payload
-         * e portanto o link não deve existir.
+         * 4xx definitivos significam que o payload
+         * foi recusado e um checkout não deve ter
+         * sido criado.
+         *
+         * 408 continua sendo ambíguo.
          */
         if (
-          response.status >= 400 &&
-          response.status < 500 &&
-          response.status !== 408
+          response.status >=
+          400 &&
+          response.status <
+          500 &&
+          response.status !==
+          408
         ) {
-          linkPodeExistir = false;
+          linkPodeExistir =
+            false;
         }
+
+        let mensagemOperadora =
+          null;
+
+        try {
+          const erroBody =
+            await response.json();
+
+          if (
+            typeof erroBody
+              ?.message ===
+            'string'
+          ) {
+            mensagemOperadora =
+              erroBody.message.slice(
+                0,
+                300
+              );
+          } else if (
+            typeof erroBody
+              ?.error ===
+            'string'
+          ) {
+            mensagemOperadora =
+              erroBody.error.slice(
+                0,
+                300
+              );
+          }
+        } catch {
+          // O corpo de erro pode não ser JSON.
+        }
+
+        console.error(
+          '[Pagamento] InfinitePay recusou criação:',
+          {
+            status:
+              response.status,
+
+            mensagem:
+              mensagemOperadora
+          }
+        );
 
         throw new Error(
           'A operadora não aceitou a criação do pagamento.'
         );
       }
 
-      const data = await response.json();
-      const link_pagamento = data?.url;
+      /*
+       * A documentação da InfinitePay define uma
+       * resposta JSON como:
+       *
+       * {
+       *   "url": "https://checkout.infinitepay.com.br/..."
+       * }
+       */
+      let data;
+
+      try {
+        data =
+          await response.json();
+      } catch {
+        console.error(
+          '[Pagamento] InfinitePay retornou sucesso, mas o corpo não é JSON válido.',
+          {
+            status:
+              response.status,
+
+            contentType
+          }
+        );
+
+        throw new Error(
+          'Resposta inválida da operadora.'
+        );
+      }
+
+      const camposResposta =
+        data &&
+          typeof data ===
+          'object' &&
+          !Array.isArray(data)
+          ? Object.keys(data)
+          : [];
+
+      console.log(
+        '[Pagamento] InfinitePay JSON:',
+        {
+          tipo:
+            Array.isArray(data)
+              ? 'array'
+              : typeof data,
+
+          campos:
+            camposResposta,
+
+          urlTipo:
+            typeof data?.url
+        }
+      );
 
       /*
-       * A InfinitePay atualmente retorna links no domínio:
-       *
-       * https://checkout.infinitepay.com.br/...
-       *
-       * Mantemos validação estrita:
-       * - precisa ser string;
-       * - precisa ser URL válida;
-       * - precisa usar HTTPS;
-       * - hostname precisa ser exatamente o checkout oficial.
+       * Não tentamos adivinhar outros campos aqui.
+       * Segundo a documentação oficial, o campo
+       * esperado chama-se "url".
        */
-      if (
-        typeof link_pagamento !== 'string'
-      ) {
+      const linkBruto =
+        typeof data?.url ===
+          'string'
+          ? data.url.trim()
+          : '';
+
+      if (!linkBruto) {
+        console.error(
+          '[Pagamento] InfinitePay não retornou campo url válido.',
+          {
+            campos:
+              camposResposta
+          }
+        );
+
         throw new Error(
           'Resposta inválida da operadora.'
         );
@@ -559,30 +935,80 @@ export function criarHandlerPagamento(
 
       try {
         urlPagamento =
-          new URL(link_pagamento);
+          new URL(
+            linkBruto
+          );
       } catch {
+        console.error(
+          '[Pagamento] InfinitePay retornou URL malformada.'
+        );
+
         throw new Error(
           'Resposta inválida da operadora.'
         );
       }
 
+      /*
+       * Nunca gravamos o checkout completo no log.
+       * Apenas protocolo e hostname são suficientes
+       * para diagnosticar a integração.
+       */
+      console.log(
+        '[Pagamento] InfinitePay URL:',
+        {
+          protocol:
+            urlPagamento.protocol,
+
+          hostname:
+            urlPagamento.hostname
+        }
+      );
+
+      /*
+       * Host atualmente documentado pela InfinitePay.
+       */
       if (
-        urlPagamento.protocol !== 'https:' ||
+        urlPagamento.protocol !==
+        'https:' ||
         urlPagamento.hostname !==
         'checkout.infinitepay.com.br'
       ) {
+        console.error(
+          '[Pagamento] Host de checkout inesperado:',
+          {
+            protocol:
+              urlPagamento.protocol,
+
+            hostname:
+              urlPagamento.hostname
+          }
+        );
+
         throw new Error(
           'Resposta inválida da operadora.'
         );
       }
 
-      const salvo = await supabase
-        .from('pedidos')
-        .update({
-          link_pagamento,
-          checkout_estado: 'pronto'
-        })
-        .eq('id', pedido_id);
+      const link_pagamento =
+        urlPagamento.toString();
+
+      /*
+       * Só depois de validar a resposta externa
+       * o link passa a ser considerado pronto.
+       */
+      const salvo =
+        await supabase
+          .from('pedidos')
+          .update({
+            link_pagamento,
+
+            checkout_estado:
+              'pronto'
+          })
+          .eq(
+            'id',
+            pedido_id
+          );
 
       if (salvo.error) {
         throw new Error(
@@ -590,37 +1016,59 @@ export function criarHandlerPagamento(
         );
       }
 
-      // Notificações são persistidas por trigger
-      // e enviadas pelo worker.
+      return res
+        .status(200)
+        .json({
+          pedido_id,
 
-      return res.status(200).json({
-        pedido_id,
-        link_pagamento,
-        status: 'pending'
-      });
+          link_pagamento,
+
+          status:
+            'pending'
+        });
     } catch (error) {
+      /*
+       * Só libera outro checkout quando sabemos
+       * que nenhuma cobrança pode existir.
+       */
       if (
         pedidoCriado &&
         !linkPodeExistir
       ) {
-        /*
-         * Nunca apaga o pedido.
-         * Só libera uma nova tentativa quando sabemos
-         * que não existe link pagável.
-         */
-        await supabase
+        const {
+          error: falhaAtualizacao
+        } = await supabase
           .from('pedidos')
           .update({
-            checkout_hash: null,
-            checkout_estado: 'falhou'
+            checkout_hash:
+              null,
+
+            checkout_estado:
+              'falhou'
           })
-          .eq('id', pedido_id)
+          .eq(
+            'id',
+            pedido_id
+          )
           .eq(
             'status',
             'Aguardando Pagamento'
           );
+
+        if (
+          falhaAtualizacao
+        ) {
+          console.error(
+            '[Pagamento] Falha ao registrar checkout como falho:',
+            falhaAtualizacao.message
+          );
+        }
       }
 
+      /*
+       * Reserva de cupom só é liberada quando
+       * sabemos que nenhum link pagável existe.
+       */
       if (
         cupomReservado &&
         !linkPodeExistir
@@ -628,28 +1076,37 @@ export function criarHandlerPagamento(
         const {
           error: releaseError
         } = await supabase
-          .from('cupons_reservados')
+          .from(
+            'cupons_reservados'
+          )
           .delete()
-          .eq('pedido_id', pedido_id);
+          .eq(
+            'pedido_id',
+            pedido_id
+          );
 
         if (releaseError) {
           console.error(
             '[Cupom] Falha ao liberar reserva:',
-            releaseError
+            releaseError.message
           );
         }
       }
 
       console.error(
         '[Pagamento] Falha ao criar cobrança:',
-        error?.message || error
+        error?.message ||
+        error
       );
 
       return res
-        .status(error.status || 500)
+        .status(
+          error?.status ||
+          500
+        )
         .json({
           error:
-            error.message ||
+            error?.message ||
             'Erro ao gerar cobrança'
         });
     }
@@ -664,10 +1121,18 @@ export default async function handler(
     return await criarHandlerPagamento(
       bancoServidor()
     )(req, res);
-  } catch {
-    return res.status(503).json({
-      error:
-        'Pagamento indisponível.'
-    });
+  } catch (error) {
+    console.error(
+      '[Pagamento] Falha ao inicializar handler:',
+      error?.message ||
+      error
+    );
+
+    return res
+      .status(503)
+      .json({
+        error:
+          'Pagamento indisponível.'
+      });
   }
 }
