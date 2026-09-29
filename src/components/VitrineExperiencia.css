@@ -57,9 +57,12 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
  .peca-pronta:first-child img { aspect-ratio:16/9; }
 }
 
-/* Entrada curta: todo o conteúdo aparece sem depender de animações. */
-.entrada-loja { min-height:100svh; padding:80px 16px 20px; display:grid; place-items:center; }
-.aviso-compra { width:100%; max-width:700px; padding:clamp(20px,3vw,32px); border:1px solid theme('colors.sand.700'); border-radius:16px; background:linear-gradient(140deg,theme('colors.sand.900'),#18181b 48%); }
+/* Abertura editorial com catálogo vivo de pronta entrega. */
+.entrada-loja { box-sizing:border-box; height:100svh; min-height:0; padding:76px 16px 12px; display:grid; place-items:center; overflow:hidden; }
+.entrada-carrossel { position:relative; isolation:isolate; width:min(1180px,100%); height:100%; min-height:0; display:flex; align-items:center; overflow:hidden; border:1px solid rgb(202 215 206 / .35); border-radius:22px; background:#18201b; box-shadow:0 28px 90px rgb(0 0 0 / .46); }
+.entrada-fundo { position:absolute; z-index:-3; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; animation:entrada-fade .55s ease both; }
+.entrada-sombra { position:absolute; z-index:-2; inset:0; background:linear-gradient(90deg,rgb(8 10 9 / .94) 0%,rgb(8 10 9 / .76) 38%,rgb(8 10 9 / .18) 74%),linear-gradient(0deg,rgb(8 10 9 / .5),transparent 45%); }
+.aviso-compra,.entrada-peca { width:min(610px,calc(100% - 120px)); margin:clamp(28px,6vw,72px); padding:clamp(20px,3vw,32px); border:1px solid rgb(202 215 206 / .34); border-radius:16px; background:linear-gradient(140deg,rgb(25 31 27 / .9),rgb(12 13 12 / .82)); box-shadow:0 20px 60px rgb(0 0 0 / .34); backdrop-filter:blur(12px); }
 .aviso-marca { display:flex; align-items:center; gap:10px; color:theme('colors.sand.300'); font-size:14px; }
 .aviso-compra h1 { font-size:clamp(26px,4vw,38px); line-height:1.2; margin:12px 0; }
 .entrada-resumo { color:#e4e4e7; font-size:16px; line-height:1.5; }
@@ -69,9 +72,23 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
 .entrada-opcoes dt { font-weight:600; font-size:16px; line-height:1.4; color:theme('colors.sand.200'); }
 .entrada-opcoes dt a { text-decoration:underline; text-underline-offset:4px; }
 .entrada-opcoes dd { font-size:15px; line-height:1.5; margin-top:3px; color:#d4d4d8; }
-.entrada-nota { color:#d4d4d8; font-size:14px; line-height:1.5; margin-bottom:18px; }
 .entrada-prosseguir { display:flex; justify-content:center; align-items:center; gap:10px; min-height:48px; padding:12px; border-radius:6px; background:theme('colors.sand.400'); color:#09090b; font-weight:600; font-size:15px; }
 .entrada-prosseguir:hover { background:theme('colors.sand.300'); }
+.entrada-peca { align-self:flex-end; width:min(470px,calc(100% - 120px)); color:#eff4f0; }
+.entrada-peca .vitrine-eyebrow { margin:18px 0 8px; color:#cad7ce; }
+.entrada-peca h2 { font-size:clamp(2rem,5vw,4rem); line-height:1.05; text-wrap:balance; }
+.entrada-peca > p:not(.vitrine-eyebrow) { max-width:36rem; margin:16px 0 24px; color:#d4d4d8; line-height:1.65; }
+.entrada-status { display:inline-flex; align-items:center; gap:8px; padding:7px 11px; border:1px solid #8ea493; border-radius:999px; background:rgb(38 55 46 / .8); color:#e2eee6; font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; }
+.entrada-status::before { content:''; width:7px; height:7px; border-radius:50%; background:#9de5ad; box-shadow:0 0 12px #9de5ad; }
+.entrada-status.esgotado { border-color:#71717a; background:rgb(39 39 42 / .82); color:#d4d4d8; }
+.entrada-status.esgotado::before { background:#a1a1aa; box-shadow:none; }
+.entrada-controles { position:absolute; right:22px; bottom:22px; display:flex; align-items:center; gap:12px; padding:8px; border:1px solid rgb(255 255 255 / .18); border-radius:999px; background:rgb(9 9 11 / .66); backdrop-filter:blur(12px); }
+.entrada-controles > button { display:grid; width:36px; height:36px; place-items:center; border-radius:50%; color:#f4f4f5; transition:background-color .2s,color .2s; }
+.entrada-controles > button:hover { background:#cad7ce; color:#18201b; }
+.entrada-pontos { display:flex; align-items:center; gap:7px; }
+.entrada-pontos button { width:7px; height:7px; border-radius:999px; background:#a1a1aa; transition:width .25s,background-color .25s; }
+.entrada-pontos button.ativo { width:24px; background:#cad7ce; }
+@keyframes entrada-fade { from { opacity:.45; transform:scale(1.015); } to { opacity:1; transform:scale(1); } }
 .loja-navegacao { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-bottom:24px; font-size:15px; }
 .loja-navegacao a { padding:10px 0; color:theme('colors.sand.200'); text-underline-offset:4px; }
 .loja-navegacao a:hover { text-decoration:underline; }
@@ -83,13 +100,29 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
 .pagina-personalizado .personalizado { margin-top:0; padding-top:20px; }
 .entrada-loja :focus-visible,.loja-navegacao :focus-visible,.catalogo-abas :focus-visible { outline:2px solid theme('colors.sand.300'); outline-offset:4px; }
 @media(max-width:420px) {
- .aviso-compra { padding:18px; }
+ .aviso-compra,.entrada-peca { padding:18px; }
  .entrada-opcoes { gap:12px; margin:16px 0; }
- .entrada-loja { padding-top:76px; padding-bottom:12px; }
+ .entrada-loja { padding:70px 10px 8px; }
+}
+@media(max-width:767px) {
+ .entrada-carrossel { align-items:flex-end; border-radius:16px; }
+ .entrada-fundo { object-position:center top; }
+ .entrada-sombra { background:linear-gradient(0deg,rgb(8 10 9 / .98) 0%,rgb(8 10 9 / .8) 54%,rgb(8 10 9 / .08) 100%); }
+ .aviso-compra,.entrada-peca { width:calc(100% - 24px); margin:clamp(90px,20vh,180px) 12px 70px; max-height:calc(100% - 86px); overflow-y:auto; }
+ .entrada-controles { right:50%; bottom:18px; transform:translateX(50%); }
+}
+@media(max-height:760px) {
+ .aviso-compra,.entrada-peca { margin-block:16px 64px; padding:18px 22px; }
+ .aviso-compra h1 { font-size:clamp(24px,5vh,32px); margin:8px 0; }
+ .entrada-resumo { font-size:14px; }
+ .entrada-opcoes { margin:12px 0; gap:9px; }
+ .entrada-opcoes dt { font-size:14px; }
+ .entrada-opcoes dd { font-size:13px; line-height:1.35; }
+ .entrada-prosseguir { min-height:42px; padding:9px 12px; }
 }
 .vitrine-link { display:inline-flex; align-items:center; gap:.6rem; }
 @media(max-width:767px) { .personalizado { grid-template-columns:1fr; gap:2rem; padding:3rem 0; } }
-@media(prefers-reduced-motion:reduce) { header { transition:none; } }
+@media(prefers-reduced-motion:reduce) { header { transition:none; } .entrada-fundo { animation:none; } }
 /* As duas seleções compartilham a grade e os cards do catálogo. */
 .catalogo-abas { justify-content:center; }
 .catalogo-abas button { font-weight:600; font-size:14px; letter-spacing:.05em; }
