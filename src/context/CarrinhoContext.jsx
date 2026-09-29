@@ -1,3 +1,4 @@
+import { atualizarPrecoProntaEntrega } from '../lib/atualizarPrecosProntaEntrega.js';
 import { apiAutenticada } from '../lib/apiAutenticada';
 import { createContext, useContext, useReducer, useEffect, useState, useCallback } from "react";
 import { useAuth } from "./AuthContext";
@@ -7,6 +8,7 @@ const CarrinhoContext = createContext(null);
 function carrinhoReducer(state, action) {
   switch (action.type) {
     case "ADICIONAR": {
+      action = { ...action, item: atualizarPrecoProntaEntrega(action.item) };
       // Find based on id and opcaoEscolhida
       const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida && !action.item.personalizador3d);
       if (existente) {
@@ -17,7 +19,7 @@ function carrinhoReducer(state, action) {
               ? [...(i.parametrosMultiplos || []), ...action.item.parametrosMultiplos] 
               : i.parametrosMultiplos;
               
-            return { ...i, quantidade: i.quantidade + qtdAdicionada, parametrosMultiplos: novosParametros };
+            return { ...atualizarPrecoProntaEntrega(i), quantidade: i.quantidade + qtdAdicionada, parametrosMultiplos: novosParametros };
           }
           return i;
         });
@@ -52,7 +54,8 @@ export function CarrinhoProvider({ children }) {
     () => {
       try {
         const salvo = localStorage.getItem(STORAGE_KEY_CARRINHO);
-        return salvo ? JSON.parse(salvo) : [];
+        const lista = salvo ? JSON.parse(salvo) : [];
+        return Array.isArray(lista) ? lista.map(atualizarPrecoProntaEntrega) : [];
       } catch {
         return [];
       }

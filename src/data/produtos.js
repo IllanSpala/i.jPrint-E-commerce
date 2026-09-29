@@ -1501,7 +1501,7 @@ export const produtos = [
   },
   {
     ativo: true,
-    id: 78, nome: "Miniatura Jax - Amazing digital Circus", preco: 27.90,
+    id: 78, nome: "Miniatura Jax - Amazing digital Circus", preco: 21.90,
     imagem: "/produtos/MINIATURA_JAX_CIRCUS.png", categoria: "Miniaturas",
     personalizador3d: false, exigePersonalizacao: false,
     descricao: "Miniatura do Jax da série The Amazing Digital Circus, impressas em PLA premium. Aproximadamente 27cm de altura",

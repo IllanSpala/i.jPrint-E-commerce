@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
@@ -7,6 +7,8 @@ export default function CardProduto({ produto }) {
   const { dispatch, setSidebarAberta } = useCarrinho();
   const [currentImgIndex, setCurrentImgIndex] = useState(0);
 
+  const recorteId = useId();
+  const recorte = produto.enquadramento?.split(" ").map(Number);
   const temCarousel = produto.imagens && produto.imagens.length > 1;
 
   function handlePrevImage(e) {
@@ -23,6 +25,7 @@ export default function CardProduto({ produto }) {
 
   function adicionarAoCarrinho(e) {
     e.preventDefault();
+    if (produto.esgotado) return;
     dispatch({ type: "ADICIONAR", item: produto });
     setSidebarAberta(true);
   }
@@ -34,12 +37,17 @@ export default function CardProduto({ produto }) {
     >
       {/* Imagem do produto */}
       <div className="relative overflow-hidden aspect-square group/carousel">
-        {temCarousel ? (
+        {produto.enquadramento ? (
+          <svg viewBox={produto.enquadramento} role="img" aria-label={produto.nome} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+            <defs><clipPath id={recorteId}><rect x={recorte[0]} y={recorte[1]} width={recorte[2]} height={recorte[3]} /></clipPath></defs>
+            <image href={produto.imagem} width="1600" height="900" clipPath={`url(#${recorteId})`} />
+          </svg>
+        ) : temCarousel ? (
           <>
             <img
               src={produto.imagens[currentImgIndex]}
               alt={produto.nome}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className={`w-full h-full ${produto.prontaEntrega ? "object-contain" : "object-cover"} transition-transform duration-500 group-hover:scale-105`}
             />
             <button
               onClick={handlePrevImage}
@@ -68,7 +76,7 @@ export default function CardProduto({ produto }) {
           <img
             src={produto.imagem}
             alt={produto.nome}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className={`w-full h-full ${produto.prontaEntrega ? "object-contain" : "object-cover"} transition-transform duration-500 group-hover:scale-105`}
           />
         )}
         {(produto.exigePersonalizacao || produto.personalizador3d) && (
@@ -81,6 +89,11 @@ export default function CardProduto({ produto }) {
           <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-red-950/90 border border-red-500/40 rounded text-red-400 text-[10px] font-medium tracking-wider uppercase">
             <Tag size={10} />
             Promoção
+          </span>
+        )}
+        {produto.esgotado && (
+          <span className="absolute inset-x-0 bottom-0 bg-zinc-950/90 px-3 py-2 text-center text-xs font-bold uppercase tracking-widest text-zinc-300">
+            Esgotado · item de mostruário
           </span>
         )}
       </div>
@@ -98,7 +111,9 @@ export default function CardProduto({ produto }) {
 
         <div className="mt-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {produto.precoPromocional ? (
+            {produto.esgotado ? (
+              <span className="select-none text-zinc-500 font-bold text-base blur-[5px]" aria-label="Preço indisponível">R$ 000,00</span>
+            ) : produto.precoPromocional ? (
               <>
                 <span className="text-sand-400 font-bold text-base">
                   R$ {produto.precoPromocional.toFixed(2).replace(".", ",")}
@@ -114,7 +129,9 @@ export default function CardProduto({ produto }) {
             )}
           </div>
 
-          {(!produto.exigePersonalizacao && !produto.personalizador3d && (!produto.opcoes || produto.opcoes.length === 0)) ? (
+          {produto.esgotado ? (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Esgotado</span>
+          ) : (!produto.exigePersonalizacao && !produto.personalizador3d && (!produto.opcoes || produto.opcoes.length === 0)) ? (
             <button
               onClick={adicionarAoCarrinho}
               aria-label={`Adicionar ${produto.nome} ao carrinho`}

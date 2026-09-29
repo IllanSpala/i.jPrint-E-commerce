@@ -1,3 +1,4 @@
+import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useState, useRef, useEffect } from "react";
 import { Search, X, MoreVertical } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -8,9 +9,17 @@ import { CATEGORIAS } from '../lib/categorias.js';
 import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
 
+import { prontaEntrega as pecasProntas } from "../data/prontaEntrega";
+import { Link, useSearchParams } from "react-router-dom";
+
 export default function Home() {
+  const [params, setParams] = useSearchParams();
+  const prontaEntrega = params.get("secao") === "pronta-entrega";
   const [produtos, setProdutos] = useState([]);
-  const categorias = ['Todos', ...CATEGORIAS];
+  const [prontas, setProntas] = useState([]);
+  const [carregandoProntas, setCarregandoProntas] = useState(true);
+  const [erroProntas, setErroProntas] = useState(false);
+  const categorias = ['Todos', ...(prontaEntrega ? [...new Set(pecasProntas.map(p => p.categoria))] : CATEGORIAS)];
   const [isLoading, setIsLoading] = useState(true);
 
   const [categoriaAtiva, setCategoriaAtiva] = useState("Todos");
@@ -39,6 +48,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    let montado = true;
+    async function atualizar() {
+      try {
+        const resultado = await carregarProntaEntrega(supabase);
+        if (!montado) return;
+        setProntas((resultado.data || []).filter(produtoAtivo));
+        setErroProntas(Boolean(resultado.error));
+      } catch {
+        if (montado) { setProntas([]); setErroProntas(true); }
+      } finally { if (montado) setCarregandoProntas(false); }
+    }
+    atualizar();
+    window.addEventListener('focus', atualizar);
+    return () => { montado = false; window.removeEventListener('focus', atualizar); };
+  }, [prontaEntrega]);
+
+  useEffect(() => {
     if (buscaAberta) inputRef.current?.focus();
   }, [buscaAberta]);
 
@@ -55,7 +81,19 @@ export default function Home() {
     setTermoBusca("");
   }
 
-  const filtrados = produtos.filter((p) => {
+  useEffect(() => {
+    document.documentElement.dataset.vitrineTema = prontaEntrega ? 'salvia' : 'areia';
+    return () => { delete document.documentElement.dataset.vitrineTema; };
+  }, [prontaEntrega]);
+
+  function mudarSecao(pronta) {
+    setCategoriaAtiva('Todos');
+    setTermoBusca('');
+    setOrdenacao('Padrao');
+    setParams(pronta ? { secao: 'pronta-entrega' } : {});
+  }
+
+  const filtrados = (prontaEntrega ? prontas : produtos).filter((p) => {
     const passaCategoria = categoriaAtiva === "Todos" 
       ? true 
       : (p.categorias || [p.categoria]).includes(categoriaAtiva);
@@ -67,21 +105,24 @@ export default function Home() {
     return passaCategoria && passaBusca;
   });
 
+  const permiteOrdenarPreco = !prontaEntrega || pecasProntas.some(p => Number.isFinite(p.precoPromocional ?? p.preco));
+
   const filtradosOrdenados = (() => {
     // Separa o Pagamento Personalizado dos demais
     const pagPersonalizado = filtrados.filter(p => p.isPagamentoPersonalizado);
     const demais = filtrados.filter(p => !p.isPagamentoPersonalizado);
 
     const demaisOrdenados = [...demais].sort((a, b) => {
-      if (ordenacao === "MenorMaior") {
-        const precoA = a.precoPromocional || a.preco;
-        const precoB = b.precoPromocional || b.preco;
-        return precoA - precoB;
-      }
-      if (ordenacao === "MaiorMenor") {
-        const precoA = a.precoPromocional || a.preco;
-        const precoB = b.precoPromocional || b.preco;
-        return precoB - precoA;
+      if (Boolean(a.esgotado) !== Boolean(b.esgotado)) return a.esgotado ? 1 : -1;
+      if (ordenacao === "NomeAZ") return a.nome.localeCompare(b.nome, 'pt-BR');
+      if (ordenacao === "NomeZA") return b.nome.localeCompare(a.nome, 'pt-BR');
+      if (ordenacao === "MenorMaior" || ordenacao === "MaiorMenor") {
+        const precoA = a.precoPromocional ?? a.preco;
+        const precoB = b.precoPromocional ?? b.preco;
+        // Valores ainda sob consulta ficam no fim em ambos os sentidos.
+        if (!Number.isFinite(precoA)) return Number.isFinite(precoB) ? 1 : 0;
+        if (!Number.isFinite(precoB)) return -1;
+        return ordenacao === "MenorMaior" ? precoA - precoB : precoB - precoA;
       }
 
       if (categoriaAtiva === "Todos") {
@@ -96,12 +137,23 @@ export default function Home() {
   })();
 
   return (
-    <main className="pt-24 pb-16 px-4 max-w-7xl mx-auto">
+    <main className={`pt-24 pb-16 px-4 max-w-7xl mx-auto ${prontaEntrega ? "catalogo-salvia" : ""}`}>
 
       <div className="mb-6 md:mb-8">
         <PromoCarousel />
       </div>
 
+      <div className="catalogo-controles">
+      <nav className="loja-navegacao" aria-label="Navegação da loja">
+        <Link to="/pedido-personalizado" className="pedido-atalho">Pedido personalizado ↗</Link>
+      </nav>
+      <h1 className="sr-only">Catálogo de produtos</h1>
+      <div className="catalogo-abas" aria-label="Tipo de produto">
+        <button type="button" aria-pressed={!prontaEntrega} onClick={() => mudarSecao(false)}>SOB ENCOMENDA</button>
+        <button type="button" aria-pressed={prontaEntrega} className="aba-pronta" onClick={() => mudarSecao(true)}>PRONTA ENTREGA</button>
+      </div>
+      </div>
+      <section id="catalogo" aria-label={prontaEntrega ? "Produtos de pronta entrega" : "Produtos sob encomenda"}>
       {/* Filtros + Busca */}
       <div className="flex items-center gap-3 mb-8 flex-wrap justify-between md:justify-start">
 
@@ -135,14 +187,17 @@ export default function Home() {
         <div className="relative flex items-center gap-2">
           
           <select
+            aria-label="Ordenar catálogo"
             value={ordenacao}
             onChange={(e) => setOrdenacao(e.target.value)}
             className="appearance-none bg-transparent text-zinc-400 hover:text-sand-400 text-xs font-bold uppercase tracking-widest text-center cursor-pointer transition-colors outline-none pr-2 focus:outline-none"
             style={{ textAlignLast: 'center' }}
           >
             <option value="Padrao" className="bg-zinc-950 text-zinc-300">ORDEM PADRÃO</option>
-            <option value="MenorMaior" className="bg-zinc-950 text-zinc-300">MENOR PREÇO</option>
-            <option value="MaiorMenor" className="bg-zinc-950 text-zinc-300">MAIOR PREÇO</option>
+            <option disabled={!permiteOrdenarPreco} value="MenorMaior" className="bg-zinc-950 text-zinc-300">{permiteOrdenarPreco ? 'MENOR PREÇO' : 'MENOR PREÇO (SEM VALORES)'}</option>
+            <option disabled={!permiteOrdenarPreco} value="MaiorMenor" className="bg-zinc-950 text-zinc-300">{permiteOrdenarPreco ? 'MAIOR PREÇO' : 'MAIOR PREÇO (SEM VALORES)'}</option>
+            <option value="NomeAZ" className="bg-zinc-950 text-zinc-300">NOME: A–Z</option>
+            <option value="NomeZA" className="bg-zinc-950 text-zinc-300">NOME: Z–A</option>
           </select>
 
           <div
@@ -161,6 +216,8 @@ export default function Home() {
               type="text"
               value={termoBusca}
               onChange={(e) => setTermoBusca(e.target.value)}
+              aria-label="Buscar produtos"
+              tabIndex={buscaAberta ? 0 : -1}
               placeholder="Buscar produtos..."
               className="bg-transparent text-zinc-200 text-xs placeholder-zinc-500 outline-none px-3 py-1.5 w-full"
               style={{ minWidth: "180px" }}
@@ -200,18 +257,21 @@ export default function Home() {
 
       {/* Grid de produtos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-        {isLoading ? (
+        {(prontaEntrega ? carregandoProntas : isLoading) ? (
           <p className="col-span-full text-center text-zinc-500 py-16">Carregando catálogo...</p>
         ) : filtradosOrdenados.map((produto) => (
           <CardProduto key={produto.id} produto={produto} />
         ))}
       </div>
 
-      {!isLoading && filtrados.length === 0 && (
+      {(prontaEntrega ? !carregandoProntas : !isLoading) && filtrados.length === 0 && (
         <p className="text-center text-zinc-500 py-16">
-          {termoBusca ? `Nenhum produto encontrado para "${termoBusca}".` : "Nenhum produto nesta categoria."}
+          {prontaEntrega && erroProntas ? "Não foi possível carregar a pronta entrega. Tente novamente em instantes." : termoBusca ? `Nenhum produto encontrado para "${termoBusca}".` : "Nenhum produto nesta categoria."}
         </p>
       )}
+
+      </section>
+
 
       {/* Menu Lateral Mobile de Categorias */}
       <div 

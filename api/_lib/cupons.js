@@ -1,3 +1,4 @@
+import { carregarCatalogoCompra } from "./catalogoCompra.js";
 import { produtos as catalogoLocal } from '../../src/data/produtos.js';
 import { produtoAtivo } from '../../src/lib/produtoAtivo.js';
 
@@ -33,9 +34,7 @@ export async function precificarItens(supabase, itens) {
   if (!Array.isArray(itens) || !itens.length || itens.length > 100) {
     throw erroCupom('Carrinho vazio ou inválido.');
   }
-  const { data: produtos, error } = await supabase.from('produtos')
-    .select('*')
-    .in('id', itens.map((item) => item.id));
+  const { data: produtos, error } = await carregarCatalogoCompra(supabase, itens);
   if (error || !produtos) throw erroCupom('Não foi possível conferir os preços dos produtos.', 503);
 
   return itens.map((item) => {

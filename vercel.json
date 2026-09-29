@@ -5,11 +5,7 @@
   "devCommand": "vite --port $PORT",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/(catalogo|pedido-personalizado|produto/.*|login|perfil|admin|pedido-confirmado)",
       "destination": "/index.html"
     }
   ],

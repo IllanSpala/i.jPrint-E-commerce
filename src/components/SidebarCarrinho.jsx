@@ -337,7 +337,7 @@ export default function SidebarCarrinho() {
             <div className="flex flex-col items-center justify-center h-full gap-3 text-zinc-500 px-6 text-center">
               <ShoppingBag size={40} strokeWidth={1} />
               <p className="text-sm">Seu carrinho está vazio.</p>
-              <button onClick={() => setSidebarAberta(false)} className="text-sand-400 text-sm hover:underline">
+              <button onClick={() => { setSidebarAberta(false); navigate("/catalogo"); }} className="text-sand-400 text-sm hover:underline">
                 Explorar produtos
               </button>
             </div>

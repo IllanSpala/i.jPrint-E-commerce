@@ -1,10 +1,20 @@
 import { createClient } from '@supabase/supabase-js';
+import WebSocket from 'ws';
 
 export function bancoServidor() {
+  // O runtime local da Vercel pode iniciar as Functions sem repassar o
+  // .env.local ao processo. Carregamos o arquivo apenas como fallback;
+  // loadEnvFile não sobrescreve variáveis já fornecidas pela hospedagem.
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL)) {
+    try { process.loadEnvFile?.('.env.local'); } catch { /* Produção usa variáveis da Vercel. */ }
+  }
   const url = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) throw Object.assign(new Error('Serviço indisponível: configuração do servidor pendente.'), { status: 503 });
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    realtime: { transport: WebSocket },
+  });
 }
 
 export async function exigirAdmin(db, req) {

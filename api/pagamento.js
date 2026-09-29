@@ -1,3 +1,4 @@
+import { carregarCatalogoCompra } from "./_lib/catalogoCompra.js";
 import { limitarRequisicoes } from './_lib/seguranca.js';
 import { createHash, randomUUID } from 'node:crypto';
 import { hashCarrinho, verificarCotacao } from './_lib/freteSeguro.js';
@@ -343,15 +344,7 @@ export function criarHandlerPagamento(
       const {
         data: catalogo,
         error: erroCatalogo
-      } = await supabase
-        .from('produtos')
-        .select('*')
-        .in(
-          'id',
-          itens.map(
-            (item) => item.id
-          )
-        );
+      } = await carregarCatalogoCompra(supabase, itens);
 
       if (
         erroCatalogo ||

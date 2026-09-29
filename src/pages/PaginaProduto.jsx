@@ -1,15 +1,18 @@
+import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign, Palette, Trash2 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
 import { produtoAtivo } from '../lib/produtoAtivo.js';
+import { prontaEntrega } from "../data/prontaEntrega";
 import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
 
 export default function PaginaProduto() {
   const { id } = useParams();
+  const recorteId = useId();
   const navigate = useNavigate();
   const { dispatch, setSidebarAberta } = useCarrinho();
 
@@ -47,7 +50,22 @@ export default function PaginaProduto() {
     let ativo = true;
     setProduto(null);
     setIsLoading(true);
+    const pecaPronta = prontaEntrega.find(p => p.id === id);
+    if (pecaPronta) document.documentElement.dataset.vitrineTema = 'salvia';
     async function fetchProduto() {
+      if (pecaPronta) {
+        try {
+          const resultado = await carregarProntaEntrega(supabase);
+          if (!ativo) return;
+          const peca = resultado.data?.find(p => p.id === id);
+          if (!resultado.error && produtoAtivo(peca)) {
+            setProduto(peca);
+            setImagemAtual(peca.imagem);
+          }
+        } catch { if (ativo) setProduto(null); }
+        finally { if (ativo) setIsLoading(false); }
+        return;
+      }
       const { data, error } = await supabase.from('produtos').select('*').eq('id', id).maybeSingle();
       if (!ativo) return;
       if (data) {
@@ -74,7 +92,7 @@ export default function PaginaProduto() {
     setOpcaoSelecionada("");
     setVariacaoSelecionada("");
     setPersonalizacoes3d([]);
-    return () => { ativo = false; };
+    return () => { ativo = false; delete document.documentElement.dataset.vitrineTema; };
   }, [id]);
 
 
@@ -90,7 +108,7 @@ export default function PaginaProduto() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-zinc-500">
         <p>Produto não encontrado.</p>
-        <Link to="/" className="text-sand-400 text-sm hover:underline">
+        <Link to="/catalogo" className="text-sand-400 text-sm hover:underline">
           Voltar ao catálogo
         </Link>
       </div>
@@ -108,7 +126,7 @@ export default function PaginaProduto() {
   const exibePromocao = (usandoPersonalizacao3d || (!opcaoAtual?.preco && !variacaoAtual?.preco)) && produto.precoPromocional;
 
   function adicionar() {
-    if (!podeAdicionar) return;
+    if (!podeAdicionar || produto.esgotado) return;
     let itemToAdd;
 
     if (produto.isPagamentoPersonalizado) {
@@ -206,10 +224,10 @@ export default function PaginaProduto() {
 
   return (
     <>
-    <main className={`pt-24 pb-16 px-4 mx-auto ${produto.personalizador3d ? "max-w-6xl" : "max-w-5xl"}`}>
+    <main className={`${produto.prontaEntrega ? "produto-salvia" : ""} pt-24 pb-16 px-4 mx-auto ${produto.personalizador3d ? "max-w-6xl" : "max-w-5xl"}`}>
       {/* Botão voltar */}
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => produto.prontaEntrega ? navigate("/catalogo?secao=pronta-entrega") : navigate(-1)}
         className="flex items-center gap-1.5 text-zinc-500 hover:text-sand-400 text-sm mb-8 transition-colors"
       >
         <ArrowLeft size={15} />
@@ -224,21 +242,28 @@ export default function PaginaProduto() {
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEndHandler}
           >
-            <img
+            {produto.enquadramento ? (
+              <svg viewBox={produto.enquadramento} role="img" aria-label={produto.nome} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                <defs><clipPath id={recorteId}><rect x={produto.enquadramento.split(' ')[0]} y={produto.enquadramento.split(' ')[1]} width={produto.enquadramento.split(' ')[2]} height={produto.enquadramento.split(' ')[3]} /></clipPath></defs>
+                <image href={produto.imagem} width="1600" height="900" clipPath={`url(#${recorteId})`} />
+              </svg>
+            ) : <img
               src={imagemAtual}
               alt={produto.nome}
-              className="w-full h-full object-cover transition-transform duration-500"
-            />
+              className={`w-full h-full ${produto.prontaEntrega ? "object-contain" : "object-cover"} transition-transform duration-500`}
+            />}
 
             {temCarousel && (
               <>
                 <button
+                  aria-label="Foto anterior"
                   onClick={handlePrevImage}
                   className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover/carousel:opacity-100 transition-opacity z-20"
                 >
                   <ChevronLeft size={20} />
                 </button>
                 <button
+                  aria-label="Próxima foto"
                   onClick={handleNextImage}
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 hover:bg-black/80 text-white rounded-full opacity-0 group-hover/carousel:opacity-100 transition-opacity z-20"
                 >
@@ -280,7 +305,20 @@ export default function PaginaProduto() {
           <p className="text-zinc-400 text-sm leading-relaxed">{produto.descricao}</p>
 
           {/* ===== PAGAMENTO PERSONALIZADO: UI Especial ===== */}
-          {produto.isPagamentoPersonalizado ? (
+          {produto.prontaEntrega ? (
+            <div className="mt-auto space-y-4">
+              <span className="inline-block rounded border border-[#8ea493] px-3 py-1 text-sm text-[#cad7ce]">Pronta entrega · peça finalizada</span>
+              {produto.esgotado ? <>
+                <p className="select-none text-zinc-500 font-bold text-3xl blur-[7px]" aria-label="Preço indisponível">R$ 000,00</p>
+                <p className="rounded border border-zinc-700 bg-zinc-900 px-4 py-3 text-center font-semibold uppercase tracking-wider text-zinc-400">Esgotado · item de mostruário</p>
+              </> : <>
+                <p className="text-[#cad7ce] font-bold text-3xl">R$ {produto.preco.toFixed(2).replace('.', ',')}</p>
+                <button type="button" onClick={adicionar} disabled={adicionado} className="w-full flex items-center justify-center gap-2 rounded bg-[#8ea493] hover:bg-[#cad7ce] text-zinc-950 px-5 py-3.5 font-semibold disabled:opacity-70">
+                  <ShoppingCart size={16} />{adicionado ? 'Adicionado!' : 'Adicionar ao carrinho'}
+                </button>
+              </>}
+            </div>
+          ) : produto.isPagamentoPersonalizado ? (
             <>
               <div className="rounded-lg border border-sand-400/30 bg-sand-400/5 p-5 space-y-4 mt-2">
                 <div className="flex items-center gap-2 text-sand-400">

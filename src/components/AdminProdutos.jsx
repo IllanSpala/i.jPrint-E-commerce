@@ -1,3 +1,4 @@
+import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { apiAutenticada } from '../lib/apiAutenticada';
@@ -16,7 +17,9 @@ export default function AdminProdutos() {
     try {
       const { data, error } = await supabase.from('produtos').select('*').order('id');
       if (error) throw new Error('Não foi possível carregar os produtos.');
-      setProdutos(data || []);
+      const prontas = await carregarProntaEntrega(supabase);
+      setProdutos([...(prontas.data || []).filter(produtoAtivo).map(p => ({ ...p, configuracaoPendente: prontas.configuracaoPendente })), ...(data || [])]);
+      if (prontas.error || prontas.configuracaoPendente) setErro('Pronta entrega indisponível. Aplique pronta_entrega_ativos.sql no banco para gerenciar essas peças.');
     } catch (e) { setErro(e.message); }
     finally { setOcupado(false); }
   }
@@ -26,7 +29,7 @@ export default function AdminProdutos() {
     try {
       const res = await apiAutenticada('/api/produto-ativo', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: produto.id, ativo: !produtoAtivo(produto) }),
+        body: JSON.stringify({ id: produto.id, ativo: produto.prontaEntrega ? produto.esgotado : !produtoAtivo(produto) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Falha ao alterar produto.');
@@ -45,12 +48,13 @@ export default function AdminProdutos() {
       <ul className="max-h-96 overflow-y-auto divide-y divide-zinc-800">
         {produtos.map(p => {
           const ativo = produtoAtivo(p);
+          const disponivel = p.prontaEntrega ? !p.esgotado : ativo;
           return <li key={p.id} className="flex items-center justify-between gap-3 py-3">
             <div className="text-sm text-zinc-200">#{p.id} — {p.nome}
-              <p className="text-xs text-zinc-500">{ativo ? 'Ativo' : 'Desativado'}</p>
+              <p className="text-xs text-zinc-500">{p.prontaEntrega ? `Pronta entrega · ${disponivel ? 'Disponível' : 'Esgotado'}` : `Sob encomenda · ${ativo ? 'Ativo' : 'Desativado'}`}</p>
             </div>
-            <button type="button" disabled={ocupado} onClick={() => alternar(p)} className="rounded border border-zinc-700 px-3 py-2 text-sm text-sand-400 disabled:opacity-40 focus-visible:outline focus-visible:outline-2">
-              {ativo ? 'Desativar' : 'Ativar'}
+            <button type="button" disabled={ocupado || p.configuracaoPendente} onClick={() => alternar(p)} className="rounded border border-zinc-700 px-3 py-2 text-sm text-sand-400 disabled:opacity-40 focus-visible:outline focus-visible:outline-2">
+              {p.prontaEntrega ? (disponivel ? 'Remover do estoque' : 'Repor no estoque') : (ativo ? 'Desativar' : 'Ativar')}
             </button>
           </li>;
         })}

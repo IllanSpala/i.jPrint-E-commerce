@@ -1,3 +1,4 @@
+import { carregarCatalogoCompra } from "./_lib/catalogoCompra.js";
 import { limitarRequisicoes } from './_lib/seguranca.js';
 import { bancoServidor } from './_lib/seguranca.js';
 import { precificarItens } from './_lib/cupons.js';
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
     if (authError || !auth?.user) return res.status(401).json({ error: 'Sessão inválida.' });
     await limitarRequisicoes(db, 'frete:' + auth.user.id, 20);
     const precos = await precificarItens(db, itens);
-    const { data: catalogo, error: erroCatalogo } = await db.from('produtos').select('*').in('id', itens.map(i => i.id));
+    const { data: catalogo, error: erroCatalogo } = await carregarCatalogoCompra(db, itens);
     if (erroCatalogo) throw new Error('Catálogo indisponível');
     // Melhor Envio requer medidas mínimas: 1x1x1cm e peso 0.1kg. Vamos mapear nossos itens (em mm/g) para cm/kg
     const products = itens.map((original, index) => {
