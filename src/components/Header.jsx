@@ -1,22 +1,29 @@
 import { ShoppingCart, User, ShieldCheck } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { useAuth } from "../context/AuthContext";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 export default function Header() {
   const { totalItens, setSidebarAberta } = useCarrinho();
-  const { user, isAdmin } = useAuth();
+  const { isAdmin } = useAuth();
+  const ajudaAberta = useLocation().pathname === "/ajuda";
   
 
   return (
     <header className="fixed top-0 left-0 right-0 z-40 bg-zinc-950/95 backdrop-blur border-b border-zinc-800">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between relative">
 
-        {/* Espaço esquerdo (balanceia a logo) */}
-        <div className="w-10" />
+        <Link
+          to={ajudaAberta ? "/catalogo" : "/ajuda"}
+          aria-label={ajudaAberta ? "Fechar ajuda e voltar ao catálogo" : "Ajuda: como comprar"}
+          title={ajudaAberta ? "Voltar ao catálogo" : "Como comprar"}
+          className="w-10 h-10 rounded-full border border-zinc-600 flex items-center justify-center text-sand-300 text-xl font-semibold hover:bg-zinc-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sand-400"
+        >
+          <span aria-hidden="true">{ajudaAberta ? '×' : '?'}</span>
+        </Link>
 
         {/* Logo centralizada — substitua o <div> abaixo por <img src="/logo.png" ... /> */}
-        <Link to="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+        <Link to={ajudaAberta ? "/catalogo" : "/"} className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
           { }
           <img
             src="/logo.png"
@@ -27,7 +34,7 @@ export default function Header() {
         </Link>
 
         {/* Botões direita (Perfil e Carrinho) */}
-        <div className="flex items-center gap-2">
+        {ajudaAberta ? <div className="w-10" /> : <div className="flex items-center gap-2">
           {isAdmin && (
             <Link
               to="/admin"
@@ -59,7 +66,7 @@ export default function Header() {
               </span>
             )}
           </button>
-        </div>
+        </div>}
       </div>
     </header>
   );

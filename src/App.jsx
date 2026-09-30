@@ -24,7 +24,7 @@ function PosicaoDaPagina() {
 }
 function RodapeDaLoja() {
   const { pathname } = useLocation();
-  return pathname === '/' ? null : <Footer />;
+  return pathname === '/ajuda' ? null : <Footer />;
 }
 export default function App() {
   return (
@@ -36,7 +36,8 @@ export default function App() {
             <Header />
             <div className="flex-1">
               <Routes>
-                <Route path="/" element={<Apresentacao />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/ajuda" element={<Apresentacao />} />
                 <Route path="/catalogo" element={<Home />} />
                 <Route path="/pedido-personalizado" element={<PaginaPersonalizado />} />
                 <Route path="/produto/:id" element={<PaginaProduto />} />

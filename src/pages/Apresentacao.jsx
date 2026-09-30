@@ -61,7 +61,7 @@ export default function Apresentacao() {
         <dl className="entrada-opcoes">
           <div><dt>Catálogo sob encomenda</dt><dd>Você escolhe o modelo. Nós produzimos e finalizamos para você.</dd></div>
           <div><dt>Pronta entrega</dt><dd>Peças já impressas e finalizadas, em uma área própria dentro do catálogo.</dd></div>
-          <div><dt><Link to="/pedido-personalizado">Pedido personalizado ↗</Link></dt><dd>Envie uma descrição, fotos, vídeo ou link para avaliarmos seu projeto.</dd></div>
+          <div><dt><Link to="/catalogo">Pedido personalizado ↗</Link></dt><dd>Envie uma descrição, fotos, vídeo ou link para avaliarmos seu projeto.</dd></div>
         </dl>
         <Link to="/catalogo" className="entrada-prosseguir">Prosseguir para o catálogo <ArrowRight size={19} aria-hidden="true" /></Link>
       </section> : <article className="entrada-peca">

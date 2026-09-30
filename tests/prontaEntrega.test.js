@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { produtos } from '../src/data/produtos.js';
 import { prontaEntrega } from '../src/data/prontaEntrega.js';
 import { precificarItens } from '../api/_lib/cupons.js';
 import { carregarCatalogoCompra } from '../api/_lib/catalogoCompra.js';
 
-test('peças prontas têm preço provisório, dados de frete e IDs próprios', () => {
+test('peças prontas têm preço individual, dados de frete e IDs próprios', () => {
   assert.equal(prontaEntrega.length, 4);
   assert.equal(new Set(prontaEntrega.map(p => p.id)).size, 4);
   for (const p of prontaEntrega) {
@@ -15,24 +16,26 @@ test('peças prontas têm preço provisório, dados de frete e IDs próprios', (
   }
 });
 test('preço da peça pronta é calculado no servidor, ignorando valor enviado', async () => {
-  const db = { from(tabela) { assert.equal(tabela, 'pronta_entrega_estados'); return { select: async () => ({ data: prontaEntrega.map(p => ({id:p.id,ativo:true,ativo_admin:null})), error:null }) }; } };
+  const db = { from(tabela) { if (tabela === 'produtos') return { select: () => ({ in: async (_campo, ids) => ({ data: produtos.filter(p => ids.includes(p.id)), error: null }) }) };
+    assert.equal(tabela, 'pronta_entrega_estados'); return { select: async () => ({ data: prontaEntrega.map(p => ({id:p.id,ativo:true,ativo_admin:null})), error:null }) }; } };
   const linhas = await precificarItens(db, [{ id:'pronta-xenonita', preco:0.01, quantidade:2 }]);
   assert.equal(linhas[0].price, Math.round(prontaEntrega.find(p => p.id === 'pronta-xenonita').preco * 100));
   assert.equal(linhas[0].quantity, 2);
   await assert.rejects(precificarItens(db, [{ id:'pronta-xenonita', preco:0.01, quantidade:1, isPagamentoPersonalizado:true }]));
 });
-test('carrinho misto preserva preços do banco e consulta só IDs de encomendas', async () => {
+test('carrinho misto preserva preços do banco e consulta o modelo original uma única vez', async () => {
   let consultados;
   const db = { from: tabela => tabela === 'pronta_entrega_estados' ? { select: async () => ({ data: prontaEntrega.map(p => ({id:p.id,ativo:true})), error:null }) } : ({ select: () => ({ in: async (_campo, ids) => {
     consultados = ids;
-    return {data:[{id:6,nome:'Modelo sob encomenda',ativo:true,preco:99.9}],error:null};
+    return {data:[{id:6,nome:'Modelo sob encomenda',ativo:true,preco:99.9,dimensoes:'120x130x140',peso_gramas:450}],error:null};
   } }) }) };
   const itens=[{id:6,quantidade:1},{id:'pronta-tony',quantidade:1}];
   const precos=await precificarItens(db,itens);
   assert.deepEqual(consultados,[6]);
   assert.deepEqual(precos.map(p=>p.price),[9990,Math.round(prontaEntrega.find(p => p.id === 'pronta-tony').preco * 100)]);
   const {data}=await carregarCatalogoCompra(db,itens);
-  assert.ok(data.find(p=>p.id==='pronta-tony').dimensoes);
+  assert.equal(data.find(p=>p.id==='pronta-tony').dimensoes, '120x130x140');
+  assert.equal(data.find(p=>p.id==='pronta-tony').peso_gramas, 450);
 });
 
 import { carregarProntaEntrega } from '../src/lib/estadoProntaEntrega.js';
@@ -41,6 +44,7 @@ import { alterarProdutoAtivo } from '../api/produto-ativo.js';
 test('remoção do estoque marca como esgotado, bloqueia compra e permite reposição', async () => {
   let estado = { id:'pronta-xenonita', ativo:true, ativo_admin:null };
   const db = { from(tabela) {
+    if (tabela === 'produtos') return { select: () => ({ in: async (_campo, ids) => ({ data: produtos.filter(p => ids.includes(p.id)), error: null }) }) };
     assert.equal(tabela, 'pronta_entrega_estados');
     return {
       select: async () => ({data:[estado],error:null}),
@@ -61,7 +65,7 @@ test('remoção do estoque marca como esgotado, bloqueia compra e permite reposi
   assert.equal((await precificarItens(db,[{id:estado.id,quantidade:1}]))[0].price,Math.round(prontaEntrega.find(p => p.id === estado.id).preco * 100));
 });
 test('falha ou ausência de estado não reativa itens pelo catálogo local', async () => {
-  const db={from:()=>({select:async()=>({data:[],error:null})})};
+  const db={from:tabela=>tabela==='produtos' ? {select:()=>({in:async()=>({data:produtos,error:null})})} : {select:async()=>({data:[],error:null})}};
   const result=await carregarProntaEntrega(db);
   assert.ok(result.data.every(p=>p.esgotado===true));
   assert.ok(result.data.every(p=>p.prod_ativo===true));
@@ -92,4 +96,36 @@ test('carrinho antigo recebe preço atual por peça sem alterar quantidade ou ou
  }
  const encomenda={id:6,preco:123,quantidade:2};
  assert.equal(atualizarPrecoProntaEntrega(encomenda),encomenda);
+});
+
+test('frete de todas as peças prontas usa o modelo original do banco e ignora medidas do cliente', async () => {
+  let idsConsultados;
+  const modelos = prontaEntrega.map((p, i) => ({ id:p.modeloId, dimensoes:`${100+i}x200x300`, peso_gramas:400+i, preco:999, ativo:false }));
+  const db = { from: tabela => tabela === 'pronta_entrega_estados'
+    ? {select:async()=>({data:prontaEntrega.map(p=>({id:p.id,ativo:true})),error:null})}
+    : {select:()=>({in:async(_campo,ids)=>{idsConsultados=ids;return {data:modelos,error:null};}})} };
+  const itens = prontaEntrega.map(p=>({id:p.id,quantidade:2,modeloId:999,dimensoes:'1x1x1',peso_gramas:1}));
+  const {data,error} = await carregarCatalogoCompra(db,itens);
+  assert.equal(error,null);
+  assert.deepEqual(idsConsultados,[80,78,6,18]);
+  assert.equal(data.length,4);
+  data.forEach((p,i)=>{
+    assert.equal(p.dimensoes,modelos[i].dimensoes);
+    assert.equal(p.peso_gramas,modelos[i].peso_gramas);
+    assert.equal(p.preco,prontaEntrega[i].preco);
+    assert.equal(p.ativo,true);
+    assert.equal(p.esgotado,false);
+    assert.equal(p.id,prontaEntrega[i].id);
+  });
+});
+
+test('modelo original ausente ou indisponível impede usar medidas locais desatualizadas', async () => {
+  for (const resposta of [{data:[],error:null},{data:null,error:new Error('offline')}]) {
+    const db = {from:tabela=>tabela==='pronta_entrega_estados'
+      ? {select:async()=>({data:[{id:'pronta-jax',ativo:true}],error:null})}
+      : {select:()=>({in:async()=>resposta})}};
+    const resultado = await carregarCatalogoCompra(db,[{id:'pronta-jax',quantidade:1}]);
+    assert.equal(resultado.data,null);
+    assert.ok(resultado.error);
+  }
 });
