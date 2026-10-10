@@ -1526,7 +1526,7 @@ export const produtos = [
   {
     ativo: true,
     id: 81, nome: 'Busto Marmorizado Personalizado', preco: 89.90,
-    imagem: '/produtos/BUSTO_MARMORIZADO_PERSONALIZADO.png', categorias: ["Bustos", "Personalizados"],
+    imagem: '/produtos/BUSTO_MARMORIZADO_PERSONALIZADO.png', categoria: 'Personalizados', categorias: ["Bustos", "Personalizados"],
     personalizacao3d: false, exigePersonalizacao: true,
     descricao: 'Busto impresso em PLA STONE MARMORIZADO com 15cm de altura, gerado a partir de uma foto enviada pelo cliente. Envia a sua e peça já',
     dimensoes: "110x90x150", peso_gramas: 200
