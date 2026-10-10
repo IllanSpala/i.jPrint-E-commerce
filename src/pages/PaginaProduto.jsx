@@ -310,7 +310,16 @@ export default function PaginaProduto() {
               <span className="inline-block rounded border border-[#8ea493] px-3 py-1 text-sm text-[#cad7ce]">Pronta entrega · peça finalizada</span>
               {produto.esgotado ? <>
                 <p className="select-none text-zinc-500 font-bold text-3xl blur-[7px]" aria-label="Preço indisponível">R$ 000,00</p>
-                <p className="rounded border border-zinc-700 bg-zinc-900 px-4 py-3 text-center font-semibold uppercase tracking-wider text-zinc-400">Esgotado · item de mostruário</p>
+                <div className="rounded border border-zinc-700 bg-zinc-900 px-4 py-3 text-center">
+                  <p className="font-semibold uppercase tracking-wider text-zinc-400">Esgotado · item de mostruário</p>
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/produto/${produto.modeloId}`)}
+                    className="mt-2 text-sm font-bold uppercase tracking-widest text-[#cad7ce] underline decoration-[#8ea493] underline-offset-4 transition-colors hover:text-white"
+                  >
+                    <h2 className="text-base">ENCOMENDE</h2>
+                  </button>
+                </div>
               </> : <>
                 <p className="text-[#cad7ce] font-bold text-3xl">R$ {produto.preco.toFixed(2).replace('.', ',')}</p>
                 <button type="button" onClick={adicionar} disabled={adicionado} className="w-full flex items-center justify-center gap-2 rounded bg-[#8ea493] hover:bg-[#cad7ce] text-zinc-950 px-5 py-3.5 font-semibold disabled:opacity-70">
