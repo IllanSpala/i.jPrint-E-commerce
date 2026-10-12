@@ -10,7 +10,7 @@ import {
   Package, Truck, CreditCard, ChevronDown, ChevronUp,
   ShoppingCart, FileDown, CheckCircle, Clock, XCircle, RefreshCw, Trash2, FileText
 } from "lucide-react";
-import { arquivosPersonalizacao, baixarArquivoPersonalizacao } from "../lib/arquivosPersonalizacao";
+import { arquivosPersonalizacao, baixarArquivoPersonalizacao, baixarAnexoPedido } from "../lib/arquivosPersonalizacao";
 
 // --------------- Componente de Detalhes de Pagamento ---------------
 function PainelPagamento({ pedido }) {
@@ -518,8 +518,16 @@ export default function Admin() {
                           {item.nome}
                           {item.personalizacoes?.length > 0 && <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
                             <p className="text-sm font-semibold">Arquivos para produção</p>
-                            <p className="text-xs text-zinc-400">SVG original do cliente, versão processada e configurações. Importe o SVG no Blender e confira as medidas antes de imprimir.</p>
+                            <p className="text-xs text-zinc-400">Arte original, SVG de produção, configurações e print do resultado aprovado pelo cliente.</p>
+                            <div className="grid grid-cols-2 gap-2">{arquivosPersonalizacao([item]).filter(a => a.dataUrl || a.previewUrl).map(arquivo => <figure key={arquivo.nome} className="rounded border border-zinc-800 bg-zinc-900 p-2"><img src={arquivo.dataUrl || arquivo.previewUrl} alt={arquivo.rotulo} className="h-32 w-full object-contain"/><figcaption className="mt-1 text-[11px] text-zinc-400">{arquivo.rotulo}</figcaption></figure>)}</div>
                             {arquivosPersonalizacao([item]).map(arquivo => <button key={arquivo.nome} onClick={() => baixarArquivoPersonalizacao(arquivo)} className="block text-xs text-sand-300 underline break-all">Baixar {arquivo.nome}</button>)}
+                          </div>}
+                          {item.anexos?.length > 0 && <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
+                            <p className="text-sm font-semibold">Fotos e vídeos enviados pelo cliente</p>
+                            <div className="grid grid-cols-2 gap-2">{item.anexos.map((anexo, anexoIndex) => <div key={`${anexo.nome}-${anexoIndex}`} className="rounded border border-zinc-800 bg-zinc-900 p-2">
+                              {anexo.tipo?.startsWith('image/') ? <img src={anexo.dados} alt={`Referência ${anexo.nome}`} className="h-32 w-full object-contain"/> : <video src={anexo.dados} controls preload="metadata" className="h-32 w-full object-contain"/>}
+                              <button onClick={() => baixarAnexoPedido(anexo)} className="mt-2 block w-full truncate text-left text-xs text-sand-300 underline">Baixar {anexo.nome}</button>
+                            </div>)}</div>
                           </div>}
                           {item.opcaoEscolhida && <span className="text-zinc-500 ml-1">({item.opcaoEscolhida})</span>}
                           {item.exigePersonalizacao && item.personalizacao && (

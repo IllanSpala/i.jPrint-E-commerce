@@ -1,7 +1,7 @@
 import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useId } from "react";
-import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign, Palette, Trash2 } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign, Palette, Trash2, FileUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
 import { produtos as produtosLocais } from "../data/produtos";
@@ -9,6 +9,7 @@ import { normalizarProduto } from "../lib/normalizarProduto";
 import { produtoAtivo } from '../lib/produtoAtivo.js';
 import { prontaEntrega } from "../data/prontaEntrega";
 import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
+import { lerAnexoPedido, validarAnexosPedido, TIPOS_ANEXOS_PEDIDO } from '../lib/anexosPedido.js';
 
 export default function PaginaProduto() {
   const { id } = useParams();
@@ -20,6 +21,8 @@ export default function PaginaProduto() {
   const [isLoading, setIsLoading] = useState(true);
 
   const [personalizacao, setPersonalizacao] = useState("");
+  const [anexos, setAnexos] = useState([]);
+  const [erroAnexos, setErroAnexos] = useState("");
   const [adicionado, setAdicionado] = useState(false);
   const [opcaoSelecionada, setOpcaoSelecionada] = useState("");
   const [variacaoSelecionada, setVariacaoSelecionada] = useState("");
@@ -154,6 +157,7 @@ export default function PaginaProduto() {
         ...(produto.personalizacao3dOpcional ? { personalizador3d: false, modoCompra: "pronto" } : {}),
         precoPromocional: (opcaoAtual?.preco || variacaoAtual?.preco) ? null : produto.precoPromocional,
         personalizacao: produto.exigePersonalizacao ? personalizacao : undefined,
+        anexos: produto.exigePersonalizacao ? anexos : undefined,
         parametrosMultiplos: produto.multiplaPersonalizacao ? parametrosMultiplos : undefined,
         quantidade: produto.multiplaPersonalizacao ? quantidadeLocal : 1,
         opcaoEscolhida: opcaoSelecionada 
@@ -171,6 +175,8 @@ export default function PaginaProduto() {
       setQuantidadeLocal(1);
       setParametrosMultiplos([""]);
       setPersonalizacao("");
+      setAnexos([]);
+      setErroAnexos("");
       setValorCustom("");
     }, 600);
   }
@@ -415,9 +421,26 @@ export default function PaginaProduto() {
                     onChange={(e) => setPersonalizacao(e.target.value)}
                     className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-sand-400/60"
                   />
-                  <p className="text-xs text-zinc-500 italic">
-                    Nota: Fotos e áudios de referência deverão ser enviados diretamente no WhatsApp após a finalização do pedido.
-                  </p>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded border border-dashed border-zinc-600 px-3 py-3 text-sm text-zinc-300 hover:border-sand-400/60">
+                    <FileUp size={16} className="text-sand-400" /> Adicionar fotos ou vídeo (opcional)
+                    <input type="file" className="sr-only" multiple accept={TIPOS_ANEXOS_PEDIDO.join(',')} onChange={async (event) => {
+                      const selecionados = [...event.target.files];
+                      const todos = [...anexos.map(a => ({ type: a.tipo, size: a.tamanho })), ...selecionados];
+                      const erro = validarAnexosPedido(todos);
+                      if (erro) setErroAnexos(erro);
+                      else {
+                        try { const novos = await Promise.all(selecionados.map(lerAnexoPedido)); setAnexos(atuais => [...atuais, ...novos]); setErroAnexos(''); }
+                        catch (e) { setErroAnexos(e.message); }
+                      }
+                      event.target.value = '';
+                    }} />
+                  </label>
+                  <p className="text-xs text-zinc-500">Até 3 arquivos, somando 2 MB. JPG, PNG, WebP, MP4 ou WebM.</p>
+                  {erroAnexos && <p role="alert" className="text-xs text-red-400">{erroAnexos}</p>}
+                  {anexos.length > 0 && <ul className="space-y-2">{anexos.map((anexo, index) => <li key={`${anexo.nome}-${index}`} className="flex items-center justify-between gap-3 rounded bg-zinc-800 px-3 py-2 text-xs">
+                    <span className="min-w-0 truncate text-zinc-300">{anexo.nome}</span>
+                    <button type="button" onClick={() => setAnexos(atuais => atuais.filter((_, i) => i !== index))} className="text-red-300 underline">Remover</button>
+                  </li>)}</ul>}
                 </div>
               )}
 

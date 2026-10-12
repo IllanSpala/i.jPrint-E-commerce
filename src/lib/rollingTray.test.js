@@ -16,12 +16,13 @@ test('rolling tray mantém catálogo híbrido mesmo com registro antigo no banco
 });
 
 test('pedido aceita opção pronta sem SVG somente no produto híbrido', () => {
+  const previewImagem = `data:image/png;base64,${Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]).toString('base64')}`;
   const item = { id: 52, modoCompra: 'pronto', opcaoEscolhida: 'Master Shake', quantidade: 1 };
   assert.equal(validarPersonalizacao(item), null);
   assert.ok(validarPersonalizacao({ ...item, opcaoEscolhida: '' }));
   assert.ok(validarPersonalizacao({ ...item, opcaoEscolhida: 'inexistente' }));
   assert.ok(validarPersonalizacao({ ...item, id: 70 }));
   assert.ok(validarPersonalizacao({ ...item, modoCompra: 'personalizado' }));
-  assert.equal(validarPersonalizacao({ id: 52, modoCompra: 'personalizado', quantidade: 1, personalizacoes: [{ svg: '<svg/>' }] }), null);
-  assert.ok(validarPersonalizacao({ id: 52, modoCompra: 'personalizado', quantidade: 2, personalizacoes: [{ svg: '<svg/>' }] }));
+  assert.equal(validarPersonalizacao({ id: 52, modoCompra: 'personalizado', quantidade: 1, personalizacoes: [{ svg: '<svg/>', previewImagem }] }), null);
+  assert.ok(validarPersonalizacao({ id: 52, modoCompra: 'personalizado', quantidade: 2, personalizacoes: [{ svg: '<svg/>', previewImagem }] }));
 });

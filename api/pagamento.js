@@ -408,6 +408,16 @@ export function criarHandlerPagamento(
                   )
                   : null,
 
+              anexos:
+                produto.exigePersonalizacao && Array.isArray(item.anexos)
+                  ? item.anexos.map((anexo) => ({
+                    nome: String(anexo.nome || 'referencia').slice(0, 180),
+                    tipo: anexo.tipo,
+                    tamanho: Number(anexo.tamanho) || 0,
+                    dados: anexo.dados
+                  }))
+                  : null,
+
               parametrosMultiplos:
                 Array.isArray(
                   item.parametrosMultiplos

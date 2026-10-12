@@ -1530,5 +1530,13 @@ export const produtos = [
     personalizacao3d: false, exigePersonalizacao: true,
     descricao: 'Busto impresso em PLA STONE MARMORIZADO com 15cm de altura, gerado a partir de uma foto enviada pelo cliente. Envia a sua e peça já',
     dimensoes: "110x90x150", peso_gramas: 200
+  },
+  {
+    ativo: true,
+    id: 82, nome: 'Quadro Hueforge Personalizado', preco: 33.90,
+    imagem: '/produtos/HUEFORGE_PERSONALIZADO.png', categoria: 'Personalizados', categorias: ['Personalizados', 'Acessórios'],
+    personalizacao3d: false, exigePersonalizacao: true,
+    descricao: 'Quadro Hueforge personalizado gerado a partir de uma foto enviada pelo cliente, impresso em até 4 cores PLA, contendo 24x24mm',
+    dimensoes: '24x24x2', peso_gramas: 150
   }
 ];

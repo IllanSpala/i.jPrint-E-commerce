@@ -34,7 +34,7 @@ export default function ConversorImagem({ onUsarSvg }) {
       let transparente = false;
       for (let i = 3; i < pixels.data.length; i += 4) if (pixels.data[i] < 128) { transparente = true; break; }
       if (id !== versao.current) return;
-      setFonte({ url: URL.createObjectURL(file), pixels, nome: file.name, formato: png ? 'PNG' : jpg ? 'JPEG' : 'WebP' });
+      setFonte({ url: URL.createObjectURL(file), pixels, nome: file.name, formato: png ? 'PNG' : jpg ? 'JPEG' : 'WebP', arquivoOriginal: canvas.toDataURL('image/webp', 0.82) });
       setConfig(c => ({ ...c, modo: transparente ? 'silhueta' : 'contraste', removerFundo: !transparente }));
     } catch (error) { if (id === versao.current) setErro(error.message || 'Não foi possível abrir a imagem.'); }
     finally { bitmap?.close(); if (id === versao.current) setOcupado(false); }
@@ -79,7 +79,7 @@ export default function ConversorImagem({ onUsarSvg }) {
         <figure><img src={fonte.url} alt="Imagem original" className="w-full h-40 object-contain rounded bg-zinc-200"/><figcaption className="mt-1 text-xs text-zinc-400">Imagem original</figcaption></figure>
         <figure>{resultado ? <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(resultado.svg)}`} alt="Prévia do SVG convertido, desenho preto sobre fundo claro" className="w-full h-40 object-contain rounded bg-zinc-200"/> : <div className="h-40 rounded bg-zinc-950 grid place-items-center text-xs text-zinc-500 text-center px-3">Gere a prévia após ajustar os controles.</div>}<figcaption className="mt-1 text-xs text-zinc-400">Vetor de uma cor · confira furos e detalhes</figcaption></figure>
       </div>
-      {resultado && <button type="button" onClick={() => onUsarSvg(resultado.svg, fonte.nome.replace(/\.[^.]+$/, '') + '.svg', { nomeOriginal: fonte.nome, formatoOriginal: fonte.formato, conversor: 'contornos-monocromaticos-v1', width: resultado.width, height: resultado.height, ...config })} className="rounded bg-sand-400 px-4 py-3 text-sm font-bold text-zinc-950">Aprovar SVG e abrir editor 3D</button>}
+      {resultado && <button type="button" onClick={() => onUsarSvg(resultado.svg, fonte.nome.replace(/\.[^.]+$/, '') + '.svg', { nomeOriginal: fonte.nome, formatoOriginal: fonte.formato, arquivoOriginal: fonte.arquivoOriginal, conversor: 'contornos-monocromaticos-v1', width: resultado.width, height: resultado.height, ...config })} className="rounded bg-sand-400 px-4 py-3 text-sm font-bold text-zinc-950">Aprovar SVG e abrir editor 3D</button>}
     </>}
     {ocupado && !fonte && <p role="status" className="text-sm text-zinc-400">Abrindo imagem…</p>}
     {erro && <p role="alert" className="text-sm text-red-400">{erro}</p>}
