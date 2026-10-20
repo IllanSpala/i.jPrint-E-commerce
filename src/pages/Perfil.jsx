@@ -1,3 +1,4 @@
+import { celularValido, enderecoCompleto } from '../lib/cadastroCompleto';
 import MeusPedidos from '../components/MeusPedidos';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
@@ -104,8 +105,8 @@ export default function Perfil() {
 
   const handleSavePhone = async () => {
     const numbersOnly = phoneInput.replace(/\D/g, '');
-    if (numbersOnly.length < 10 || numbersOnly.length > 11) {
-      alert("Por favor, insira um telefone válido com DDD (Ex: 11999999999).");
+    if (!celularValido(numbersOnly)) {
+      alert("Por favor, insira um celular válido com DDD (Ex: 11999999999).");
       return;
     }
 
@@ -149,6 +150,7 @@ export default function Perfil() {
   const handleSaveAddress = async (e) => {
     e.preventDefault();
 
+    if (!enderecoCompleto(addressForm)) { alert('Preencha rua, número, bairro, cidade, UF válida e CEP de 8 dígitos.'); return; }
     const cepNumbers = addressForm.cep.replace(/\D/g, '');
     if (cepNumbers.length !== 8) {
       alert("Por favor, insira um CEP válido de 8 dígitos.");
@@ -253,6 +255,11 @@ export default function Perfil() {
           <h1 className="text-xl font-bold text-sand-400 tracking-wider">PERFIL</h1>
         </div>
 
+        <div className="rounded-lg border border-sand-400/30 bg-sand-400/5 p-4 text-sm text-zinc-300">
+          Para enviar pedidos, mantenha seu e-mail confirmado, celular com DDD e endereço completo cadastrados. Confira se os dados estão corretos.
+          {!user.email_confirmed_at && <button className="block mt-3 underline text-sand-300" onClick={async () => { const {error} = await supabase.auth.resend({type:'signup',email:user.email}); alert(error ? 'Não foi possível reenviar a confirmação. Tente novamente.' : 'Confira seu e-mail para confirmar sua conta.'); }}>Reenviar confirmação de e-mail</button>}
+          <Link to="/pedido-personalizado" className="block mt-3 underline text-sand-300">Ir para pedido personalizado</Link>
+        </div>
         {/* User Info */}
         <div className="flex items-center gap-4 mt-6">
           <div className="w-14 h-14 bg-zinc-900 rounded-full flex items-center justify-center text-sand-400 text-xl font-bold uppercase border border-zinc-800">

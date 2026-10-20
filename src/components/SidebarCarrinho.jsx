@@ -1,3 +1,4 @@
+import { carregarCadastro } from '../lib/cadastroCompleto';
 import { apiAutenticada } from '../lib/apiAutenticada';
 import { X, Trash2, Plus, Minus, ShoppingBag, CreditCard } from "lucide-react";
 import { useCarrinho } from "../context/CarrinhoContext";
@@ -149,6 +150,12 @@ export default function SidebarCarrinho() {
       alert("Por favor, faça login para finalizar a compra.");
       navigate("/login");
       setSidebarAberta(false);
+      return;
+    }
+
+    try { await carregarCadastro(supabase, user); } catch (error) {
+      alert(error.message);
+      if (error.status === 422) { navigate('/perfil'); setSidebarAberta(false); }
       return;
     }
 

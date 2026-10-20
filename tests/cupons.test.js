@@ -12,12 +12,12 @@ function banco({ comprado = false, reservado = false, indisponivel = false, aute
   const liberados = [];
   return {
     registros, liberados,
-    auth: { getUser: async () => ({ data: { user: autenticado ? { id: 'cliente-1', email: 'teste@example.com' } : null }, error: null }) },
+    auth: { getUser: async () => ({ data: { user: autenticado ? { id: 'cliente-1', email_confirmed_at: '2026-01-01', email: 'teste@example.com' } : null }, error: null }) },
     rpc: async (nome) => ({ data: nome === 'limitar_requisicoes_loja' ? true : reservaResult, error: null }),
     from(tabela) {
       let action = 'select';
       const q = {
-        select() { return q; }, eq() { return q; }, in() { return q; },
+        select() { return q; }, order() { return q; }, eq() { return q; }, in() { return q; },
         update() { return q; },
         insert(v) { action = 'insert'; registros.push(v); return q; },
         delete() { action = 'delete'; liberados.push(tabela); return q; },
@@ -26,6 +26,7 @@ function banco({ comprado = false, reservado = false, indisponivel = false, aute
           let data = null;
           let error = null;
           if (tabela === 'produtos') data = [produto];
+          if (tabela === 'enderecos') data = [{rua:'Rua A',numero:'1',bairro:'Centro',cidade:'São Paulo',uf:'SP',cep:'01001000'}];
           if (tabela === 'perfis') data = { nome: 'Teste', cpf: '52998224725', telefone: '11999999999' };
           if (tabela === 'clientes_com_compra') { data = comprado ? { user_id: 'cliente-1' } : null; error = indisponivel ? new Error('offline') : null; }
           if (tabela === 'cupons_reservados' && action === 'select') data = reservado ? { user_id: 'cliente-1' } : null;

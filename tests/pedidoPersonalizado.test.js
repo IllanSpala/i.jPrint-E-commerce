@@ -20,15 +20,15 @@ test('confere assinatura e renomeia anexos sem reutilizar nome fornecido', () =>
  assert.throws(()=>prepararAnexos([{tipo:'image/png',conteudo:Buffer.from('<html>').toString('base64')}]));
  assert.throws(()=>prepararAnexos([{tipo:'image/png',conteudo:'!invalid'}]));
 });
-async function executar({sent=true,limitError=null,body=dados,method='POST'}={}) {
+async function executar({sent=true,limitError=null,body=dados,method='POST',headers={authorization:'Bearer token'}}={}) {
  let enviado;
- const handler=criarHandler({criarBanco:()=>({}),limitar:async()=>{if(limitError)throw limitError;},enviar:async d=>{enviado=d;return {sent};}});
+ const handler=criarHandler({criarBanco:()=>({auth:{getUser:async()=>({data:{user:{id:'cliente',email:'conta@example.com',email_confirmed_at:'2026-01-01'}}})},from:tabela=>({select:()=>({eq:()=>({single:async()=>({data:{nome:'Cliente',telefone:'11987654321'}}),order:async()=>({data:[{rua:'Rua A',numero:'1',bairro:'Centro',cidade:'São Paulo',uf:'SP',cep:'01001000'}]})})})})}),limitar:async()=>{if(limitError)throw limitError;},enviar:async d=>{enviado=d;return {sent};}});
  const res={status(code){this.code=code;return this;},json(json){this.body=json;return this;}};
- await handler({method,body,headers:{}},res);return {res,enviado};
+ await handler({method,body,headers},res);return {res,enviado};
 }
 test('só confirma quando o provedor aceita e escapa o conteúdo',async()=>{
  const {res,enviado}=await executar({body:{...dados,descricao:'<script>Uma referência de peça</script>'}});
- assert.equal(res.code,200);assert.equal(res.body.ok,true);assert.ok(!enviado.html.includes('<script>'));assert.ok(enviado.idempotencyKey);
+ assert.equal(res.code,200);assert.equal(res.body.ok,true);assert.ok(!enviado.html.includes('<script>'));assert.ok(enviado.idempotencyKey); assert.ok(enviado.html.includes('conta@example.com')); assert.ok(!enviado.html.includes(dados.email)); assert.ok(enviado.html.includes('11987654321'));
  assert.equal((await executar({sent:false})).res.code,503);
 });
 test('limite e validação bloqueiam envio; método inválido não envia',async()=>{
@@ -40,3 +40,5 @@ test('aceita um anexo grande dentro do limite sem estourar a validação',()=>{
  const bytes=Buffer.alloc(2*1024*1024); Buffer.from([137,80,78,71,13,10,26,10]).copy(bytes);
  assert.equal(prepararAnexos([{tipo:'image/png',conteudo:bytes.toString('base64')}]).length,1);
 });
+
+test('pedido personalizado exige autenticação antes do envio',async()=>{ const {res,enviado}=await executar({headers:{}}); assert.equal(res.code,401); assert.equal(enviado,undefined); });

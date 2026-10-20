@@ -1,3 +1,4 @@
+import { carregarCadastro } from '../src/lib/cadastroCompleto.js';
 import { carregarCatalogoCompra } from "./_lib/catalogoCompra.js";
 import { limitarRequisicoes } from './_lib/seguranca.js';
 import { createHash, randomUUID } from 'node:crypto';
@@ -99,6 +100,9 @@ export function criarHandlerPagamento(
           'Acesso negado: Token inválido ou expirado'
       });
     }
+
+    try { await carregarCadastro(supabase, user); }
+    catch (error) { return res.status(error.status || 503).json({error:error.message}); }
 
     const {
       data: perfilDb

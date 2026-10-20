@@ -11,19 +11,20 @@ import { produtos } from '../src/data/produtos.js';
 import { criarHandlerPagamento } from '../api/pagamento.js';
 
 const resposta = () => ({ code: 200, status(c) { this.code = c; return this; }, json(v) { this.body = v; return this; } });
-function banco({ admin = false, autenticado = true, total = 100, status = 'Aguardando Pagamento', produto = { id: 10001, nome: 'Peça', preco: 100 } } = {}) {
+function banco({ cadastroIncompleto = false, admin = false, autenticado = true, total = 100, status = 'Aguardando Pagamento', produto = { id: 10001, nome: 'Peça', preco: 100 } } = {}) {
   const db = { pedido: { id: 'pedido-1', total, status, pagamento_handle: 'loja-teste' }, mudancas: [], consultas: [],
-    auth: { getUser: async () => ({ data: { user: autenticado ? { id: 'cliente-1', email: 'teste@example.invalid' } : null } }) },
+    auth: { getUser: async () => ({ data: { user: autenticado ? { id: 'cliente-1', email_confirmed_at: '2026-01-01', email: 'teste@example.invalid' } : null } }) },
     rpc: async () => ({ data: true }),
     from(tabela) {
       let valor; let acao = 'select'; const filtros = [];
-      const q = { select() { return q; }, eq(k,v) { filtros.push([k,v]); return q; }, in() { return q; }, maybeSingle() { return q; }, single() { return q; },
+      const q = { select() { return q; }, order() { return q; }, eq(k,v) { filtros.push([k,v]); return q; }, in() { return q; }, maybeSingle() { return q; }, single() { return q; },
         update(v) { valor = v; acao = 'update'; return q; }, insert(v) { valor = v; acao = 'insert'; return q; },
         then(resolve, reject) {
           db.consultas.push({ tabela, acao, filtros });
           let data = null, error = null;
           if (tabela === 'loja_admins') data = admin ? { user_id: 'cliente-1' } : null;
           if (tabela === 'produtos') data = [produto];
+          if (tabela === 'enderecos') data = cadastroIncompleto ? [] : [{rua:'Rua A',numero:'1',bairro:'Centro',cidade:'São Paulo',uf:'SP',cep:'01001000'}];
           if (tabela === 'perfis') data = { nome: 'Teste', cpf: '52998224725', telefone: '11999999999' };
           if (tabela === 'pedidos') {
             if (acao === 'insert') { db.pedido = valor; db.mudancas.push(valor); }
@@ -132,4 +133,10 @@ test('pedido legado sem identificação segura da loja exige conciliação', asy
   const db = banco(); db.pedido.pagamento_handle = null; let chamadas = 0; const res = resposta();
   await criarHandlerWebhook(db, async () => { chamadas++; })({ method: 'POST', body: evento }, res);
   assert.equal(res.code, 503); assert.equal(chamadas, 0); assert.equal(db.mudancas.length, 0);
+});
+
+test('checkout exige endereço cadastrado até na retirada e não gera cobrança com perfil incompleto', async () => {
+ const db=banco({cadastroIncompleto:true}); let cobrancas=0; const res=resposta();
+ await criarHandlerPagamento(db,{fetchPagamento:async()=>{cobrancas++;}})({method:'POST',headers:{authorization:'Bearer teste'},body:{itens:[{id:10001,quantidade:1}],modo_entrega:'retirada',endereco:{}}},res);
+ assert.equal(res.code,422); assert.equal(cobrancas,0); assert.equal(db.mudancas.length,0);
 });

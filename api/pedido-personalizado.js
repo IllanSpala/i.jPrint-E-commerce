@@ -1,3 +1,4 @@
+import { carregarCadastro } from '../src/lib/cadastroCompleto.js';
 import { createHash } from 'node:crypto';
 import { bancoServidor, limitarRequisicoes } from './_lib/seguranca.js';
 import { enviarEmailAdmin } from './_lib/mailer.js';
@@ -35,13 +36,18 @@ export function criarHandler({ criarBanco = bancoServidor, limitar = limitarRequ
     if (typeof dados.chave !== 'string' || !/^[a-f0-9-]{36}$/i.test(dados.chave)) return res.status(400).json({error:'Identificador de envio inválido.'});
     try {
       const db = criarBanco();
+      const token = /^Bearer (\S+)$/i.exec(req.headers?.authorization || '')?.[1];
+      if (!token) return res.status(401).json({error:'Entre ou crie uma conta para enviar seu pedido.'});
+      const {data: auth, error: authError} = await db.auth.getUser(token);
+      if (authError || !auth?.user) return res.status(401).json({error:'Sessão inválida. Entre novamente.'});
+      const cadastro = await carregarCadastro(db, auth.user);
       const ip = String(req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
       await limitar(db, 'personalizado:' + createHash('sha256').update(ip).digest('hex'), 3);
       let attachments;
       try { attachments = prepararAnexos(dados.anexos || []); }
       catch (e) { return res.status(400).json({error:e.message}); }
-      const resultado = await enviar({ subject:'Nova solicitação — I.J Print', idempotencyKey:`personalizado/${dados.chave}`, attachments,
-        html:`<h2>Solicitação de avaliação / consulta de peça</h2><p>Nome: ${escaparHtml(dados.nome)}</p><p>E-mail: ${escaparHtml(dados.email)}</p><p style="white-space:pre-wrap">${escaparHtml(dados.descricao)}</p><p>Referência: ${escaparHtml(dados.referencia || 'Não informada')}</p>` });
+      const resultado = await enviar({ subject:'Nova solicitação — I.J Print', idempotencyKey:`personalizado/${auth.user.id}/${dados.chave}`, attachments,
+        html:`<h2>Solicitação de avaliação / consulta de peça</h2><p>Nome: ${escaparHtml(cadastro.nome)}</p><p>E-mail: ${escaparHtml(cadastro.email)}</p><p>Celular: ${escaparHtml(cadastro.telefone)}</p><p>Endereço: ${escaparHtml([cadastro.endereco.rua, cadastro.endereco.numero, cadastro.endereco.bairro, cadastro.endereco.cidade, cadastro.endereco.uf, cadastro.endereco.cep].join(", "))}</p><p style="white-space:pre-wrap">${escaparHtml(dados.descricao)}</p><p>Referência: ${escaparHtml(dados.referencia || 'Não informada')}</p>` });
       if (!resultado.sent) return res.status(503).json({error:'Não foi possível confirmar o envio. Tente novamente em instantes.'});
       return res.status(200).json({ok:true});
     } catch (e) { return res.status(e.status || 503).json({error:e.status ? e.message : 'Serviço temporariamente indisponível. Tente novamente.'}); }
