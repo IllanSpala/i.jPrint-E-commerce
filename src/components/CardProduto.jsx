@@ -36,7 +36,7 @@ export default function CardProduto({ produto }) {
       className="group relative flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-sand-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-sand-400/5"
     >
       {/* Imagem do produto */}
-      <div className="relative overflow-hidden aspect-square group/carousel">
+      <div className="relative overflow-hidden aspect-square shrink-0 group/carousel">
         {produto.enquadramento ? (
           <svg viewBox={produto.enquadramento} role="img" aria-label={produto.nome} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             <defs><clipPath id={recorteId}><rect x={recorte[0]} y={recorte[1]} width={recorte[2]} height={recorte[3]} /></clipPath></defs>
@@ -91,11 +91,6 @@ export default function CardProduto({ produto }) {
             Promoção
           </span>
         )}
-        {produto.esgotado && (
-          <span className="absolute inset-x-0 bottom-0 bg-zinc-950/90 px-3 py-2 text-center text-xs font-bold uppercase tracking-widest text-zinc-300">
-            Esgotado · item de mostruário
-          </span>
-        )}
       </div>
 
       {/* Informações */}
@@ -112,7 +107,9 @@ export default function CardProduto({ produto }) {
         <div className="mt-auto flex items-center justify-between">
           <div className="flex items-center gap-2">
             {produto.esgotado ? (
-              <span className="select-none text-zinc-500 font-bold text-base blur-[5px]" aria-label="Preço indisponível">R$ 000,00</span>
+              <span className="inline-block rounded border border-zinc-600 bg-zinc-950/50 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-zinc-300">
+                Esgotado · item de mostruário
+              </span>
             ) : produto.precoPromocional ? (
               <>
                 <span className="text-sand-400 font-bold text-base">
@@ -129,9 +126,7 @@ export default function CardProduto({ produto }) {
             )}
           </div>
 
-          {produto.esgotado ? (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Esgotado</span>
-          ) : (!produto.exigePersonalizacao && !produto.personalizador3d && (!produto.opcoes || produto.opcoes.length === 0)) ? (
+          {produto.esgotado ? null : (!produto.exigePersonalizacao && !produto.personalizador3d && (!produto.opcoes || produto.opcoes.length === 0)) ? (
             <button
               onClick={adicionarAoCarrinho}
               aria-label={`Adicionar ${produto.nome} ao carrinho`}

@@ -17,6 +17,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 90px; }
 .angulos button[aria-pressed=true] { background:#cad7ce; color:#18201b; }
 header { transition:background-color .6s,border-color .6s; }
 html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); border-bottom-color:#526658; }
+html[data-vitrine-tema=areia] header { background-color:rgb(38 32 24 / .96); border-bottom-color:theme('colors.sand.400'); }
 .catalogo-intro { margin-bottom:2rem; }
 .catalogo-intro h2 { font-size:clamp(2.5rem,5vw,4rem); }
 .catalogo-intro p { color:#a1a1aa; margin-top:.6rem; font-size:.9rem; }
@@ -57,7 +58,7 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
  .peca-pronta:first-child img { aspect-ratio:16/9; }
 }
 
-/* Abertura editorial com catálogo vivo de pronta entrega. */
+/* Guia de compra com três slides editoriais fixos. */
 .entrada-loja { box-sizing:border-box; height:100svh; min-height:0; padding:76px 16px 12px; display:grid; place-items:center; overflow:hidden; }
 .entrada-carrossel { position:relative; isolation:isolate; width:min(1180px,100%); height:100%; min-height:0; display:flex; align-items:center; overflow:hidden; border:1px solid rgb(202 215 206 / .35); border-radius:22px; background:#18201b; box-shadow:0 28px 90px rgb(0 0 0 / .46); }
 .entrada-fundo { position:absolute; z-index:-3; inset:0; width:100%; height:100%; object-fit:cover; object-position:center; animation:entrada-fade .55s ease both; }
@@ -74,6 +75,10 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
 .entrada-opcoes dd { font-size:15px; line-height:1.5; margin-top:3px; color:#d4d4d8; }
 .entrada-prosseguir { display:flex; justify-content:center; align-items:center; gap:10px; min-height:48px; padding:12px; border-radius:6px; background:theme('colors.sand.400'); color:#09090b; font-weight:600; font-size:15px; }
 .entrada-prosseguir:hover { background:theme('colors.sand.300'); }
+.entrada-acoes { display:grid; gap:10px; }
+.entrada-prosseguir-salvia { background:#8ea493; }
+.entrada-prosseguir-salvia:hover { background:#cad7ce; }
+.entrada-carrossel .aviso-compra { max-height:calc(100% - 96px); overflow-y:auto; }
 .entrada-peca { align-self:flex-end; width:min(470px,calc(100% - 120px)); color:#eff4f0; }
 .entrada-peca .vitrine-eyebrow { margin:18px 0 8px; color:#cad7ce; }
 .entrada-peca h2 { font-size:clamp(2rem,5vw,4rem); line-height:1.05; text-wrap:balance; }
@@ -145,3 +150,43 @@ html[data-vitrine-tema=salvia] header { background-color:rgb(24 32 27 / .96); bo
 }
 .produto-salvia .aspect-square { background:#8ea493; border-color:#526658; }
 .produto-salvia .group\/carousel button { opacity:1; }
+
+/* Em telas amplas, a base do primeiro card acompanha a base dos controles. */
+@media(min-width:1024px) {
+ .entrada-guia-processo .aviso-compra {
+   align-self:flex-end; margin-bottom:22px;
+   transform:scale(.7705); transform-origin:bottom left;
+ }
+}
+
+/* Fotos completas à direita, sem texto sobre as peças dos guias 2 e 3. */
+@media(min-width:768px) {
+ .entrada-guia-formas-de-comprar .entrada-fundo,
+ .entrada-guia-personalizados .entrada-fundo {
+   left:auto; right:0; width:52%; object-fit:contain; object-position:center;
+ }
+ .entrada-guia-formas-de-comprar .entrada-sombra,
+ .entrada-guia-personalizados .entrada-sombra {
+   background:linear-gradient(90deg,#101713 0%,#101713 46%,transparent 55%);
+ }
+ .entrada-guia-formas-de-comprar .aviso-compra,
+ .entrada-guia-personalizados .aviso-compra {
+   width:44%; margin:24px 0 88px 3%; padding:clamp(18px,2vw,28px);
+   max-height:calc(100% - 112px);
+ }
+ .entrada-guia-formas-de-comprar .aviso-compra { align-self:flex-end; }
+}
+@media(max-width:767px) {
+ .entrada-loja:has(.entrada-guia-formas-de-comprar),
+ .entrada-loja:has(.entrada-guia-personalizados) { height:auto; min-height:100svh; overflow:visible; }
+ .entrada-guia-formas-de-comprar,
+ .entrada-guia-personalizados { display:flex; flex-direction:column; height:auto; }
+ .entrada-guia-formas-de-comprar .entrada-fundo,
+ .entrada-guia-personalizados .entrada-fundo {
+   position:relative; z-index:0; width:100%; height:auto; aspect-ratio:1; object-fit:contain; animation:none;
+ }
+ .entrada-guia-formas-de-comprar .entrada-sombra,
+ .entrada-guia-personalizados .entrada-sombra { display:none; }
+ .entrada-guia-formas-de-comprar .aviso-compra,
+ .entrada-guia-personalizados .aviso-compra { margin:12px 12px 88px; max-height:none; overflow:visible; }
+}

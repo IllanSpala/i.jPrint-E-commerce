@@ -6,9 +6,11 @@ import { precificarItens } from '../api/_lib/cupons.js';
 import { carregarCatalogoCompra } from '../api/_lib/catalogoCompra.js';
 
 test('peças prontas têm preço individual, dados de frete e IDs próprios', () => {
-  assert.equal(prontaEntrega.length, 4);
-  assert.equal(new Set(prontaEntrega.map(p => p.id)).size, 4);
+  assert.ok(prontaEntrega.length > 0);
+  assert.equal(new Set(prontaEntrega.map(p => p.id)).size, prontaEntrega.length);
   for (const p of prontaEntrega) {
+    assert.match(p.id, /^pronta-/);
+    assert.ok(produtos.some(modelo => modelo.id === p.modeloId), `Modelo original ausente para ${p.id}`);
     assert.equal(typeof p.prod_ativo, 'boolean');
     assert.ok(Number.isFinite(p.preco) && p.preco > 0);
     assert.ok(p.peso_gramas > 0);
@@ -85,7 +87,7 @@ test('ausência da tabela permite catálogo local, mas não mascara erro de perm
  const db=error=>({from:()=>({select:async()=>({data:null,error})})});
  const result=await carregarProntaEntrega(db({code:'PGRST205',message:"Could not find the table 'public.pronta_entrega_estados' in the schema cache"}));
  assert.equal(result.configuracaoPendente,true);
- assert.deepEqual(result.data.map(p=>p.preco),[189.9,21.9,63.9,63.9]);
+ assert.deepEqual(result.data.map(p=>({id:p.id,preco:p.preco})),prontaEntrega.map(p=>({id:p.id,preco:p.preco})));
  assert.equal((await carregarProntaEntrega(db({code:'42501',message:'permission denied'}))).data,null);
 });
 test('carrinho antigo recebe preço atual por peça sem alterar quantidade ou outros produtos',()=>{
@@ -107,8 +109,8 @@ test('frete de todas as peças prontas usa o modelo original do banco e ignora m
   const itens = prontaEntrega.map(p=>({id:p.id,quantidade:2,modeloId:999,dimensoes:'1x1x1',peso_gramas:1}));
   const {data,error} = await carregarCatalogoCompra(db,itens);
   assert.equal(error,null);
-  assert.deepEqual(idsConsultados,[80,78,6,18]);
-  assert.equal(data.length,4);
+  assert.deepEqual(idsConsultados,[...new Set(prontaEntrega.map(p=>p.modeloId))]);
+  assert.equal(data.length,prontaEntrega.length);
   data.forEach((p,i)=>{
     assert.equal(p.dimensoes,modelos[i].dimensoes);
     assert.equal(p.peso_gramas,modelos[i].peso_gramas);

@@ -14,7 +14,7 @@ import { Link, useSearchParams } from "react-router-dom";
 
 export default function Home() {
   const [params, setParams] = useSearchParams();
-  const prontaEntrega = params.get("secao") === "pronta-entrega";
+  const prontaEntrega = params.get("secao") !== "catalogo";
   const [produtos, setProdutos] = useState([]);
   const [prontas, setProntas] = useState([]);
   const [carregandoProntas, setCarregandoProntas] = useState(true);
@@ -90,7 +90,7 @@ export default function Home() {
     setCategoriaAtiva('Todos');
     setTermoBusca('');
     setOrdenacao('Padrao');
-    setParams(pronta ? { secao: 'pronta-entrega' } : {});
+    setParams({ secao: pronta ? 'pronta-entrega' : 'catalogo' });
   }
 
   const filtrados = (prontaEntrega ? prontas : produtos).filter((p) => {
@@ -149,8 +149,8 @@ export default function Home() {
       </nav>
       <h1 className="sr-only">Catálogo de produtos</h1>
       <div className="catalogo-abas" aria-label="Tipo de produto">
-        <button type="button" aria-pressed={!prontaEntrega} onClick={() => mudarSecao(false)}>SOB ENCOMENDA</button>
         <button type="button" aria-pressed={prontaEntrega} className="aba-pronta" onClick={() => mudarSecao(true)}>PRONTA ENTREGA</button>
+        <button type="button" aria-pressed={!prontaEntrega} onClick={() => mudarSecao(false)}>SOB ENCOMENDA</button>
       </div>
       </div>
       <section id="catalogo" aria-label={prontaEntrega ? "Produtos de pronta entrega" : "Produtos sob encomenda"}>
