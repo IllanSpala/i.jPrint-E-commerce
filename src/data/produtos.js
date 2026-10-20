@@ -1539,4 +1539,8 @@ export const produtos = [
     descricao: 'Quadro Hueforge personalizado gerado a partir de uma foto enviada pelo cliente, impresso em até 4 cores PLA, contendo 24x24mm',
     dimensoes: '24x24x2', peso_gramas: 150
   }
-];
+].map(produto => ({
+  ...produto,
+  parametrico: Boolean(produto.personalizador3d),
+  classificacoesInternas: produto.personalizador3d ? ['Paramétricos'] : [],
+}));

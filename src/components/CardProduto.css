@@ -1,0 +1,8 @@
+.selo-parametrico { position:absolute; top:36px; left:8px; z-index:20; display:inline-flex; align-items:center; padding:5px 6px; border:1px solid #f9731673; border-radius:4px; background:#431c0beb; color:#fb923c; font-size:10px; font-weight:500; letter-spacing:.05em; text-transform:uppercase; pointer-events:none; }
+.selo-parametrico > svg { flex-shrink:0; }
+.selo-parametrico-texto { max-width:0; opacity:0; overflow:hidden; white-space:nowrap; margin-left:0; transition:max-width .25s ease,opacity .2s ease,margin-left .25s ease; }
+.produto-foto:hover .selo-parametrico-texto,
+a:focus-visible .selo-parametrico-texto,
+.produto-foto:focus-within .selo-parametrico-texto { max-width:110px; opacity:1; margin-left:5px; }
+@media(hover:none) { .selo-parametrico-texto { max-width:110px; opacity:1; margin-left:5px; } }
+@media(prefers-reduced-motion:reduce) { .selo-parametrico-texto { transition:none; } }

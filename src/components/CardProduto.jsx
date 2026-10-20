@@ -1,6 +1,8 @@
 import { useId, useState } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import { ShoppingCart, Pencil, Tag, Box, ChevronLeft, ChevronRight } from "lucide-react";
+import "./CardProduto.css";
+import { produtoPersonalizado } from "../lib/produtoPersonalizado.js";
 import { useCarrinho } from "../context/CarrinhoContext";
 
 export default function CardProduto({ produto }) {
@@ -36,7 +38,7 @@ export default function CardProduto({ produto }) {
       className="group relative flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden hover:border-sand-400/50 transition-all duration-300 hover:shadow-lg hover:shadow-sand-400/5"
     >
       {/* Imagem do produto */}
-      <div className="relative overflow-hidden aspect-square shrink-0 group/carousel">
+      <div className="produto-foto relative overflow-hidden aspect-square shrink-0 group/carousel">
         {produto.enquadramento ? (
           <svg viewBox={produto.enquadramento} role="img" aria-label={produto.nome} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
             <defs><clipPath id={recorteId}><rect x={recorte[0]} y={recorte[1]} width={recorte[2]} height={recorte[3]} /></clipPath></defs>
@@ -45,6 +47,8 @@ export default function CardProduto({ produto }) {
         ) : temCarousel ? (
           <>
             <img
+              loading="lazy"
+              decoding="async"
               src={produto.imagens[currentImgIndex]}
               alt={produto.nome}
               className={`w-full h-full ${produto.prontaEntrega ? "object-contain" : "object-cover"} transition-transform duration-500 group-hover:scale-105`}
@@ -74,12 +78,14 @@ export default function CardProduto({ produto }) {
           </>
         ) : (
           <img
+              loading="lazy"
+              decoding="async"
             src={produto.imagem}
             alt={produto.nome}
             className={`w-full h-full ${produto.prontaEntrega ? "object-contain" : "object-cover"} transition-transform duration-500 group-hover:scale-105`}
           />
         )}
-        {(produto.exigePersonalizacao || produto.personalizador3d) && (
+        {produtoPersonalizado(produto) && (
           <span className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-zinc-950/90 border border-sand-400/40 rounded text-sand-400 text-[10px] font-medium tracking-wider uppercase">
             <Pencil size={10} />
             Personalizado
@@ -89,6 +95,12 @@ export default function CardProduto({ produto }) {
           <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-red-950/90 border border-red-500/40 rounded text-red-400 text-[10px] font-medium tracking-wider uppercase">
             <Tag size={10} />
             Promoção
+          </span>
+        )}
+        {produto.parametrico && (
+          <span className="selo-parametrico" aria-label="Produto paramétrico">
+            <Box size={13} aria-hidden="true" />
+            <span className="selo-parametrico-texto" aria-hidden="true">Paramétrico</span>
           </span>
         )}
       </div>

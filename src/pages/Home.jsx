@@ -1,3 +1,4 @@
+import { prioridadeCatalogo } from '../lib/prioridadeCatalogo.js';
 import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useState, useRef, useEffect } from "react";
 import { Search, X, MoreVertical } from "lucide-react";
@@ -108,11 +109,11 @@ export default function Home() {
   const permiteOrdenarPreco = !prontaEntrega || pecasProntas.some(p => Number.isFinite(p.precoPromocional ?? p.preco));
 
   const filtradosOrdenados = (() => {
-    // Separa o Pagamento Personalizado dos demais
-    const pagPersonalizado = filtrados.filter(p => p.isPagamentoPersonalizado);
-    const demais = filtrados.filter(p => !p.isPagamentoPersonalizado);
-
-    const demaisOrdenados = [...demais].sort((a, b) => {
+    return [...filtrados].sort((a, b) => {
+      if (!prontaEntrega) {
+        const prioridade = prioridadeCatalogo(a) - prioridadeCatalogo(b);
+        if (prioridade) return prioridade;
+      }
       if (Boolean(a.esgotado) !== Boolean(b.esgotado)) return a.esgotado ? 1 : -1;
       if (ordenacao === "NomeAZ") return a.nome.localeCompare(b.nome, 'pt-BR');
       if (ordenacao === "NomeZA") return b.nome.localeCompare(a.nome, 'pt-BR');
@@ -125,15 +126,9 @@ export default function Home() {
         return ordenacao === "MenorMaior" ? precoA - precoB : precoB - precoA;
       }
 
-      if (categoriaAtiva === "Todos") {
-        if (a.precoPromocional && !b.precoPromocional) return -1;
-        if (!a.precoPromocional && b.precoPromocional) return 1;
-      }
       return 0;
     });
 
-    // Pagamento Personalizado sempre primeiro
-    return [...pagPersonalizado, ...demaisOrdenados];
   })();
 
   return (

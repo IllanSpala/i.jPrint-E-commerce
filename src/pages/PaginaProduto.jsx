@@ -1,6 +1,6 @@
 import { carregarProntaEntrega } from '../lib/estadoProntaEntrega.js';
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect, useId, lazy, Suspense } from "react";
 import { ArrowLeft, ShoppingCart, Pencil, Tag, ChevronLeft, ChevronRight, Ruler, Dumbbell, Plus, Minus, List, DollarSign, Palette, Trash2, FileUp } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useCarrinho } from "../context/CarrinhoContext";
@@ -8,7 +8,9 @@ import { produtos as produtosLocais } from "../data/produtos";
 import { normalizarProduto } from "../lib/normalizarProduto";
 import { produtoAtivo } from '../lib/produtoAtivo.js';
 import { prontaEntrega } from "../data/prontaEntrega";
-import Personalizador3D, { PreviewPersonalizacao } from "../components/Personalizador3D";
+const carregarEditor3D = () => import('../components/Personalizador3D');
+const Personalizador3D = lazy(carregarEditor3D);
+const PreviewPersonalizacao = lazy(() => carregarEditor3D().then(modulo => ({default:modulo.PreviewPersonalizacao})));
 import { lerAnexoPedido, validarAnexosPedido, TIPOS_ANEXOS_PEDIDO } from '../lib/anexosPedido.js';
 
 export default function PaginaProduto() {
@@ -576,7 +578,7 @@ export default function PaginaProduto() {
                       <div className="grid grid-cols-2 gap-3">
                         {personalizacoes3d.map((item, index) => (
                           <div key={item.id} className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 flex items-center">
-                            <div className="w-16 lg:w-20 shrink-0"><PreviewPersonalizacao compact personalizacao={item}/></div>
+                            <div className="w-16 lg:w-20 shrink-0"><Suspense fallback={<span className="text-xs text-zinc-400">Carregando prévia…</span>}><PreviewPersonalizacao compact personalizacao={item}/></Suspense></div>
                             <div className="p-2 flex flex-1 min-w-0 items-start justify-between gap-1">
                               <div className="text-xs leading-relaxed text-zinc-400">
                                 <p>Objeto: <span className="text-zinc-200">{item.corObjetoNome}</span></p>
@@ -645,7 +647,7 @@ export default function PaginaProduto() {
         </div>
       </div>
     </main>
-    <Personalizador3D
+    {personalizadorAberto && <Suspense fallback={<div role="status" className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/90 text-sand-300">Carregando editor 3D…</div>}><Personalizador3D
       key={produto.id}
       aberto={personalizadorAberto}
       modelo3d={produto.modelo3d}
@@ -655,7 +657,7 @@ export default function PaginaProduto() {
         setPersonalizacoes3d((atuais) => [...atuais, { ...configuracao, id: `${Date.now()}-${atuais.length}` }].slice(0, 4));
         setPersonalizadorAberto(false);
       }}
-    />
+    /></Suspense>}
     </>
   );
 }

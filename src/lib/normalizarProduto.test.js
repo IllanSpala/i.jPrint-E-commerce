@@ -24,3 +24,13 @@ for (const id of [70, 74, 75, 76]) {
 test("produto comum continua sem editor 3D", () => {
   assert.notEqual(normalizarProduto({ id: 69 }).personalizador3d, true);
 });
+
+test('classificação paramétrica é metadado e não uma categoria de navegação', () => {
+  const produto = normalizarProduto({id:74});
+  assert.equal(produto.parametrico, true);
+  assert.ok(produto.classificacoesInternas.includes('Paramétricos'));
+  assert.ok(!produto.categorias.includes('Paramétricos'));
+  const comum = normalizarProduto({id:69});
+  assert.equal(comum.parametrico, false);
+  assert.ok(!comum.classificacoesInternas.includes('Paramétricos'));
+});

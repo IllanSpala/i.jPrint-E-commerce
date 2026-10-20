@@ -30,5 +30,12 @@ export function normalizarProduto(data) {
     produto.dimensoes = local.dimensoes;
     produto.descricao = local.descricao;
   }
+  produto.parametrico = Boolean(produto.personalizador3d);
+  produto.classificacoesInternas = [
+    ...new Set([
+      ...(Array.isArray(produto.classificacoesInternas) ? produto.classificacoesInternas.filter(c => c !== 'Paramétricos') : []),
+      ...(produto.parametrico ? ['Paramétricos'] : []),
+    ]),
+  ];
   return produto;
 }
