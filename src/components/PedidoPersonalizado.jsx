@@ -80,7 +80,9 @@ export default function PedidoPersonalizado({ consulta }) {
         <div className="projeto-secao-titulo"><span>01</span> Seus dados</div>
         <div className="projeto-contatos">
         <label>Seu nome<input name="nome" value={cadastro?.nome || ''} readOnly autoComplete="name" required minLength={2} maxLength={100} placeholder="Como podemos chamar você?" /></label>
-        <label>E-mail para retorno<input name="email" value={cadastro?.email || ''} readOnly type="email" autoComplete="email" required maxLength={254} placeholder="voce@email.com" /></label></div>
+        <label>E-mail para retorno<input name="email" value={cadastro?.email || ''} readOnly type="email" autoComplete="email" required maxLength={254} placeholder="voce@email.com" /></label>
+        <label>Celular com DDD (obrigatório)<input name="telefone" value={cadastro?.telefone || ''} readOnly type="tel" autoComplete="tel-national" required aria-required="true" aria-describedby="telefone-cadastro-ajuda" placeholder="(11) 99999-9999" /></label></div>
+        <small id="telefone-cadastro-ajuda">Usaremos o celular cadastrado para contato sobre o pedido. <Link to="/perfil" className="underline text-sand-300">Cadastrar ou atualizar celular no perfil</Link>.</small>
         <div className="projeto-secao-titulo"><span>02</span> Sua ideia</div>
         <label>Conte sua ideia<textarea ref={texto} name="descricao" required minLength={20} maxLength={4000} rows={5} value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="O que você quer criar? Conte o tamanho aproximado, as cores, a quantidade e como imagina o acabamento…" /><small className="projeto-contagem">Mínimo de 20 caracteres <span>{descricao.length}/4000</span></small></label>
         <div className="projeto-secao-titulo"><span>03</span> Referências <small>opcional</small></div>

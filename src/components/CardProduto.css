@@ -6,3 +6,8 @@ a:focus-visible .selo-parametrico-texto,
 .produto-foto:focus-within .selo-parametrico-texto { max-width:110px; opacity:1; margin-left:5px; }
 @media(hover:none) { .selo-parametrico-texto { max-width:110px; opacity:1; margin-left:5px; } }
 @media(prefers-reduced-motion:reduce) { .selo-parametrico-texto { transition:none; } }
+@media(max-width:767px) {
+ .selo-produto { padding:5px 6px; gap:0; }
+ .selo-produto > svg { width:13px; height:13px; }
+ .selo-produto-texto,.selo-parametrico-texto { display:none; }
+}

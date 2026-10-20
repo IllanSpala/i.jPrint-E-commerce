@@ -86,15 +86,15 @@ export default function CardProduto({ produto }) {
           />
         )}
         {produtoPersonalizado(produto) && (
-          <span className="absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-zinc-950/90 border border-sand-400/40 rounded text-sand-400 text-[10px] font-medium tracking-wider uppercase">
-            <Pencil size={10} />
-            Personalizado
+          <span aria-label="Personalizado" title="Personalizado" className="selo-produto absolute top-2 left-2 flex items-center gap-1 px-2 py-0.5 bg-zinc-950/90 border border-sand-400/40 rounded text-sand-400 text-[10px] font-medium tracking-wider uppercase">
+            <Pencil size={10} aria-hidden="true" />
+            <span className="selo-produto-texto" aria-hidden="true">Personalizado</span>
           </span>
         )}
         {produto.precoPromocional && (
-          <span className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-red-950/90 border border-red-500/40 rounded text-red-400 text-[10px] font-medium tracking-wider uppercase">
-            <Tag size={10} />
-            Promoção
+          <span aria-label="Promoção" title="Promoção" className="selo-produto absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 bg-red-950/90 border border-red-500/40 rounded text-red-400 text-[10px] font-medium tracking-wider uppercase">
+            <Tag size={10} aria-hidden="true" />
+            <span className="selo-produto-texto" aria-hidden="true">Promoção</span>
           </span>
         )}
         {produto.parametrico && (
