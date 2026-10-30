@@ -10,10 +10,10 @@ function carrinhoReducer(state, action) {
     case "ADICIONAR": {
       action = { ...action, item: atualizarPrecoProntaEntrega(action.item) };
       // Find based on id and opcaoEscolhida
-      const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida && !action.item.personalizador3d);
+      const existente = state.find((i) => i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida && !action.item.personalizador3d && !action.item.filamentArt && !i.filamentArt);
       if (existente) {
         return state.map((i) => {
-          if (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida) {
+          if (i.id === action.item.id && i.opcaoEscolhida === action.item.opcaoEscolhida && !i.filamentArt) {
             const qtdAdicionada = action.item.quantidade || 1;
             const novosParametros = action.item.parametrosMultiplos 
               ? [...(i.parametrosMultiplos || []), ...action.item.parametrosMultiplos] 

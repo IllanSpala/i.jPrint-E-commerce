@@ -1534,6 +1534,7 @@ export const produtos = [
   {
     ativo: true,
     id: 82, nome: 'Quadro Hueforge Personalizado', preco: 33.90,
+    tipoPersonalizacao: 'filament_art',
     imagem: '/produtos/HUEFORGE_PERSONALIZADO.png', categoria: 'Personalizados', categorias: ['Personalizados', 'Acessórios'],
     personalizacao3d: false, exigePersonalizacao: true,
     descricao: 'Quadro Hueforge personalizado gerado a partir de uma foto enviada pelo cliente, impresso em até 4 cores PLA, contendo 24x24mm',
@@ -1541,6 +1542,6 @@ export const produtos = [
   }
 ].map(produto => ({
   ...produto,
-  parametrico: Boolean(produto.personalizador3d),
-  classificacoesInternas: produto.personalizador3d ? ['Paramétricos'] : [],
+  parametrico: Boolean(produto.personalizador3d || produto.tipoPersonalizacao === 'filament_art'),
+  classificacoesInternas: (produto.personalizador3d || produto.tipoPersonalizacao === 'filament_art') ? ['Paramétricos'] : [],
 }));

@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import { supabase } from "../lib/supabase";
 import { useNavigate } from "react-router-dom";
 import ModalAviso from "./ModalAviso";
+import FilamentProject from './filament-art/FilamentProject.jsx';
 
 export default function SidebarCarrinho() {
   const {
@@ -353,7 +354,7 @@ export default function SidebarCarrinho() {
               {itens.map((item) => (
                 <li key={item.cartId || item.id} className="p-4 flex gap-3">
                   <div className="w-14 h-14 rounded overflow-hidden flex-shrink-0 bg-zinc-800">
-                    <img src={item.imagem} alt={item.nome} className="w-full h-full object-cover" />
+                    {item.filamentArt ? <FilamentProject reference={item.filamentArt}/> : <img src={item.imagem} alt={item.nome} className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-zinc-100 text-sm font-medium truncate">

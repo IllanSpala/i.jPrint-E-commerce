@@ -1,6 +1,9 @@
 import { produtos } from "./produtos.js";
 
 // Preços unitários independentes definidos para cada peça pronta.
+// modeloId mantém o vínculo com os dados do produto (incluindo frete).
+// linkEncomenda opcional altera o destino do botão ENCOMENDE;
+// sem ele, o botão abre /produto/{modeloId}.
 export const prontaEntrega = [
   { id: 'pronta-xenonita', prod_ativo: true, preco: 189.90, modeloId: 80, nome: 'Xenonita', categoria: 'Bustos', descricao: 'Pedra articulada, impressa e finalizada.', imagem: '/pronta-entrega/xenonita_real.png', imagens: ['/pronta-entrega/xenonita_real.png', '/pronta-entrega/xenonita_real2.png', '/pronta-entrega/xenonita_real3.png'] },
   { id: 'pronta-jax', prod_ativo: true, preco: 21.90, modeloId: 78, nome: 'Jax — Amazing Digital Circus', categoria: 'Miniaturas', descricao: 'Jax, de Amazing Digital Circus, impresso e finalizado.', imagem: '/pronta-entrega/jax_real.png' },
@@ -8,12 +11,15 @@ export const prontaEntrega = [
   { id: 'pronta-edward', prod_ativo: true, preco: 63.90, modeloId: 18, nome: 'Edward Mãos de Tesoura', categoria: 'Miniaturas', descricao: 'Peça finalizada com traje preto e mãos de tesoura.', imagem: '/pronta-entrega/edward_real.png', imagens: ['/pronta-entrega/edward_real.png', '/pronta-entrega/edward_real2.png'] },
   { id: 'pronta-luffy', prod_ativo: true, preco: 139.90, modeloId: 21, nome: 'Luffy Vascaino', categoria: 'Miniaturas', descricao: 'Peça finalizada da figure do Luffy com o pedido de personalização do Vasco Da Gama', imagem: '/pronta-entrega/luffy_real.png', imagens: ['/pronta-entrega/luffy_real.png', '/pronta-entrega/luffy_real2.png', '/pronta-entrega/luffy_real3.png'] },
   { id: 'pronta-busto', prod_ativo: true, preco: 89.90, modeloId: 81, nome: 'Busto Marmorizado Personalizado', categoria: 'Miniaturas', descricao: 'Busto impresso em PLA STONE MARMÓRE gerado a partir de uma foto enviada pelo cliente, 15CM de altura', imagem: '/pronta-entrega/busto_mj1.png', imagens: ['/pronta-entrega/busto_mj1.png', '/pronta-entrega/busto_mj2.png', '/pronta-entrega/busto_mj3.png', '/pronta-entrega/busto_mj4.png'] },
-  { id: 'pronta-hueforge-harrison', prod_ativo: true, preco: 33.90, modeloId: 82, nome: 'Hueforge George Harrison', categoria: 'Acessórios', descricao: 'Quadro Hueforge 24x24mm personalizado, gerado a partir de uma foto enviada pelo cliente. OBS: Não vem com imã ou fita adesiva junto', imagem: '/pronta-entrega/hueforge_harrison.png' }
+  { id: 'pronta-hueforge-harrison', prod_ativo: true, preco: 33.90, modeloId: 82, nome: 'Hueforge George Harrison', categoria: 'Acessórios', descricao: 'Quadro Hueforge 24x24mm personalizado, gerado a partir de uma foto enviada pelo cliente. OBS: Não vem com imã ou fita adesiva junto', imagem: '/pronta-entrega/hueforge_harrison.png' },
+  { id: 'pronta-macca', prod_ativo: true, preco: 189.90, modeloId: 0, linkEncomenda: '/pedido-personalizado', nome:'Macca - Figure Colecionável GTA VI', categoria: 'Miniaturas', descricao: 'Peça finalizada, figure do Macca, jacarezinho colecionável de GTA VI, torno de 18cm de altura', imagem: '/pronta-entrega/macca_real1.png'},
+  { id: 'pronta-amp', prod_ativo: true, preco: 99.90, modeloId: 0, linkEncomenda: '/pedido-personalizado', nome:'Kit Placas de Amp + Gabinete 4x12', categoria: 'Acessórios', descricao:'Peça finalizada, KIT CONTENDO -> 01x AmpPlate MesaBoogie, 01X AmpPlate EVH, 01x Gabinete MesaBoogie 4x12 angulado', imagem:'/pronta-entrega/amp_plate_gabinete_real.png'}
 
 ].map(peca => {
   const modelo = produtos.find(p => p.id === peca.modeloId);
   return {
     ...peca, prontaEntrega: true, ativo: peca.prod_ativo,
+    linkEncomenda: peca.linkEncomenda || `/produto/${peca.modeloId}`,
     dimensoes: modelo?.dimensoes, peso_gramas: modelo?.peso_gramas
   };
 });

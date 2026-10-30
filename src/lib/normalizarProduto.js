@@ -15,6 +15,7 @@ export function normalizarProduto(data) {
     precoPromocional: data.preco_promocional ?? data.precoPromocional ?? local.precoPromocional,
     exigePersonalizacao: data.exige_personalizacao ?? data.exigePersonalizacao ?? local.exigePersonalizacao,
     multiplaPersonalizacao: data.multipla_personalizacao ?? local.multiplaPersonalizacao,
+    tipoPersonalizacao: local.tipoPersonalizacao,
   };
   if (local.personalizador3d) {
     Object.assign(produto, {
@@ -30,7 +31,7 @@ export function normalizarProduto(data) {
     produto.dimensoes = local.dimensoes;
     produto.descricao = local.descricao;
   }
-  produto.parametrico = Boolean(produto.personalizador3d);
+  produto.parametrico = Boolean(produto.personalizador3d || produto.tipoPersonalizacao === 'filament_art');
   produto.classificacoesInternas = [
     ...new Set([
       ...(Array.isArray(produto.classificacoesInternas) ? produto.classificacoesInternas.filter(c => c !== 'Paramétricos') : []),

@@ -12,6 +12,7 @@ import {
   reservarCupom
 } from './_lib/cupons.js';
 import { validarPersonalizacao } from './_lib/validarPersonalizacao.js';
+import { validateFilamentProjects, checkCommercialPlan } from './_lib/filamentArt.js';
 
 export function criarHandlerPagamento(
   supabase,
@@ -161,6 +162,8 @@ export function criarHandlerPagamento(
         `pagamento:${user.id}`,
         10
       );
+
+      const filamentProjects = await validateFilamentProjects(supabase, user.id, itens);
 
       if (codigoCupom) {
         cupom =
@@ -380,7 +383,10 @@ export function criarHandlerPagamento(
               );
             }
 
+            const filamentArt = item.filamentArt ? filamentProjects.get(item.filamentArt.id) : null;
+            checkCommercialPlan(filamentArt, produto);
             return {
+              ...(filamentArt ? { filamentArt } : {}),
               id:
                 item.id,
 

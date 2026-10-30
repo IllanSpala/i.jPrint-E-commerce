@@ -29,7 +29,7 @@ function criarPreviewSvg(grupo, geometry, cor, angulo = 0) {
   grupo.add(giro);
 }
 
-export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicarRef, onErro, aplicacaoSvg, anguloSvg = 0, zoom = 1, panCamera = { x: 0, y: 0 } }) {
+export default function ModeloStl({ arquivo, placa, imagemCanvas, corObjeto, corGravura, svg, escala, x, y, povX, povY, capturaRef, aplicarRef, onErro, aplicacaoSvg, anguloSvg = 0, zoom = 1, panCamera = { x: 0, y: 0 } }) {
   const containerRef = useRef(null);
   const cenaRef = useRef(null);
   const propsRef = useRef(null);
@@ -37,7 +37,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || !arquivo) return;
+    if (!container || (!arquivo && !placa)) return;
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(34, 1, 0.01, 2000);
     camera.up.set(0, 0, 1);
@@ -123,7 +123,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
         atual.decal.quaternion.copy(atual.orientacaoArte);
         criarPreviewSvg(atual.decal, atual.svgPlana, p.corGravura, p.anguloSvg);
       }
-      if (atual.decal && !atual.aplicada) {
+      if (atual.decal && !placa && !atual.aplicada) {
         const tamanho = Number(p.escala);
         atual.decal.scale.setScalar((Number.isFinite(tamanho) && tamanho > 0 ? tamanho : 45) / (aplicacaoSvg?.tipo === "corpo" ? 48 : 24));
         const base = atual.baseArte || new THREE.Vector3(0, 0, atual.altura / 2);
@@ -236,7 +236,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
     };
     let descartado = false;
 
-    new STLLoader().load(arquivo, (geometry) => {
+    const carregarGeometria = (geometry) => {
       if (descartado) { geometry.dispose(); return; }
       geometry.computeVertexNormals();
       if (aplicacaoSvg?.rotacaoZ) geometry.rotateZ(THREE.MathUtils.degToRad(aplicacaoSvg.rotacaoZ));
@@ -262,6 +262,22 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       geometry.boundingBox.getSize(finalSize);
       group.position.z = finalSize.z / 2;
       cenaRef.current.altura = finalSize.z;
+      if (placa) {
+        const face = placa === 'circle' ? new THREE.CircleGeometry(1.7, 128) : new THREE.PlaneGeometry(3.4, placa === 'rectangle' ? 2.55 : 3.4);
+        const surface = new THREE.Mesh(face, new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.FrontSide, toneMapped: false }));
+        surface.position.z = finalSize.z / 2 + 0.001;
+        group.add(surface);
+        cenaRef.current.imagemMesh = surface;
+        if (imagemCanvas) {
+          const texture = new THREE.CanvasTexture(imagemCanvas);
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.minFilter = texture.magFilter = THREE.NearestFilter;
+          texture.generateMipmaps = false;
+          surface.material.map = texture;
+        }
+        schedule();
+        return;
+      }
       const decal = new THREE.Group();
       if (aplicacaoSvg?.tipo === "corpo") {
         decal.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1), new THREE.Vector3(1, 0, 0)));
@@ -282,7 +298,12 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       const hit = ray.intersectObject(mesh)[0];
       if (hit) cenaRef.current.baseArte = group.worldToLocal(hit.point.clone());
       schedule();
-    }, undefined, () => propsRef.current.onErro?.("Não foi possível carregar o modelo 3D. Tente novamente."));
+    };
+    if (placa) {
+      const geometry = placa === 'circle' ? new THREE.CylinderGeometry(1.7, 1.7, 0.04, 128) : new THREE.BoxGeometry(3.4, placa === 'rectangle' ? 2.55 : 3.4, 0.04);
+      if (placa === 'circle') geometry.rotateX(Math.PI / 2);
+      carregarGeometria(geometry);
+    } else new STLLoader().load(arquivo, carregarGeometria, undefined, () => propsRef.current.onErro?.("Não foi possível carregar o modelo 3D. Tente novamente."));
 
     const resize = () => {
       const width = container.clientWidth || 1;
@@ -310,7 +331,7 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       scene.traverse((obj) => {
         obj.geometry?.dispose?.();
         if (Array.isArray(obj.material)) obj.material.forEach((m) => m.dispose());
-        else obj.material?.dispose?.();
+        else { obj.material?.map?.dispose?.(); obj.material?.dispose?.(); }
       });
       renderer.dispose();
       renderer.forceContextLoss();
@@ -318,7 +339,21 @@ export default function ModeloStl({ arquivo, corObjeto, corGravura, svg, escala,
       cubeMaterials.forEach((m) => { m.map.dispose(); m.dispose(); });
       renderer.domElement.remove();
     };
-  }, [arquivo]);
+  }, [arquivo, placa]);
+
+  useEffect(() => {
+    const atual = cenaRef.current;
+    if (!atual?.imagemMesh || !imagemCanvas) return;
+    const material = atual.imagemMesh.material;
+    material.map?.dispose();
+    const texture = new THREE.CanvasTexture(imagemCanvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = texture.magFilter = THREE.NearestFilter;
+    texture.generateMipmaps = false;
+    material.map = texture;
+    material.needsUpdate = true;
+    atual.schedule();
+  }, [imagemCanvas, placa]);
 
   useEffect(() => {
     cenaRef.current?.schedule();

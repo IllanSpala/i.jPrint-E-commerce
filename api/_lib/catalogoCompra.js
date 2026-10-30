@@ -16,8 +16,15 @@ export async function carregarCatalogoCompra(db, itens) {
   // O vínculo é definido no servidor: medidas enviadas pelo carrinho não são usadas.
   // Preço, identidade e estoque da peça pronta continuam independentes do modelo.
   const prontasComFrete = [];
+  const modelosPorId = new Map();
+  for (const modelo of data) {
+    const fila = modelosPorId.get(modelo.id) || [];
+    fila.push(modelo);
+    modelosPorId.set(modelo.id, fila);
+  }
   for (const peca of prontas) {
-    const modelo = data.find(p => p.id === peca.modeloId);
+    const fila = modelosPorId.get(peca.modeloId) || [];
+    const modelo = fila.length > 1 ? fila.shift() : fila[0];
     if (!modelo) return { data: null, error: new Error(`Modelo original não encontrado para ${peca.id}.`) };
     prontasComFrete.push({ ...peca, dimensoes: modelo.dimensoes, peso_gramas: modelo.peso_gramas });
   }

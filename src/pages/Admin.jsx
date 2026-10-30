@@ -1,5 +1,6 @@
 import { gerarReciboSeguro } from '../lib/reciboSeguro.js';
 import AdminProdutos from '../components/AdminProdutos';
+import FilamentProject from '../components/filament-art/FilamentProject.jsx';
 import { pedidoPendenteExpirado } from '../lib/expiracaoPedido.js';
 import { apiAutenticada } from '../lib/apiAutenticada';
 import { useEffect, useState } from "react";
@@ -439,7 +440,7 @@ export default function Admin() {
         <h1 className="font-display text-3xl text-white tracking-tight uppercase">Painel de Pedidos</h1>
       </div>
 
-      <AdminProdutos />
+        <AdminProdutos />
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <button
           type="button"
@@ -516,6 +517,7 @@ export default function Admin() {
                         <li key={idx} className="text-sm text-zinc-300 bg-zinc-950 p-3 rounded border border-zinc-800/50">
                           <span className="font-bold text-sand-400 mr-2">{item.quantidade}x</span>
                           {item.nome}
+                          {item.filamentArt && <div className="mt-3 border-t border-zinc-800 pt-3"><FilamentProject reference={item.filamentArt} admin/></div>}
                           {item.personalizacoes?.length > 0 && <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3">
                             <p className="text-sm font-semibold">Arquivos para produção</p>
                             <p className="text-xs text-zinc-400">Arte original, SVG de produção, configurações e print do resultado aprovado pelo cliente.</p>

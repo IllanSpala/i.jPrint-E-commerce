@@ -10,6 +10,7 @@ import { produtoAtivo } from '../lib/produtoAtivo.js';
 import { prontaEntrega } from "../data/prontaEntrega";
 const carregarEditor3D = () => import('../components/Personalizador3D');
 const Personalizador3D = lazy(carregarEditor3D);
+const FilamentArtEditor = lazy(() => import('../components/filament-art/FilamentArtEditor.jsx'));
 const PreviewPersonalizacao = lazy(() => carregarEditor3D().then(modulo => ({default:modulo.PreviewPersonalizacao})));
 import { lerAnexoPedido, validarAnexosPedido, TIPOS_ANEXOS_PEDIDO } from '../lib/anexosPedido.js';
 
@@ -37,6 +38,8 @@ export default function PaginaProduto() {
   const [valorCustom, setValorCustom] = useState("");
   const [personalizadorAberto, setPersonalizadorAberto] = useState(false);
   const [personalizacoes3d, setPersonalizacoes3d] = useState([]);
+  const [filamentEditorOpen, setFilamentEditorOpen] = useState(false);
+  const [filamentArt, setFilamentArt] = useState(null);
   const [modoCompra, setModoCompra] = useState("pronto");
 
   useEffect(() => {
@@ -97,6 +100,8 @@ export default function PaginaProduto() {
     setOpcaoSelecionada("");
     setVariacaoSelecionada("");
     setPersonalizacoes3d([]);
+    setFilamentArt(null);
+    setFilamentEditorOpen(false);
     return () => { ativo = false; delete document.documentElement.dataset.vitrineTema; };
   }, [id]);
 
@@ -144,6 +149,8 @@ export default function PaginaProduto() {
         quantidade: 1,
         cartId: `pagamento-custom-${Date.now()}`,
       };
+    } else if (filamentArt && produto.tipoPersonalizacao === 'filament_art') {
+      itemToAdd = { ...produto, filamentArt, personalizacao: `Quadro ${filamentArt.plan.widthMm} × ${filamentArt.plan.heightMm} mm · ${filamentArt.shapeLabel || filamentArt.shape || "HueForge"} · ${filamentArt.status}`, quantidade: 1, cartId: `${produto.id}-filament-${crypto.randomUUID()}` };
     } else if (usandoPersonalizacao3d) {
       itemToAdd = {
         ...produto,
@@ -220,7 +227,7 @@ export default function PaginaProduto() {
 
   const temOpcaoPendente = (produto.opcoes && produto.opcoes.length > 0 && !opcaoSelecionada) || 
                            (opcaoAtual?.variacoes && opcaoAtual.variacoes.length > 0 && !variacaoSelecionada);
-  const isPersonalizacaoUnicaValida = !produto.exigePersonalizacao || personalizacao.trim().length > 0;
+  const isPersonalizacaoUnicaValida = !produto.exigePersonalizacao || personalizacao.trim().length > 0 || Boolean(filamentArt);
   const isPersonalizacaoMultiplaValida = !produto.multiplaPersonalizacao || parametrosMultiplos.every(p => p.trim().length > 0);
   const valorCustomNum = parseFloat((valorCustom || '0').replace(',', '.'));
   const isPagCustomValido = !produto.isPagamentoPersonalizado || (valorCustomNum >= 1);
@@ -322,7 +329,7 @@ export default function PaginaProduto() {
                   <p className="font-semibold uppercase tracking-wider text-zinc-400">Esgotado · item de mostruário</p>
                   <button
                     type="button"
-                    onClick={() => navigate(`/produto/${produto.modeloId}`)}
+                    onClick={() => navigate(produto.linkEncomenda || `/produto/${produto.modeloId}`)}
                     className="mt-2 text-sm font-bold uppercase tracking-widest text-[#cad7ce] underline decoration-[#8ea493] underline-offset-4 transition-colors hover:text-white"
                   >
                     <h2 className="text-base">ENCOMENDE</h2>
@@ -410,7 +417,13 @@ export default function PaginaProduto() {
               </div>
 
               {/* Campo de personalização única */}
-              {produto.exigePersonalizacao && !produto.personalizador3d && (
+              {produto.tipoPersonalizacao === 'filament_art' && <section className="space-y-3 rounded border border-sand-400/50 bg-zinc-900 p-4">
+                <h2 className="font-semibold text-sand-300">Quadro 3D Personalizado</h2>
+                <p className="text-sm text-zinc-400">Envie sua imagem e personalize a peça em 3D com até quatro cores.</p>
+                <button type="button" onClick={() => setFilamentEditorOpen(true)} className="w-full rounded bg-sand-400 px-4 py-3 font-semibold text-zinc-950">{filamentArt ? 'Criar outra configuração' : 'Personalizar minha foto'}</button>
+                {filamentArt && <>{filamentArt.previewUrl && <img src={filamentArt.previewUrl} alt="Prévia 3D do HueForge aprovado" className="w-full max-h-64 object-contain bg-[#17191d] rounded"/>}<p className="text-sm">Configuração salva: {filamentArt.plan.widthMm} × {filamentArt.plan.heightMm} mm · {filamentArt.status}</p><button type="button" onClick={() => setFilamentArt(null)} className="text-xs text-zinc-400 underline">Remover configuração</button></>}
+              </section>}
+              {produto.exigePersonalizacao && produto.tipoPersonalizacao !== 'filament_art' && !produto.personalizador3d && !filamentArt && (
                 <div className="rounded-lg border border-zinc-700 bg-zinc-900 p-4 space-y-2">
                   <div className="flex items-center gap-2 text-sand-400">
                     <Pencil size={14} />
@@ -630,7 +643,7 @@ export default function PaginaProduto() {
                   {adicionado ? "Adicionado!" : "Adicionar ao carrinho"}
                 </button> : null}
 
-                {produto.exigePersonalizacao && !personalizacao.trim() && (
+                {produto.exigePersonalizacao && produto.tipoPersonalizacao !== 'filament_art' && !personalizacao.trim() && !filamentArt && (
                   <p className="text-xs text-zinc-600 text-center">
                     Preencha a personalização para continuar.
                   </p>
@@ -647,6 +660,7 @@ export default function PaginaProduto() {
         </div>
       </div>
     </main>
+    {filamentEditorOpen && <Suspense fallback={<div role="status" className="fixed inset-0 z-50 grid place-items-center bg-zinc-950">Carregando editor de quadros…</div>}><FilamentArtEditor product={produto} onClose={() => setFilamentEditorOpen(false)} onConfirm={config => { setFilamentArt(config); setFilamentEditorOpen(false); }}/></Suspense>}
     {personalizadorAberto && <Suspense fallback={<div role="status" className="fixed inset-0 z-50 grid place-items-center bg-zinc-950/90 text-sand-300">Carregando editor 3D…</div>}><Personalizador3D
       key={produto.id}
       aberto={personalizadorAberto}

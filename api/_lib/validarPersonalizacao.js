@@ -1,4 +1,5 @@
 import { svgSeguro } from '../../src/lib/svgSeguro.js';
+import { validProjectRef, isFilamentProduct } from '../../src/lib/filament-art/projectSerializer.js';
 import { produtos } from '../../src/data/produtos.js';
 import { dadosDataUrl, LIMITE_ANEXOS_PEDIDO, LIMITE_BYTES_ANEXOS_PEDIDO, TIPOS_ANEXOS_PEDIDO } from '../../src/lib/anexosPedido.js';
 
@@ -27,6 +28,7 @@ export function validarAnexosItem(anexos) {
 
 export function validarPersonalizacao(item) {
   if (!item || typeof item !== 'object') return 'Item inválido.';
+  if (item.filamentArt && (!isFilamentProduct(item) || !validProjectRef(item.filamentArt) || item.personalizacoes?.length || item.personalizador3d)) return 'Personalização de quadro inválida.';
   if (item.personalizacoes && (!Array.isArray(item.personalizacoes) || item.personalizacoes.some(p => !p || !svgSeguro(p.svg) || (p.svgOriginal && !svgSeguro(p.svgOriginal))))) return 'SVG inválido. Envie somente vetores estáticos, sem CSS, scripts ou links externos.';
   const produto = produtos.find(p => String(p.id) === String(item.id));
   if (item.personalizacoes?.some(p => {
