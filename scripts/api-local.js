@@ -10,9 +10,12 @@ export function criarMiddlewareApiLocal({ rotas, carregar, limite = 4_500_000, l
     res.json = data => { res.setHeader('Content-Type', 'application/json; charset=utf-8'); res.end(JSON.stringify(data)); return res; };
     res.setHeader('Cache-Control', 'no-store');
     const nome = url.pathname.slice(5);
-    if (!rotas.has(nome)) return res.status(404).json({ error: 'Rota de API não encontrada.' });
+    const adminAlias = nome === 'status' || nome === 'produto-ativo';
+    const moduloNome = adminAlias ? 'admin' : nome;
+    if (!rotas.has(moduloNome)) return res.status(404).json({ error: 'Rota de API não encontrada.' });
     try {
       req.query = Object.fromEntries(url.searchParams);
+      if (adminAlias) req.query.operation = nome;
       let size = 0;
       const chunks = [];
       for await (const chunk of req) {
@@ -23,7 +26,7 @@ export function criarMiddlewareApiLocal({ rotas, carregar, limite = 4_500_000, l
       const text = Buffer.concat(chunks).toString('utf8');
       try { req.body = text ? JSON.parse(text) : {}; }
       catch { return res.status(400).json({ error: 'JSON inválido.' }); }
-      const modulo = await carregar(nome);
+      const modulo = await carregar(moduloNome);
       await modulo.default(req, res);
     } catch (error) {
       log('[API local]', nome, error.message);

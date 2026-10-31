@@ -5,6 +5,14 @@
   "devCommand": "vite --port $PORT",
   "rewrites": [
     {
+      "source": "/api/status",
+      "destination": "/api/admin?operation=status"
+    },
+    {
+      "source": "/api/produto-ativo",
+      "destination": "/api/admin?operation=produto-ativo"
+    },
+    {
       "source": "/(catalogo|pedido-personalizado|produto/.*|login|perfil|admin|pedido-confirmado)",
       "destination": "/index.html"
     }

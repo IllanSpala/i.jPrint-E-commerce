@@ -35,3 +35,14 @@ test('malformed and oversized requests stop before invoking a handler', async ()
   const large=await request('/api/filament-art','12345',{limite:4});
   assert.equal(large.res.statusCode,413);assert.equal(large.loaded,false);
 });
+
+test('admin aliases preserve public URLs and select the matching operation', async () => {
+  for (const name of ['status','produto-ativo']) {
+    const result=await request(`/api/${name}?operation=invalid`,JSON.stringify({id:82}),{rotas:new Set(['admin'])});
+    assert.equal(result.res.statusCode,200);
+    assert.equal(result.data.nome,'admin');
+    assert.equal(result.data.query.operation,name);
+    assert.equal(result.data.authorization,'Bearer session');
+    assert.deepEqual(result.data.body,{id:82});
+  }
+});

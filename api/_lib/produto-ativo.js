@@ -1,5 +1,5 @@
-import { prontaEntrega } from '../src/data/prontaEntrega.js';
-import { protegerAdmin } from './_lib/seguranca.js';
+import { prontaEntrega } from '../../src/data/prontaEntrega.js';
+import { protegerAdmin } from './seguranca.js';
 
 export async function alterarProdutoAtivo(req, res, db) {
   const { id, ativo } = req.body || {};

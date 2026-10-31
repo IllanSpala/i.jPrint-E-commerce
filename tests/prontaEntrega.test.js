@@ -41,7 +41,7 @@ test('carrinho misto preserva preços do banco e consulta o modelo original uma 
 });
 
 import { carregarProntaEntrega } from '../src/lib/estadoProntaEntrega.js';
-import { alterarProdutoAtivo } from '../api/produto-ativo.js';
+import { alterarProdutoAtivo } from '../api/_lib/produto-ativo.js';
 
 test('remoção do estoque marca como esgotado, bloqueia compra e permite reposição', async () => {
   let estado = { id:'pronta-xenonita', ativo:true, ativo_admin:null };

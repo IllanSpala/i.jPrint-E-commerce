@@ -1,4 +1,4 @@
-import { protegerAdmin } from './_lib/seguranca.js';
+import { protegerAdmin } from './seguranca.js';
 
 
 
