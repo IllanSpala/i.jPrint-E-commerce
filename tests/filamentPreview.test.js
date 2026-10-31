@@ -1,7 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { imagePalette, quantizePixels, validateImagePreview } from '../src/lib/filament-art/previewColors.js';
+import { imagePalette, quantizePixels, validateImagePreview, serializePreviewRaster } from '../src/lib/filament-art/previewColors.js';
 import { loadImage } from '../src/lib/filament-art/imagePipeline.js';
+
+test('save tolerates canvas RGB rounding without emitting invalid palette indices', () => {
+  const palette = ['#fafafa', '#181818', '#bb2934', '#cccccc'];
+  const image = {width:4,height:1,data:new Uint8ClampedArray([249,250,251,255, 24,23,25,255, 188,40,52,255, 203,205,204,255])};
+  const raster = serializePreviewRaster(image,palette);
+  assert.deepEqual(raster.indices,[0,1,2,3]);
+  assert.doesNotThrow(() => validateImagePreview({shape:'square',palette,background:palette[0],raster}));
+});
+test('saved preview respects dimension limits and retains only palette indices', () => {
+  for (const [width,height] of [[512,512],[1,1024],[1024,1]]) {
+    const data = new Uint8ClampedArray(width*height*4).fill(255);
+    const raster = serializePreviewRaster({width,height,data},['#ffffff']);
+    assert.ok(raster.width <= 256 && raster.height <= 256);
+    assert.equal(raster.indices.length,raster.width*raster.height);
+    assert.ok(raster.indices.every(index => index === 0));
+  }
+});
 
 test('preserves every pixel of an opaque image already using four colors', () => {
   const pixels = new Uint8ClampedArray([255,0,0,255, 0,255,0,255, 0,0,255,255, 255,255,255,255, 255,0,0,255]);
@@ -43,4 +60,25 @@ test('image loader returns a usable preview and handles HTMLImageElement fallbac
     const fallback = await loadImage(file);
     assert.equal(fallback.canvas.width,2); assert.equal(fallback.url,first.url);
   } finally { for (const [key,value] of Object.entries(originals)) { if(value === undefined) delete globalThis[key]; else globalThis[key]=value; } }
+});
+
+test('small red accents survive a predominantly neutral textured image', () => {
+  const pixels = [];
+  for (let shade=0;shade<256;shade++) {
+    for(let n=0;n<30;n++) pixels.push(shade,shade,shade,255);
+  }
+  // JPEG-like variation across the red star and its lighter red lettering.
+  for(let n=0;n<100;n++) pixels.push(220+n%20,n%8,20+n%15,255);
+  for(let n=0;n<100;n++) pixels.push(255,50+n%15,80+n%15,255);
+  const input=new Uint8ClampedArray(pixels);
+  const palette=imagePalette(input);
+  assert.ok(palette.length<=4);
+  const output=quantizePixels(input,palette);
+  for(let i=0;i<256*30*4;i+=4) {
+    assert.equal(output[i],output[i+1], 'neutral texture must not become red');
+    assert.equal(output[i+1],output[i+2]);
+  }
+  for(let i=256*30*4;i<output.length;i+=4) {
+    assert.ok(output[i]>180 && output[i+1]<100 && output[i+2]<110, 'both red regions must stay red');
+  }
 });

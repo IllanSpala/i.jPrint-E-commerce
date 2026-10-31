@@ -1,5 +1,6 @@
 import { gerarReciboSeguro } from '../lib/reciboSeguro.js';
 import AdminProdutos from '../components/AdminProdutos';
+import FilamentStock from '../components/filament-art/FilamentStock.jsx';
 import FilamentProject from '../components/filament-art/FilamentProject.jsx';
 import { pedidoPendenteExpirado } from '../lib/expiracaoPedido.js';
 import { apiAutenticada } from '../lib/apiAutenticada';
@@ -440,7 +441,8 @@ export default function Admin() {
         <h1 className="font-display text-3xl text-white tracking-tight uppercase">Painel de Pedidos</h1>
       </div>
 
-        <AdminProdutos />
+      <FilamentStock/>
+      <AdminProdutos />
       <div className="mb-6 flex flex-wrap items-center gap-3 text-sm">
         <button
           type="button"

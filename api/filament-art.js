@@ -23,6 +23,11 @@ return async function handler(req,res) {
     if (req.body?.action === 'prepare-original') {
       const { size, type } = req.body;
       if (!Number.isInteger(size) || size < 24 || size > MAX_FILE_BYTES || !['image/png','image/jpeg','image/webp'].includes(type)) return res.status(422).json({error:'Envie PNG, JPEG ou WebP de até 8 MB.'});
+      const schema = await db.from('filament_art_projects').select('id').limit(0);
+      if (schema.error) {
+        console.error('[filament-art] project storage', schema.error.message);
+        return res.status(503).json({error:'O salvamento do HueForge ainda não foi configurado pela loja. Sua prévia foi mantida.'});
+      }
       const path = `${user.id}/${randomUUID()}/original`;
       const upload = await db.storage.from(BUCKET).createSignedUploadUrl(path, { upsert: false });
       if (upload.error) {
@@ -30,6 +35,19 @@ return async function handler(req,res) {
         return res.status(503).json({error:'O armazenamento de imagens está indisponível. Sua prévia foi mantida; tente novamente em instantes.'});
       }
       return res.status(200).json({path,token:upload.data.token});
+    }
+    if (req.body?.action === 'save-stock-color') {
+      const admin = await db.from('loja_admins').select('user_id').eq('user_id',user.id).maybeSingle();
+      if (admin.error || !admin.data) return res.status(403).json({error:'Acesso restrito à administração.'});
+      const {id,name,hex,inStock,material='PLA',effect='solid'} = req.body.color || {};
+      if (typeof id !== 'string' || !/^[a-z0-9_-]{1,80}$/.test(id) || typeof name !== 'string' || !name.trim() || name.length > 120 || !/^#[a-f0-9]{6}$/i.test(hex) || typeof inStock !== 'boolean') return res.status(422).json({error:'Informe nome, cor e disponibilidade válidos.'});
+      if(!['PLA','PETG'].includes(material) || !['solid','silk','marble','multicolor'].includes(effect)) return res.status(422).json({error:'Material ou acabamento inválido.'});
+      const existing = await db.from('filament_art_profiles').select('profile').eq('id',id).maybeSingle();
+      if(existing.error) throw new Error('Não foi possível consultar a cor.');
+      const profile = {...existing.data?.profile,id,name:name.trim(),hex:hex.toLowerCase(),material,effect,inStock};
+      const saved = await db.from('filament_art_profiles').upsert({id,profile,in_stock:inStock,updated_at:new Date().toISOString()});
+      if(saved.error) throw new Error('Não foi possível salvar a cor.');
+      return res.status(200).json({id,profile,in_stock:inStock});
     }
     if (req.body?.action === 'save-profile') {
       const admin = await db.from('loja_admins').select('user_id').eq('user_id',user.id).maybeSingle();

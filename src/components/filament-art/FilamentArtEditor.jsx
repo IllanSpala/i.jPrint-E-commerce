@@ -7,8 +7,10 @@ import { supabase } from '../../lib/supabase';
 import { apiAutenticada } from '../../lib/apiAutenticada';
 import { A1 } from '../../lib/filament-art/opticalModel.js';
 import { loadImage } from '../../lib/filament-art/imagePipeline.js';
-import { imagePalette, previewCanvas } from '../../lib/filament-art/previewColors.js';
+import { imagePalette, previewCanvas, serializePreviewRaster, validateImagePreview } from '../../lib/filament-art/previewColors.js';
 import { BUCKET } from '../../lib/filament-art/projectSerializer.js';
+
+
 
 const SHAPES = [['square', 'Quadrado'], ['circle', 'Círculo']];
 const CAMERA_INICIAL = { x: -20, y: -42 };
@@ -19,6 +21,8 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
   const [shape, setShape] = useState('square');
   const [source, setSource] = useState(null);
   const [palette, setPalette] = useState(['#ffffff']);
+  const [sourcePalette,setSourcePalette] = useState(['#ffffff']);
+  const [imageScale,setImageScale] = useState(100);
   const [background, setBackground] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -32,7 +36,8 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
   const originalRef = useRef(null);
   const request = useRef(0);
   const dialog = useRef(null);
-  const texture = useMemo(() => source ? previewCanvas(source.canvas, palette, shape, palette[background]) : null, [source, palette, shape, background]);
+  const texture = useMemo(() => source ? previewCanvas(source.canvas, palette, shape, palette[background], {sourcePalette,imageScale,backgroundIndex:background}) : null, [source, palette, shape, background, sourcePalette, imageScale]);
+  function enterEditor() { setEtapa('editor'); }
   useEffect(() => { setApplied(false); }, [texture]);
   useEffect(() => {
     const previous = document.activeElement, old = document.body.style.overflow;
@@ -48,7 +53,7 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
       const image = await loadImage(file);
       if (id !== request.current) return;
       const pixels = image.canvas.getContext('2d').getImageData(0, 0, image.canvas.width, image.canvas.height);
-      setPalette(imagePalette(pixels.data)); setBackground(0); setSource(image);
+      const extracted = imagePalette(pixels.data); setSourcePalette(extracted); setPalette(extracted); setImageScale(100); setBackground(0); setSource(image);
       setApplied(false); setPov(CAMERA_INICIAL); setPanCamera({ x: 0, y: 0 }); setZoom(1);
     } catch (e) { if (id === request.current) setError(e.message || 'Não foi possível carregar a imagem.'); }
     finally { if (id === request.current) setLoading(false); }
@@ -67,15 +72,10 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
     try {
       const previewImagem = capturaRef.current();
       const plan = { ...A1, shape };
-      const thumbnail = document.createElement('canvas');
-      thumbnail.width = 256; thumbnail.height = Math.round(256 * texture.height / texture.width);
-      const ctx = thumbnail.getContext('2d'); ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(texture, 0, 0, thumbnail.width, thumbnail.height);
-      const pixels = ctx.getImageData(0, 0, thumbnail.width, thumbnail.height).data;
-      const colors = palette.map(hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)));
-      const indices = [];
-      for (let i = 0; i < pixels.length; i += 4) indices.push(colors.findIndex(rgb => rgb.every((v, c) => v === pixels[i + c])));
-      const input = { mode: 'image-preview', plan, shape, palette, background: palette[background], raster: { width: thumbnail.width, height: thumbnail.height, indices } };
+      const pixels = texture.getContext('2d').getImageData(0, 0, texture.width, texture.height);
+      const raster = serializePreviewRaster(pixels, palette, palette[background]);
+      const input = { mode: 'image-preview', plan, shape, palette, background: palette[background], raster, imageScale, sourcePalette };
+      validateImagePreview(input);
       let path = originalRef.current?.file === source.file && originalRef.current?.userId === user.id ? originalRef.current.path : null;
       if (!path) {
         const authorization = await apiAutenticada('/api/filament-art', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'prepare-original', size: source.file.size, type: source.metadata.type }) });
@@ -112,7 +112,7 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
         <p className="mt-4 text-sm text-zinc-400">Fotos complexas não reproduzem bem neste formato: tons parecidos serão unidos para respeitar o limite de quatro cores. Artes em SVG funcionam bem como origem; exporte para PNG em boa resolução antes de enviar. O envio aceita PNG, JPEG e WebP.</p>
         <p className="mt-3 text-xs text-sand-300">Sua foto original será guardada com o pedido para prepararmos o HueForge.</p>
       </section>
-      <div className="grid md:grid-cols-2 gap-6"><section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-5">{shapes}{upload}{source && <p className="text-xs text-zinc-400">{source.file.name} · {source.canvas.width} × {source.canvas.height} px · {palette.length} cores</p>}{error && <p role="alert" className="text-sm text-red-400">{error}</p>}<button disabled={!source || loading} onClick={() => setEtapa('editor')} className="w-full rounded-lg bg-sand-400 py-3 font-bold text-zinc-950 disabled:opacity-40">Personalizar em 3D <ChevronRight className="inline" size={16}/></button></section>
+      <div className="grid md:grid-cols-2 gap-6"><section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 space-y-5">{shapes}{upload}{source && <p className="text-xs text-zinc-400">{source.file.name} · {source.canvas.width} × {source.canvas.height} px · {palette.length} cores</p>}{error && <p role="alert" className="text-sm text-red-400">{error}</p>}<button disabled={!source || loading} onClick={enterEditor} className="w-full rounded-lg bg-sand-400 py-3 font-bold text-zinc-950 disabled:opacity-40">Personalizar em 3D <ChevronRight className="inline" size={16}/></button></section>
       <div className="min-h-80 rounded-2xl bg-[#17191d] flex items-center justify-center p-6">{texture ? <img alt="Prévia da imagem em até quatro cores" src={texture.toDataURL('image/png')} className={`max-h-80 max-w-full object-contain ${shape === 'circle' ? 'rounded-full' : ''}`}/> : <p className="text-sm text-zinc-500">Carregue uma imagem para conferir o formato.</p>}</div></div>
     </div> : <div className="h-[100dvh] min-h-0 flex flex-col">
       <header className="h-16 shrink-0 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-4 md:px-6"><div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{source.file.name} · {palette.length} cores</span></div><div className="flex gap-2"><button disabled={busy} onClick={() => setEtapa('guia')} className="px-3 py-2 rounded-lg border border-zinc-700 text-xs text-zinc-300">Trocar imagem</button><button disabled={busy} onClick={() => confirm()} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider disabled:opacity-50">{busy ? 'Guardando…' : applied ? 'Concluído' : 'Aplicar'}<ChevronRight size={15}/></button><button disabled={busy} onClick={onClose} aria-label="Fechar" className="p-2 text-zinc-400"><X size={18}/></button></div></header>
@@ -122,7 +122,8 @@ export default function FilamentArtEditor({ onClose, onConfirm }) {
           <div className="flex items-center gap-2 text-xs text-zinc-400"><LockKeyhole size={14} className="text-sand-400"/> Objeto centralizado e bloqueado</div>
           <div className="flex items-center justify-center gap-2 rounded-lg bg-sand-400 text-zinc-950 py-2.5 text-xs"><Rotate3D size={14}/> Rotacionar</div>
           {shapes}
-          <fieldset><legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Cores da imagem · máximo 4</legend><div className="flex flex-wrap gap-3">{palette.map((color, index) => <label key={index} className="text-xs text-zinc-400">Cor {index + 1}<input type="color" aria-label={`Cor ${index + 1}`} value={color} onChange={e => setPalette(list => list.map((v, i) => i === index ? e.target.value : v))} className="block mt-2 h-9 w-12 cursor-pointer bg-transparent"/></label>)}</div><p className="mt-3 text-xs text-zinc-500">Paleta extraída da sua imagem. O desenho e os detalhes são preservados.</p></fieldset>
+          <label className="block text-sm text-zinc-300">Tamanho da imagem <output className="float-right">{imageScale}%</output><input aria-label="Tamanho da imagem" type="range" min="10" max="200" step="1" value={imageScale} onChange={e=>setImageScale(Number(e.target.value))} className="mt-3 w-full accent-sand-400"/><span className="block text-xs text-zinc-500">Acima de 100%, a imagem pode ser recortada nos limites da peça.</span></label>
+          <fieldset><legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">Cores da imagem · máximo 4</legend><div className="flex gap-3">{palette.map((color,index)=><label key={index} className="text-xs text-zinc-400">Cor {index+1}<input type="color" aria-label={`Cor ${index+1}`} value={color} onChange={e=>setPalette(list=>list.map((v,i)=>i===index?e.target.value:v))} className="mt-2 block h-9 w-12 cursor-pointer bg-transparent"/></label>)}</div><button onClick={()=>setPalette([...sourcePalette])} className="mt-3 text-xs text-sand-300 underline">Restaurar cores da imagem</button><p className="mt-2 text-xs text-zinc-500">Ajuste apenas se desejar. A escolha dos filamentos será feita pela loja.</p></fieldset>
           <label className="block text-xs text-zinc-400">Cor do fundo<select aria-label="Cor do fundo" value={background} onChange={e => setBackground(Number(e.target.value))} className="mt-2 block w-full rounded border border-zinc-700 bg-zinc-950 p-2">{palette.map((color, index) => <option key={index} value={index}>Cor {index + 1} · {color}</option>)}</select></label>
           <div className="space-y-3"><span className="text-sm text-zinc-300">Zoom da visualização</span><div className="flex items-center justify-between gap-2"><button aria-label="Diminuir zoom" disabled={zoom <= .6} onClick={() => setZoom(z => Math.max(.6, +(z - .1).toFixed(1)))} className="rounded border border-zinc-700 px-4 py-2">−</button><output>{Math.round(zoom * 100)}%</output><button aria-label="Aumentar zoom" disabled={zoom >= 2} onClick={() => setZoom(z => Math.min(2, +(z + .1).toFixed(1)))} className="rounded border border-zinc-700 px-4 py-2">+</button></div><button onClick={() => { setZoom(1); setPanCamera({ x: 0, y: 0 }); setPov(CAMERA_INICIAL); }} className="text-xs text-sand-300 underline">Centralizar câmera</button></div>
           <p className="text-xs text-zinc-500">Shift + arrastar ou botão do meio: deslocar câmera. Arrastar: orbitar câmera.</p>

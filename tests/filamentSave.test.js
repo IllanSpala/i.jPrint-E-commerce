@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { criarHandlerFilamentArt } from '../api/filament-art.js';
 import { A1 } from '../src/lib/filament-art/opticalModel.js';
+import { serializePreviewRaster } from '../src/lib/filament-art/previewColors.js';
 
 const userId = '12345678-1234-4123-8123-123456789abc';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB9sAAAAASUVORK5CYII=', 'base64');
@@ -20,6 +21,8 @@ function fixture() {
     from(table) {
       return {
         select() {return this;}, eq(_, value) {this.id=value; return this;},
+        async limit() {return {data:[]};},
+        async in() {return {data:[{id:'white',in_stock:true,profile:{name:'Branco',hex:'#ffffff',material:'PLA'}}]};},
         async maybeSingle() {return {data:table === 'produtos' ? {id:82,ativo:true,dimensoes:'24x24x2'} : rows.get(this.id)};},
         async insert(row) {rows.set(row.id,row); return {};},
       };
@@ -39,7 +42,8 @@ test('authorized upload, save and admin artifact retain original image and palet
   assert.equal(prepared.code,200);
   assert.ok(prepared.data.path.startsWith(`${userId}/`));
   files.set(prepared.data.path,png);
-  const input = {mode:'image-preview',plan:{...A1,shape:'square'},shape:'square',palette:['#ffffff'],background:'#ffffff',raster:{width:1,height:1,indices:[0]}};
+  const raster = serializePreviewRaster({width:1,height:1,data:new Uint8ClampedArray([254,255,254,255])},['#ffffff']);
+  const input = {mode:'image-preview',plan:{...A1,shape:'square'},shape:'square',palette:['#ffffff'],background:'#ffffff',raster,imageScale:75};
   const saved = await call({action:'save',input,originalPath:prepared.data.path,originalName:'minha-foto.png'});
   assert.equal(saved.code,200,JSON.stringify(saved.data));
   assert.equal(rows.get(saved.data.id).original_path,prepared.data.path);
@@ -47,6 +51,7 @@ test('authorized upload, save and admin artifact retain original image and palet
   assert.equal(loaded.code,200);
   assert.equal(loaded.data.originalFile.name,'minha-foto.png');
   assert.deepEqual(loaded.data.project.input.palette,['#ffffff']);
+  assert.equal(loaded.data.project.input.imageScale,75);
   assert.deepEqual(files.get(prepared.data.path),png);
 });
 test('upload requires a session and a supported image within the limit', async () => {
