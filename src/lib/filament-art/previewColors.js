@@ -73,6 +73,40 @@ export function imagePalette(data) {
     }
     result.push({color:hex(representative.color),count:family.count});
   }
+  // Spend unused slots on tonal detail instead of flattening each hue to one
+  // swatch. Split the region with the largest area-weighted approximation error.
+  const distance = (a,b) => a.reduce((sum,v,i)=>sum+(v-b[i])**2,0);
+  while (result.length < 4) {
+    const centers = result.map(item=>rgb(item.color));
+    if (!centers.length) break;
+    const regions = centers.map(()=>({points:[],error:0}));
+    for (const point of bins.values()) {
+      const distances = centers.map(center=>distance(point.color,center));
+      const index = distances.indexOf(Math.min(...distances));
+      regions[index].points.push(point);
+      regions[index].error += distances[index]*point.count;
+    }
+    const index = regions.reduce((best,region,i)=>region.error>regions[best].error?i:best,0);
+    const points = regions[index].points;
+    if (points.length<2) break;
+    const farthest = points.reduce((best,p)=>distance(p.color,centers[index])*Math.sqrt(p.count)>distance(best.color,centers[index])*Math.sqrt(best.count)?p:best);
+    let pair = [centers[index],farthest.color];
+    let groups;
+    for(let iteration=0;iteration<12;iteration++) {
+      groups = [[],[]];
+      for(const point of points) groups[distance(point.color,pair[0])<=distance(point.color,pair[1])?0:1].push(point);
+      pair = groups.map((group,i)=>{
+        const count=group.reduce((sum,p)=>sum+p.count,0);
+        return count ? [0,1,2].map(c=>group.reduce((sum,p)=>sum+p.color[c]*p.count,0)/count) : pair[i];
+      });
+    }
+    if(distance(pair[0],pair[1])<32**2 || groups.some(group=>group.reduce((sum,p)=>sum+p.count,0)<total*.005)) break;
+    const replacements = groups.map((group,i)=>{
+      const closest=group.reduce((best,p)=>distance(p.color,pair[i])<distance(best.color,pair[i])?p:best);
+      return {color:hex(closest.color),count:group.reduce((sum,p)=>sum+p.count,0)};
+    });
+    result.splice(index,1,...replacements);
+  }
   // Most common region supplies the default background, independently of hue.
   result.sort((a,b)=>b.count-a.count);
   return result.length ? result.map(p=>p.color) : [hex([...bins.values()].sort((a,b)=>b.count-a.count)[0].color)];
@@ -105,6 +139,19 @@ export function recolorPixels(data, sourcePalette, palette, backgroundIndex = 0)
   return original;
 }
 
+export function preparePreviewSource(source, sourcePalette, palette, backgroundIndex = 0) {
+  const image = document.createElement('canvas');
+  const scale = Math.min(1, 2048 / Math.max(source.width, source.height));
+  image.width = Math.max(1, Math.round(source.width * scale));
+  image.height = Math.max(1, Math.round(source.height * scale));
+  const ctx = image.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(source, 0, 0, image.width, image.height);
+  const pixels = ctx.getImageData(0, 0, image.width, image.height);
+  pixels.data.set(recolorPixels(pixels.data, sourcePalette, palette, backgroundIndex));
+  ctx.putImageData(pixels, 0, 0);
+  return image;
+}
+
 export function previewCanvas(source, palette, shape, background = palette[0], options = {}) {
   const canvas = document.createElement('canvas');
   const ratio = shape === 'rectangle' ? 4 / 3 : 1;
@@ -119,15 +166,27 @@ export function previewCanvas(source, palette, shape, background = palette[0], o
     shape === 'circle' ? canvas.width / Math.hypot(source.width, source.height) : Infinity);
   const scale = (options.imageScale ?? 100) / 100;
   const width = source.width * fit * scale, height = source.height * fit * scale;
-  let image = source;
-  if (options.sourcePalette) {
+  let image = options.preparedSource || source;
+  if (!options.preparedSource && options.sourcePalette) {
     image = document.createElement('canvas'); image.width=source.width; image.height=source.height;
     const imageContext = image.getContext('2d');
     const original = source.getContext('2d').getImageData(0,0,source.width,source.height);
     original.data.set(recolorPixels(original.data,options.sourcePalette,palette,options.backgroundIndex ?? 0));
     imageContext.putImageData(original,0,0);
   }
-  ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+  // A prepared source already contains only the selected colors. Nearest-neighbor
+  // scaling preserves them without another CPU pass over millions of pixels.
+  if (options.preparedSource) ctx.imageSmoothingEnabled = false;
+  const rotation = options.imageRotation || 0;
+  const position = options.position || {x:0,y:0};
+  if (rotation || position.x || position.y) {
+    ctx.save();
+    ctx.translate(canvas.width/2 + position.x*canvas.width/320, canvas.height/2 + position.y*canvas.height/320);
+    ctx.rotate(rotation*Math.PI/180);
+    ctx.drawImage(image,-width/2,-height/2,width,height);
+    ctx.restore();
+  } else ctx.drawImage(image, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+  if (options.preparedSource) return canvas;
   const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
   pixels.data.set(quantizePixels(pixels.data, palette, background));
   ctx.putImageData(pixels, 0, 0);
@@ -156,7 +215,9 @@ export function serializePreviewRaster(image, palette, background = palette[0]) 
 }
 
 export function validateImagePreview(input) {
-  if (input.imageScale !== undefined && (!Number.isFinite(input.imageScale) || input.imageScale < 10 || input.imageScale > 200)) throw new Error('Tamanho da imagem inválido.');
+  if (input.imageScale !== undefined && (!Number.isFinite(input.imageScale) || input.imageScale <= 0)) throw new Error('Tamanho da imagem inválido.');
+  if (input.imageRotation !== undefined && (!Number.isFinite(input.imageRotation) || Math.abs(input.imageRotation)>180)) throw new Error('Rotação inválida.');
+  if (input.position !== undefined && (!Number.isFinite(input.position?.x) || !Number.isFinite(input.position?.y))) throw new Error('Posição inválida.');
   if (!['square', 'circle'].includes(input?.shape)) throw new Error('Formato inválido.');
   const palette = input.palette;
   if (!Array.isArray(palette) || !palette.length || palette.length > 4 || palette.some(c => typeof c !== 'string' || !/^#[0-9a-f]{6}$/i.test(c)) || !palette.includes(input.background)) throw new Error('A imagem deve usar de uma a quatro cores, incluindo o fundo.');

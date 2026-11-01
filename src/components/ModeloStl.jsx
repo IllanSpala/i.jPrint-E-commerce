@@ -345,8 +345,9 @@ export default function ModeloStl({ arquivo, placa, imagemCanvas, corObjeto, cor
     const atual = cenaRef.current;
     if (!atual?.imagemMesh || !imagemCanvas) return;
     const material = atual.imagemMesh.material;
-    material.map?.dispose();
-    const texture = new THREE.CanvasTexture(imagemCanvas);
+    const texture = material.map || new THREE.CanvasTexture(imagemCanvas);
+    texture.image = imagemCanvas;
+    texture.needsUpdate = true;
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = texture.magFilter = THREE.NearestFilter;
     texture.generateMipmaps = false;

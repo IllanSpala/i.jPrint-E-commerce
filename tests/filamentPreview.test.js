@@ -82,3 +82,57 @@ test('small red accents survive a predominantly neutral textured image', () => {
     assert.ok(output[i]>180 && output[i+1]<100 && output[i+2]<110, 'both red regions must stay red');
   }
 });
+
+test('uses a spare color for light and shadow within the same blue hue',()=>{
+ const pixels=[];
+ for(let n=0;n<2000;n++) pixels.push(13,29,42,255);
+ for(let n=0;n<1000;n++) pixels.push(130+n%15,195+n%15,240+n%15,255);
+ for(let n=0;n<700;n++) pixels.push(70+n%15,140+n%15,205+n%15,255);
+ for(let n=0;n<100;n++) pixels.push(220+n%15,10+n%8,10,255);
+ const palette=imagePalette(new Uint8ClampedArray(pixels));
+ assert.equal(palette.length,4);
+ const colors=palette.map(hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)));
+ const blues=colors.filter(([r,g,b])=>b>180&&b-r>70);
+ assert.equal(blues.length,2,'light and shaded blue must remain distinct');
+ assert.ok(Math.abs(blues[0][1]-blues[1][1])>30);
+ assert.ok(colors.some(([r,g,b])=>r>180&&g<50&&b<50));
+});
+
+test('resizing a prepared preview never reads or quantizes pixels again', async()=>{
+ const {previewCanvas}=await import('../src/lib/filament-art/previewColors.js');
+ const previous=globalThis.document;
+ const draws=[];
+ globalThis.document={createElement:()=>({getContext:()=>({
+   fillRect(){},
+   drawImage(...args){assert.equal(this.imageSmoothingEnabled,false);draws.push(args);},
+   getImageData(){throw new Error('Slider must not read pixels');},
+   putImageData(){throw new Error('Slider must not recolor pixels');},
+ })})};
+ try {
+   const source={width:4000,height:2000},preparedSource={width:2048,height:1024};
+   for(const imageScale of [10,75,100,150,200]) {
+     const canvas=previewCanvas(source,['#000000','#ffffff'],'square','#ffffff',{preparedSource,imageScale});
+     assert.equal(canvas.width,2048);
+     const [image,x,y,width,height]=draws.at(-1);
+     assert.equal(image,preparedSource);
+     assert.equal(width,2048*imageScale/100);
+     assert.equal(height,width/2);
+     assert.equal(x,(canvas.width-width)/2);
+     assert.equal(y,(canvas.height-height)/2);
+   }
+ } finally {globalThis.document=previous;}
+});
+
+test('prepared preview applies rotation and position without recoloring',async()=>{
+ const {previewCanvas}=await import('../src/lib/filament-art/previewColors.js');
+ const previous=globalThis.document,calls=[];
+ globalThis.document={createElement:()=>({getContext:()=>({fillRect(){},save(){},restore(){},translate(...args){calls.push(['translate',...args]);},rotate(angle){calls.push(['rotate',angle]);},drawImage(){},getImageData(){throw Error('Unexpected processing');}})})};
+ try {
+  previewCanvas({width:320,height:320},['#000000'],'square','#000000',{preparedSource:{},imageScale:250,imageRotation:90,position:{x:20,y:-10}});
+  assert.deepEqual(calls,[['translate',180,150],['rotate',Math.PI/2]]);
+  const input={shape:'square',palette:['#000000'],background:'#000000',raster:{width:1,height:1,indices:[0]},imageScale:250,imageRotation:90,position:{x:20,y:-10}};
+  assert.doesNotThrow(()=>validateImagePreview(input));
+  assert.throws(()=>validateImagePreview({...input,imageRotation:Infinity}));
+  assert.throws(()=>validateImagePreview({...input,position:{x:NaN,y:0}}));
+ } finally {globalThis.document=previous;}
+});

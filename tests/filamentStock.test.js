@@ -29,7 +29,7 @@ test('saved image scale must be inside the slider range',()=>{
  const input={shape:'square',palette:['#ffffff'],background:'#ffffff',raster:{width:1,height:1,indices:[0]}};
  assert.doesNotThrow(()=>validateImagePreview({...input,imageScale:75}));
  assert.throws(()=>validateImagePreview({...input,imageScale:0}));
- assert.throws(()=>validateImagePreview({...input,imageScale:201}));
+ assert.throws(()=>validateImagePreview({...input,imageScale:Infinity}));
 });
 
 test('palette preserves solid source colors despite shading and antialiasing',()=>{

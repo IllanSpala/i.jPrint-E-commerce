@@ -1,27 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Check, ChevronRight, FileUp, Info, LockKeyhole, Move, Rotate3D, X } from "lucide-react";
+import { ChevronRight, FileUp, Info, LockKeyhole, Move, Rotate3D, X } from "lucide-react";
 import ModeloStl from "./ModeloStl";
 import ViewportPersonalizacao from "./ViewportPersonalizacao";
 import ConversorImagem from "./ConversorImagem";
 
-const CORES = [
-  { nome: "Vermelho", valor: "#ef4444" },
-  { nome: "Laranja", valor: "#f97316" },
-  { nome: "Dourado", valor: "#c9a227" },
-  { nome: "Amarelo", valor: "#eab308" },
-  { nome: "Verde", valor: "#22c55e" },
-  { nome: "Azul Bebê", valor: "#a7d8f0" },
-  { nome: "Azul Prime", valor: "#3b82f6" },
-  { nome: "Lilás", valor: "#c8a2c8" },
-  { nome: "Rosa Bebê", valor: "#f4c2c2" },
-  { nome: "Branco", valor: "#ffffff" },
-  { nome: "Areia", valor: "#d6c5a3" },
-  { nome: "Cinza Grafite", valor: "#474a51" },
-  { nome: "Preto", valor: "#111111" },
-];
+import { supabase } from '../lib/supabase';
 
-function corNome(valor) {
-  return CORES.find((cor) => cor.valor === valor)?.nome || valor;
+function corNome(valor, cores) {
+  return cores.find(cor => cor.valor === valor)?.nome || valor;
 }
 
 function limparSvg(texto) {
@@ -60,40 +46,13 @@ function limparSvg(texto) {
   return new XMLSerializer().serializeToString(svg).replace(/>\s+</g, "><").trim();
 }
 
-function ExemploSvg({ bom }) {
-  return (
-    <div className={`rounded-xl border p-4 ${bom ? "border-emerald-500/30 bg-emerald-500/5" : "border-red-500/30 bg-red-500/5"}`}>
-      <div className="h-28 rounded-lg bg-zinc-950 flex items-center justify-center overflow-hidden mb-3">
-        {bom ? (
-          <svg viewBox="0 0 120 90" className="w-24 h-20 text-emerald-400" aria-hidden="true">
-            <path fill="currentColor" d="M60 8 73 35h30L79 52l10 30-29-18-29 18 10-30-24-17h30z" />
-          </svg>
-        ) : (
-          <svg viewBox="0 0 120 90" className="w-24 h-20" aria-hidden="true">
-            <defs><linearGradient id="ruim"><stop stopColor="#f43f5e"/><stop offset="1" stopColor="#60a5fa"/></linearGradient></defs>
-            <rect x="8" y="8" width="104" height="74" rx="3" fill="white" />
-            <path fill="url(#ruim)" stroke="#18181b" strokeWidth=".5" d="M60 11 66 39h34L70 48l4 30-14-21-14 21 4-30-30-9h34z" />
-          </svg>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className={`grid place-items-center w-5 h-5 rounded-full ${bom ? "bg-emerald-500 text-zinc-950" : "bg-red-500 text-white"}`}>{bom ? <Check size={13}/> : <X size={13}/>}</span>
-        <strong className="text-sm text-zinc-100">{bom ? "Ideal para imprimir" : "Evite este formato"}</strong>
-      </div>
-      <p className="text-xs text-zinc-400 leading-relaxed mt-2">
-        {bom ? "Formas fechadas, traços espessos, uma cor sólida e sem fundo." : "Fundo branco, degradês, detalhes muito finos e cores sobrepostas."}
-      </p>
-    </div>
-  );
-}
-
-function SeletorCor({ titulo, valor, onChange }) {
+function SeletorCor({ titulo, valor, onChange, cores }) {
   return (
     <fieldset>
-      <legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">{titulo}: <span className="text-zinc-200">{corNome(valor)}</span></legend>
+      <legend className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3">{titulo}: <span className="text-zinc-200">{corNome(valor, cores)}</span></legend>
       <div className="flex flex-wrap gap-2">
-        {CORES.map((cor) => (
-          <label key={cor.valor} className="relative cursor-pointer" title={cor.nome}>
+        {cores.map((cor) => (
+          <label key={cor.id} className="relative cursor-pointer" title={cor.nome}>
             <input className="peer sr-only" type="radio" name={titulo} aria-label={cor.nome} value={cor.valor} checked={valor === cor.valor} onChange={() => onChange(cor.valor)} />
             <span style={{ backgroundColor: cor.valor }} className="block w-8 h-8 rounded-full border-2 border-zinc-700 ring-offset-2 ring-offset-zinc-900 peer-checked:ring-2 peer-checked:ring-sand-400 peer-checked:border-white" />
           </label>
@@ -129,6 +88,32 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   const [nomeArquivo, setNomeArquivo] = useState("");
   const [erro, setErro] = useState("");
   const [processando, setProcessando] = useState(false);
+  const [cores, setCores] = useState([]);
+  const [erroCores, setErroCores] = useState('');
+  const [carregandoCores, setCarregandoCores] = useState(true);
+  const [recarregarCores, setRecarregarCores] = useState(0);
+  useEffect(() => {
+    if (!aberto) return;
+    let ativo = true;
+    setCarregandoCores(true);
+    setErroCores('');
+    (async () => {
+      try {
+        const {data,error} = await supabase.from('filament_art_profiles').select('id,profile,in_stock').eq('in_stock',true).order('id');
+        if (error) throw error;
+        if (!ativo) return;
+        const disponiveis = (data || []).filter(row=>/^#[0-9a-f]{6}$/i.test(row.profile?.hex)).map(row=>({id:row.id,nome:row.profile.name,valor:row.profile.hex.toLowerCase()}));
+        setCores(disponiveis);
+        if (!disponiveis.length) setErroCores('Nenhuma cor disponível no momento.');
+        else {
+          setCorObjeto(atual=>disponiveis.some(c=>c.valor===atual)?atual:disponiveis[0].valor);
+          setCorGravura(atual=>disponiveis.some(c=>c.valor===atual)?atual:(disponiveis[1] || disponiveis[0]).valor);
+        }
+      } catch { if(ativo) {setCores([]);setErroCores('Não foi possível carregar as cores da loja.');} }
+      finally {if(ativo) setCarregandoCores(false);}
+    })();
+    return ()=>{ativo=false;};
+  }, [aberto,recarregarCores]);
   const [corObjeto, setCorObjeto] = useState("#3b82f6");
   const [corGravura, setCorGravura] = useState("#eab308");
   const [escala, setEscala] = useState(46);
@@ -183,7 +168,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
     };
   }, [aberto, onFechar]);
 
-  const configuracao = useMemo(() => ({ svg, corObjeto, corGravura, escala, anguloSvg, zoom, x: posicao.x, y: posicao.y, povX: pov.x, povY: pov.y, nomeArquivo, corObjetoNome: corNome(corObjeto), corGravuraNome: corNome(corGravura) }), [svg, corObjeto, corGravura, escala, anguloSvg, zoom, posicao, pov, nomeArquivo]);
+  const configuracao = useMemo(() => ({ svg, corObjeto, corGravura, escala, anguloSvg, zoom, x: posicao.x, y: posicao.y, povX: pov.x, povY: pov.y, nomeArquivo, corObjetoNome: corNome(corObjeto, cores), corGravuraNome: corNome(corGravura, cores) }), [svg, corObjeto, corGravura, escala, anguloSvg, zoom, posicao, pov, nomeArquivo, cores]);
 
   function usarSvg(texto, nome, origem = null) {
     try {
@@ -226,68 +211,47 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
   if (!aberto) return null;
 
   return (
-    <div className={`fixed inset-0 z-[80] bg-zinc-950 text-zinc-100 ${etapa === "guia" ? "overflow-y-auto" : "overflow-hidden"}`} role="dialog" aria-modal="true" aria-label="Personalizador 3D">
-      {etapa === "guia" ? (
-        <div className="max-w-5xl mx-auto px-5 py-8 md:py-12">
-          <div className="flex justify-between items-start gap-5 mb-8">
-            <div>
-              <span className="text-sand-400 text-xs font-bold uppercase tracking-[.2em]">Antes de personalizar</span>
-              <h2 className="font-display text-3xl md:text-5xl uppercase mt-2">Prepare sua arte</h2>
-              <p className="text-zinc-400 mt-3 max-w-2xl leading-relaxed">Envie um SVG pronto ou converta uma imagem aqui. Prefira logos, desenhos e texturas simples: fotografias e degradês perdem detalhes ao virar uma gravura de uma cor.</p>
-              <p className="text-sm text-sand-300 mt-3">Compatíveis: SVG (até 2 MB) · PNG, JPG/JPEG e WebP (até 8 MB). PDF, GIF, HEIC e arquivos de editores não são aceitos diretamente.</p>
-            </div>
-            <button onClick={onFechar} className="p-2 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white" aria-label="Fechar"><X size={20}/></button>
-          </div>
-
-          <div className="grid md:grid-cols-[1fr_1.1fr] gap-6">
-            <div className="md:col-span-2"><ConversorImagem onUsarSvg={usarSvg}/></div>
-            <section className="md:col-span-2 rounded-xl border border-zinc-800 bg-zinc-900 p-5 text-sm text-zinc-300">
-              <h3 className="font-semibold text-white mb-3">Prefere converter fora do site? Passo a passo com Convertio</h3>
-              <ol className="list-decimal pl-5 space-y-2">
-                <li>Escolha um desenho simples, com bom contraste e poucos detalhes.</li>
-                <li>Abra o <a href="https://convertio.co/pt/png-svg/" target="_blank" rel="noopener noreferrer" className="text-sand-300 underline">conversor PNG para SVG do Convertio</a> e selecione sua imagem.</li>
-                <li>Escolha SVG como saída, clique em converter e baixe o arquivo. Confira os limites e condições atuais do serviço; a imagem será enviada ao Convertio.</li>
-                <li>Volte aqui e use “Carregar SVG pronto” abaixo. O arquivo deve conter vetores, não uma imagem PNG embutida.</li>
-                <li>No editor, ajuste tamanho, posição, rotação e cores. Clique em Aplicar para recortar a arte na superfície da peça; confira o resultado e só então clique em Concluído.</li>
-              </ol>
-              <p className="mt-3 text-zinc-400">O SVG aprovado e os ajustes são guardados com o pedido para preparação da impressão. Na conversão local, guardamos o vetor gerado e as configurações, não a imagem original.</p>
-            </section>
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-5 md:p-6">
-              <h3 className="font-semibold text-lg mb-5">O que funciona melhor</h3>
-              <div className="space-y-5">
-                {[
-                  ["Espessura", "Prefira traços largos; use 1,2 mm como referência no tamanho final. A conversão não garante que detalhes muito finos sejam imprimíveis."],
-                  ["Cores", "Prefira uma única cor sólida. Degradês e transparências serão convertidos."],
-                  ["Superfície e profundidade", "Aplicar recorta a arte na superfície, inclusive nas curvas. Espessura e relevo finais são preparados para impressão posteriormente."],
-                  ["Fundo", "Prefira transparência ou fundo uniforme. Confira a prévia: regiões brancas podem fazer parte da arte, e fundos complexos podem exigir edição manual."],
-                ].map(([titulo, texto], index) => (
-                  <div key={titulo} className="flex gap-3">
-                    <span className="shrink-0 grid place-items-center w-7 h-7 rounded-full bg-sand-400 text-zinc-950 text-xs font-bold">{index + 1}</span>
-                    <div><strong className="text-sm text-zinc-100">{titulo}</strong><p className="text-sm text-zinc-400 mt-1 leading-relaxed">{texto}</p></div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <ExemploSvg bom />
-              <ExemploSvg />
-              <label className="sm:col-span-2 min-h-36 rounded-2xl border-2 border-dashed border-zinc-700 hover:border-sand-400/60 bg-zinc-900/60 flex flex-col items-center justify-center cursor-pointer transition-colors px-5 text-center">
-                <FileUp className="text-sand-400 mb-3" size={28}/>
-                <strong className="text-sm">{processando ? "Preparando SVG..." : "Carregar SVG pronto"}</strong>
-                <span className="text-xs text-zinc-500 mt-1">Somente .svg, até 2 MB</span>
-                <input disabled={processando} type="file" accept=".svg,image/svg+xml" className="sr-only" onChange={(event) => lerArquivo(event.target.files?.[0])}/>
+    <div className="fixed inset-0 z-[80] overflow-hidden bg-zinc-950 text-zinc-100" role="dialog" aria-modal="true" aria-label="Personalizador 3D">
+      {etapa === "guia" && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/55 backdrop-blur-sm p-3 sm:p-6">
+          <section onKeyDown={event => {
+            if (event.key !== 'Tab') return;
+            const items = [...event.currentTarget.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), summary, a[href]')].filter(el => el.getClientRects().length);
+            const first = items[0], last = items[items.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+          }} role="dialog" aria-modal="true" aria-labelledby="svg-setup-title" className="w-full max-w-6xl max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-zinc-700/70 bg-zinc-900 shadow-2xl">
+            <header className="flex items-start justify-between gap-4 border-b border-zinc-800 px-5 py-5 sm:px-6">
+              <div><p className="text-xs text-sand-300 mb-1">Personalização</p><h2 id="svg-setup-title" className="text-xl font-semibold">Escolha seu desenho</h2><p className="mt-2 text-sm text-zinc-400">Envie uma imagem, confira a gravura e personalize seu produto.</p></div>
+              <button autoFocus onClick={onFechar} className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-sand-400" aria-label="Fechar configuração"><X size={20}/></button>
+            </header>
+            <div className="grid items-start gap-5 p-5 sm:p-6 md:grid-cols-[minmax(0,1.6fr)_minmax(240px,0.8fr)]">
+              <div className="min-w-0"><ConversorImagem onUsarSvg={usarSvg}/></div>
+              <div className="min-w-0 space-y-4">
+              <h3 className="text-sm font-medium text-zinc-300">Já tem uma arte pronta?</h3>
+              <label className="relative flex cursor-pointer items-center gap-4 rounded-xl border border-dashed border-zinc-600 p-5 transition-colors hover:border-sand-400 hover:bg-zinc-800/50 focus-within:ring-2 focus-within:ring-sand-400">
+                <FileUp size={24} className="shrink-0 text-sand-300"/>
+                <span><strong className="block text-sm font-medium">{processando ? "Preparando arquivo…" : "Enviar arquivo SVG"}</strong><span className="mt-1 block text-xs text-zinc-400">Arquivo vetorial · até 2 MB</span></span>
+                <input aria-label="Carregar SVG pronto" disabled={processando} type="file" accept=".svg,image/svg+xml" className="sr-only" onChange={event=>{lerArquivo(event.target.files?.[0]);event.target.value='';}}/>
               </label>
-              {erro && <p className="sm:col-span-2 text-sm text-red-400" role="alert">{erro}</p>}
+              {erro && <p role="alert" className="text-sm text-red-400">{erro}</p>}
+              <p className="text-xs leading-relaxed text-zinc-400">Prefira desenhos simples, traços largos e bom contraste. Fotos e degradês perdem detalhes na gravura de uma cor.</p>
+              <p className="text-xs leading-relaxed text-zinc-400">Depois do envio, ajuste tamanho, posição e cores no grid.</p>
+              <p className="text-xs text-zinc-500">O SVG aprovado e seus ajustes serão enviados com o pedido.</p>
+              </div>
+
             </div>
-          </div>
+            {svg && <footer className="border-t border-zinc-800 px-5 py-4 sm:px-6"><button onClick={()=>{setErro('');setEtapa('editor');}} className="text-sm text-sand-300 hover:text-sand-200">Voltar à edição atual</button></footer>}
+          </section>
         </div>
-      ) : (
+      )}
+      <div inert={etapa === "guia" ? "" : undefined} aria-hidden={etapa === "guia" ? true : undefined}>
         <div className="h-[100dvh] min-h-0 flex flex-col">
           <header className="h-16 shrink-0 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between px-4 md:px-6">
             <div><strong className="text-sm">Editor de personalização</strong><span className="hidden sm:inline text-xs text-zinc-500 ml-3">{nomeArquivo} · {origemImagem ? "convertido de imagem" : "SVG preparado"}</span></div>
             <div className="flex gap-2">
               <button onClick={() => setEtapa("guia")} className="px-3 py-2 rounded-lg border border-zinc-700 text-xs text-zinc-300 hover:bg-zinc-800">Trocar SVG</button>
-              <button disabled={aplicando || !escalaValida} onClick={aplicacao || !modelo3d ? concluir : aplicar} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider hover:bg-sand-300 disabled:opacity-50">{aplicando ? "Aplicando…" : aplicacao || !modelo3d ? "Concluído" : "Aplicar"} <ChevronRight size={15}/></button>
+              <button disabled={aplicando || !escalaValida || carregandoCores || !cores.length} onClick={aplicacao || !modelo3d ? concluir : aplicar} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-sand-400 text-zinc-950 text-xs font-bold uppercase tracking-wider hover:bg-sand-300 disabled:opacity-50">{aplicando ? "Aplicando…" : aplicacao || !modelo3d ? "Concluído" : "Aplicar"} <ChevronRight size={15}/></button>
             </div>
           </header>
           {erro && <p role="alert" className="px-5 py-2 text-sm text-red-400">{erro}</p>}
@@ -301,8 +265,10 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
                   <button onClick={() => setFerramenta("mover")} className={`flex items-center justify-center gap-2 rounded-lg px-2 py-2.5 text-xs font-medium transition-colors ${ferramenta === "mover" ? "bg-sand-400 text-zinc-950" : "text-zinc-400 hover:text-white"}`}><Move size={14}/> Mover SVG</button>
                 </div>
               </div>
-              <SeletorCor titulo="Cor do objeto" valor={corObjeto} onChange={setCorObjeto}/>
-              <SeletorCor titulo="Cor da gravura" valor={corGravura} onChange={setCorGravura}/>
+              {carregandoCores && <p role="status" className="text-xs text-zinc-400">Carregando cores disponíveis…</p>}
+              {erroCores && <p role="alert" className="text-xs text-red-300">{erroCores} <button onClick={()=>setRecarregarCores(v=>v+1)} className="underline">Tentar novamente</button></p>}
+              <SeletorCor titulo="Cor do objeto" valor={corObjeto} onChange={setCorObjeto} cores={cores}/>
+              <SeletorCor titulo="Cor da gravura" valor={corGravura} onChange={setCorGravura} cores={cores}/>
               <div>
                 <label htmlFor="escala-svg" className="flex justify-between text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3"><span>Tamanho do SVG</span><span>{escala}%</span></label>
                 <input id="escala-svg" type="number" inputMode="decimal" step="any" value={escala} aria-invalid={!escalaValida} onChange={(e) => setEscala(e.target.value === "" ? "" : Number(e.target.value))} className="w-full rounded border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"/>
@@ -340,7 +306,7 @@ export default function Personalizador3D({ aberto, onFechar, onConcluir, modelo3
             </ViewportPersonalizacao>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
